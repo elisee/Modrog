@@ -1,0 +1,1 @@
+Build\DeepSwarmClient-Debug\netcoreapp3.0\DeepSwarmClient.exe
