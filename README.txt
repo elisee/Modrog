@@ -29,6 +29,13 @@
 (x) Collisions
 (x) Creuser avec un robot
 (x) Brouillard de guerre
+(x) Editeur de texte
+  (x) TAB
+  ( ) Déplacer curseur à la souris
+  ( ) Pouvoir scroller
+  ( ) Sélection / Copier / Coller
+(x) Pouvoir ouvrir un script existant
+( ) Mount / Unmount
 ( ) Robots scriptables avec Lua (entièrement coté client)
 ( ) Pouvoir laisser les boutons enfoncés
 ( ) Si un déplacement rentre dans un chunk qui était free, le marquer comme pas free pour éviter qu'on spawne sur des gens (ou alors il faut au moins garder une liste d'entités par chunk)
