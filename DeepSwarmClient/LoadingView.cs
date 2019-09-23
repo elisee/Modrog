@@ -1,5 +1,4 @@
 ﻿using DeepSwarmClient.UI;
-using DeepSwarmCommon;
 
 namespace DeepSwarmClient
 {
@@ -12,7 +11,7 @@ namespace DeepSwarmClient
 
             var loadingPopup = new Element(Desktop, this)
             {
-                AnchorRectangle = new Rectangle(16, 16, 320 + 32, 320 + 32),
+                AnchorRectangle = MakeCenteredRectangle(320, 320),
                 BackgroundColor = new Color(0x88aa88ff)
             };
 

@@ -68,12 +68,20 @@ namespace DeepSwarmClient.UI
             return null;
         }
 
-        public virtual void OnKeyDown(SDL.SDL_Keycode key, bool repeat) { }
+        public virtual void OnKeyDown(SDL.SDL_Keycode key, bool repeat)
+        {
+            if (!repeat && key == SDL.SDL_Keycode.SDLK_RETURN) Validate();
+            else if (!repeat && key == SDL.SDL_Keycode.SDLK_ESCAPE) Dismiss();
+        }
+
         public virtual void OnKeyUp(SDL.SDL_Keycode key) { }
         public virtual void OnMouseMove() { }
         public virtual void OnMouseDown(int button) { }
         public virtual void OnMouseUp(int button) { }
         public virtual void OnTextEntered(string text) { }
+
+        public virtual void Validate() => Parent?.Validate();
+        public virtual void Dismiss() => Parent?.Dismiss();
 
         public void Draw()
         {

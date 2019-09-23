@@ -12,17 +12,24 @@ namespace DeepSwarmClient
         {
             AnchorRectangle = engine.Viewport;
 
+            const int PanelWidth = 320 + 16 * 2;
+            const int PanelHeight = 160 + 16 * 2;
+
             var panel = new Element(Desktop, this)
             {
-                AnchorRectangle = new Rectangle(16, 16, 320 + 32, 320 + 32),
+                AnchorRectangle = MakeCenteredRectangle(PanelWidth, PanelHeight),
                 BackgroundColor = new Color(0x88aa88ff)
             };
 
-            new Label(Desktop, panel) { Text = "Enter your name:" };
+            new Label(Desktop, panel)
+            {
+                AnchorRectangle = new Rectangle(16, 16, 0, 0),
+                Text = "Enter your name:"
+            };
 
             NameInput = new TextInput(Desktop, panel)
             {
-                AnchorRectangle = new Rectangle(16, 32, 320, 16),
+                AnchorRectangle = new Rectangle(16, 48, 320, 16),
                 BackgroundColor = new Color(0x004400ff),
                 MaxLength = Protocol.MaxPlayerNameLength
             };
@@ -30,13 +37,13 @@ namespace DeepSwarmClient
             new Button(Desktop, panel)
             {
                 Text = "OK",
-                AnchorRectangle = new Rectangle(16, 64, ("OK".Length + 2) * 16, 16),
+                AnchorRectangle = new Rectangle(16, 80, ("OK".Length + 2) * 16, 16),
                 BackgroundColor = new Color(0x4444ccff),
-                OnActivate = OnValidate
+                OnActivate = Validate
             };
         }
 
-        public void OnValidate()
+        public override void Validate()
         {
             var name = NameInput.Value.Trim();
             if (name.Length == 0) return;

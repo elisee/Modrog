@@ -1,4 +1,5 @@
 ﻿using DeepSwarmClient.UI;
+using DeepSwarmCommon;
 
 namespace DeepSwarmClient
 {
@@ -10,5 +11,11 @@ namespace DeepSwarmClient
         {
             Engine = engine;
         }
+
+        protected Rectangle MakeCenteredRectangle(int width, int height)
+        {
+            return new Rectangle(Engine.Viewport.Width / 2 - width / 2, Engine.Viewport.Height / 2 - height / 2, width, height);
+        }
+
     }
 }

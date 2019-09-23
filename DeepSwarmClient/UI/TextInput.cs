@@ -22,6 +22,9 @@ namespace DeepSwarmClient.UI
                 case SDL.SDL_Keycode.SDLK_BACKSPACE:
                     if (Value.Length > 0) Value = Value[0..^1];
                     break;
+                default:
+                    base.OnKeyDown(key, repeat);
+                    break;
             }
         }
 

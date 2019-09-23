@@ -56,7 +56,7 @@ namespace DeepSwarmServer
 
             var stopwatch = Stopwatch.StartNew();
             var accumulatedTime = 0f;
-            const float TickInterval = 1000f / 2f;
+            const float TickInterval = 0.2f;
             int tickIndex = -1;
 
             while (!cancelTokenSource.IsCancellationRequested)
@@ -83,6 +83,8 @@ namespace DeepSwarmServer
                 }
 
                 var deltaTime = (float)stopwatch.Elapsed.TotalSeconds;
+                stopwatch.Restart();
+
                 accumulatedTime += deltaTime;
 
                 if (accumulatedTime > TickInterval)
@@ -176,7 +178,7 @@ namespace DeepSwarmServer
                                     // throw new NotImplementedException();
                                     break;
 
-                                case Protocol.ClientPacketType.Tick:
+                                case Protocol.ClientPacketType.PlanMoves:
                                     var clientTickIndex = reader.ReadInt();
                                     if (clientTickIndex != tickIndex)
                                     {
@@ -303,20 +305,67 @@ namespace DeepSwarmServer
                 {
                     switch (entity.UpcomingMove)
                     {
-                        case Entity.EntityMove.RotateCW: entity.Direction = (Entity.EntityDirection)((int)(entity.Direction + 1) % 4); break;
-                        case Entity.EntityMove.RotateCCW: entity.Direction = (Entity.EntityDirection)((int)(entity.Direction + 3) % 4); break;
+                        case Entity.EntityMove.RotateCW:
+                            if (entity.Type == Entity.EntityType.Robot)
+                            {
+                                entity.Direction = (Entity.EntityDirection)((int)(entity.Direction + 1) % 4);
+                            }
+                            break;
+                        case Entity.EntityMove.RotateCCW:
+                            if (entity.Type == Entity.EntityType.Robot)
+                            {
+                                entity.Direction = (Entity.EntityDirection)((int)(entity.Direction + 3) % 4);
+                            }
+                            break;
 
                         case Entity.EntityMove.Move:
-                            switch (entity.Direction)
+                            if (entity.Type == Entity.EntityType.Robot)
                             {
-                                case Entity.EntityDirection.Right: entity.X++; break;
-                                case Entity.EntityDirection.Down: entity.Y++; break;
-                                case Entity.EntityDirection.Left: entity.X--; break;
-                                case Entity.EntityDirection.Up: entity.Y--; break;
+                                var newX = entity.X;
+                                var newY = entity.Y;
+
+                                switch (entity.Direction)
+                                {
+                                    case Entity.EntityDirection.Right: newX++; break;
+                                    case Entity.EntityDirection.Down: newY++; break;
+                                    case Entity.EntityDirection.Left: newX--; break;
+                                    case Entity.EntityDirection.Up: newY--; break;
+                                }
+
+                                var targetTile = map.PeekTile(newX, newY);
+
+                                switch (targetTile)
+                                {
+                                    case Map.Tile.Rock:
+                                        // Can't move
+                                        break;
+                                    case Map.Tile.Dirt1:
+                                    case Map.Tile.Dirt2:
+                                    case Map.Tile.Dirt3:
+                                        map.PokeTile(newX, newY, targetTile + 1);
+                                        break;
+                                    case Map.Tile.Path:
+                                        entity.X = newX;
+                                        entity.Y = newY;
+                                        break;
+                                    case Map.Tile.Crystal1:
+                                    case Map.Tile.Crystal2:
+                                    case Map.Tile.Crystal3:
+                                    case Map.Tile.Crystal4:
+                                        map.PokeTile(newX, newY, targetTile + 1);
+                                        break;
+                                    case Map.Tile.Crystal5:
+                                        map.PokeTile(newX, newY, Map.Tile.Path);
+                                        // TODO: Add crystal to entity inventory
+                                        break;
+                                }
                             }
                             break;
 
                         case Entity.EntityMove.Attack:
+                            if (entity.Type == Entity.EntityType.Robot)
+                            {
+                            }
                             break;
 
                         case Entity.EntityMove.Build:
@@ -353,6 +402,7 @@ namespace DeepSwarmServer
                         var directionAngle = ownedEntity.GetDirectionAngle();
 
                         var radius = Math.Max(stats.OmniViewRadius, stats.DirectionalViewRadius);
+                        seenTiles.TryAdd((ownedEntity.X, ownedEntity.Y), map.PeekTile(ownedEntity.X, ownedEntity.Y));
 
                         for (var dy = -radius; dy <= radius; dy++)
                         {

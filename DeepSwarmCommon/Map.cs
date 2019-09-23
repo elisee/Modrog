@@ -14,17 +14,25 @@ namespace DeepSwarmCommon
 
         public enum Tile : byte
         {
-            Unknown = 0,
-            Rock = 1,
-            Path = 2,
-            Crystal = 3
+            Unknown,
+            Rock,
+            Dirt1, Dirt2, Dirt3,
+            Path,
+            Crystal1, Crystal2, Crystal3, Crystal4, Crystal5
         }
 
         public static readonly uint[] TileColors = new uint[] {
-            0x000000ff,
-            0x51260aff,
-            0x271104ff,
-            0xa8d618ff,
+            0x000000ff, // Unknown
+            0x625b5bff, // Rock
+            0x51260aff, // Dirt1
+            0x69270aff, // Dirt2
+            0x912a0aff, // Dirt3
+            0x271104ff, // Path
+            0x16d8acff, // Crystal1
+            0x66deb9ff, // Crystal2
+            0x80e1c2ff, // Crystal3
+            0xb0ead5ff, // Crystal4
+            0xdff5edff, // Crystal5
         };
 
         [Flags]
@@ -130,7 +138,7 @@ namespace DeepSwarmCommon
 
         public void Generate()
         {
-            Unsafe.InitBlock(ref Tiles[0], (byte)Tile.Rock, (uint)Tiles.Length);
+            Unsafe.InitBlock(ref Tiles[0], (byte)Tile.Dirt1, (uint)Tiles.Length);
             FreeChunkIndices.Clear();
 
             var random = new Random();
@@ -216,7 +224,7 @@ namespace DeepSwarmCommon
                 for (var x = 0; x < MapSize; x++)
                 {
                     var rarity = HasNearby(x, y, Tile.Path) ? 2000 : 500;
-                    if (random.Next(rarity) == 0) PokeCircle(x, y, Tile.Crystal, random.Next(1, 4));
+                    if (random.Next(rarity) == 0) PokeCircle(x, y, Tile.Crystal1, random.Next(1, 4));
                 }
             }
 
@@ -280,7 +288,7 @@ namespace DeepSwarmCommon
             }
         }
 
-        void PokeTile(int x, int y, Tile tile)
+        public void PokeTile(int x, int y, Tile tile)
         {
             if (x < 0) x += MapSize;
             if (x >= MapSize) x -= MapSize;

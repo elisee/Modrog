@@ -160,14 +160,39 @@ namespace DeepSwarmClient
 
             var tileViewport = new Rectangle(startTileX, startTileY, tilesPerRow, tilesPerColumn);
 
+            // Tiles
             for (var y = 0; y < tilesPerColumn; y++)
             {
                 for (var x = 0; x < tilesPerRow; x++)
                 {
                     var index = (startTileY + y) * Map.MapSize + (startTileX + x);
 
+                    var rect = new SDL.SDL_Rect
+                    {
+                        x = (startTileX + x) * Map.TileSize - (int)Engine.ScrollingPixelsX,
+                        y = (startTileY + y) * Map.TileSize - (int)Engine.ScrollingPixelsY,
+                        w = Map.TileSize,
+                        h = Map.TileSize
+                    };
+
                     var color = new Color(Map.TileColors[(int)Engine.Map.Tiles[index]]);
                     color.UseAsDrawColor(Engine.Renderer);
+
+                    SDL.SDL_RenderFillRect(Engine.Renderer, ref rect);
+                }
+            }
+
+            // Fog of war
+            var fogColor = new Color(0x00000044);
+            fogColor.UseAsDrawColor(Engine.Renderer);
+            SDL.SDL_SetRenderDrawBlendMode(Engine.Renderer, SDL.SDL_BlendMode.SDL_BLENDMODE_BLEND);
+
+            for (var y = 0; y < tilesPerColumn; y++)
+            {
+                for (var x = 0; x < tilesPerRow; x++)
+                {
+                    var index = (startTileY + y) * Map.MapSize + (startTileX + x);
+                    if (Engine.FogOfWar[index] != 0) continue;
 
                     var rect = new SDL.SDL_Rect
                     {
@@ -181,6 +206,9 @@ namespace DeepSwarmClient
                 }
             }
 
+            SDL.SDL_SetRenderDrawBlendMode(Engine.Renderer, SDL.SDL_BlendMode.SDL_BLENDMODE_NONE);
+
+            // Entities
             foreach (var entity in Engine.Map.Entities)
             {
                 if (!tileViewport.Contains(entity.X, entity.Y)) continue;

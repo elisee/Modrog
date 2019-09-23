@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using static DeepSwarmCommon.Player;
 using static DeepSwarmCommon.Protocol;
@@ -20,11 +21,13 @@ namespace DeepSwarmClient
         public readonly IntPtr Renderer;
 
         public readonly string AssetsPath;
+        public readonly string SettingsFilePath;
 
         public enum EngineStage { EnterName, Loading, Playing }
         public EngineStage ActiveStage { get; private set; }
 
         public readonly Guid SelfGuid;
+        public string SelfPlayerName;
         public readonly List<PlayerListEntry> PlayerList = new List<PlayerListEntry>();
         public int SelfPlayerIndex = -1;
         public int SelfBaseChunkX { get; private set; }
@@ -34,10 +37,11 @@ namespace DeepSwarmClient
         public float ScrollingPixelsY { get; private set; }
 
         public int HoveredTileX { get; private set; }
-
         public int HoveredTileY { get; private set; }
         public Entity SelectedEntity { get; private set; }
-        readonly Dictionary<int, Entity.EntityMove> _plannedMovesByEntityId = new Dictionary<int, Entity.EntityMove>();
+        int _tickIndex;
+
+        public readonly byte[] FogOfWar = new byte[Map.MapSize * Map.MapSize];
 
         public bool IsScrollingLeft;
         public bool IsScrollingRight;
@@ -67,8 +71,7 @@ namespace DeepSwarmClient
 
             if (File.Exists(identityPath))
             {
-                try { SelfGuid = new Guid(File.ReadAllBytes(identityPath)); }
-                catch { }
+                try { SelfGuid = new Guid(File.ReadAllBytes(identityPath)); } catch { }
             }
 
             if (SelfGuid == Guid.Empty)
@@ -77,9 +80,16 @@ namespace DeepSwarmClient
                 File.WriteAllBytes(identityPath, SelfGuid.ToByteArray());
             }
 
+            SettingsFilePath = Path.Combine(AppContext.BaseDirectory, "Settings.txt");
+            if (File.Exists(SettingsFilePath))
+            {
+                try { SelfPlayerName = File.ReadAllText(SettingsFilePath); } catch { }
+            }
+
             AssetsPath = FileHelper.FindAppFolder("Assets");
 
-            SDL_image.IMG_Init(SDL_image.IMG_InitFlags.IMG_INIT_PNG);
+            if (SDL_image.IMG_Init(SDL_image.IMG_InitFlags.IMG_INIT_PNG) != (int)SDL_image.IMG_InitFlags.IMG_INIT_PNG) throw new Exception();
+
             RendererHelper.FontTexture = SDL_image.IMG_LoadTexture(Renderer, Path.Combine(AssetsPath, "Font.png"));
             SpritesheetTexture = SDL_image.IMG_LoadTexture(Renderer, Path.Combine(AssetsPath, "Spritesheet.png"));
 
@@ -103,6 +113,7 @@ namespace DeepSwarmClient
             _receiver = new PacketReceiver(_socket);
 
             Desktop.SetRootElement(EnterNameView);
+            EnterNameView.NameInput.Value = SelfPlayerName ?? "";
             Desktop.FocusedElement = EnterNameView.NameInput;
 
             Run();
@@ -283,13 +294,16 @@ namespace DeepSwarmClient
 
         public void SetName(string name)
         {
+            SelfPlayerName = name;
+            File.WriteAllText(SettingsFilePath, SelfPlayerName);
+
             ActiveStage = EngineStage.Loading;
             Desktop.SetRootElement(LoadingView);
             Desktop.FocusedElement = null;
 
             _writer.WriteByteLengthString(Protocol.VersionString);
             _writer.WriteBytes(SelfGuid.ToByteArray());
-            _writer.WriteByteLengthString(name);
+            _writer.WriteByteLengthString(SelfPlayerName);
             Send();
         }
 
@@ -300,7 +314,12 @@ namespace DeepSwarmClient
 
         public void PlanMove(Entity.EntityMove move)
         {
-            _plannedMovesByEntityId[SelectedEntity.Id] = move;
+            _writer.WriteByte((byte)Protocol.ClientPacketType.PlanMoves);
+            _writer.WriteInt(_tickIndex);
+            _writer.WriteShort(1);
+            _writer.WriteInt(SelectedEntity.Id);
+            _writer.WriteByte((byte)move);
+            Send();
         }
 
         void ReadPlayerList()
@@ -339,14 +358,14 @@ namespace DeepSwarmClient
 
         void ReadTick()
         {
+            Unsafe.InitBlock(ref FogOfWar[0], 0, (uint)FogOfWar.Length);
             Map.Entities.Clear();
 
             // TODO: Handle fog of war with an additional array holding whether each tile is currently being seen or not
 
-            var tickIndex = _reader.ReadInt();
+            _tickIndex = _reader.ReadInt();
 
             Entity newSelectedEntity = null;
-            var validPlannedMoves = new Dictionary<int, Entity.EntityMove>();
 
             var seenEntitiesCount = _reader.ReadShort();
             for (var i = 0; i < seenEntitiesCount; i++)
@@ -362,8 +381,6 @@ namespace DeepSwarmClient
                     Health = _reader.ReadByte(),
                 };
 
-                if (_plannedMovesByEntityId.TryGetValue(entity.Id, out var move)) validPlannedMoves.Add(entity.Id, move);
-
                 if (SelectedEntity?.Id == entity.Id) newSelectedEntity = entity;
 
                 Map.Entities.Add(entity);
@@ -376,25 +393,28 @@ namespace DeepSwarmClient
             }
 
             SelectedEntity = newSelectedEntity;
-            _plannedMovesByEntityId.Clear();
 
             var seenTilesCount = _reader.ReadShort();
             for (var i = 0; i < seenTilesCount; i++)
             {
                 var x = _reader.ReadShort();
                 var y = _reader.ReadShort();
+                FogOfWar[y * Map.MapSize + x] = 1;
                 Map.Tiles[y * Map.MapSize + x] = _reader.ReadByte();
             }
 
-            _writer.WriteByte((byte)Protocol.ClientPacketType.Tick);
-            _writer.WriteInt(tickIndex);
+            // TODO: Scripting
+            /* var validPlannedMoves = new Dictionary<int, Entity.EntityMove>();
+
+            _writer.WriteByte((byte)Protocol.ClientPacketType.PlanMoves);
+            _writer.WriteInt(_tickIndex);
             _writer.WriteShort((short)validPlannedMoves.Count);
             foreach (var (entityId, move) in validPlannedMoves)
             {
                 _writer.WriteInt(entityId);
                 _writer.WriteByte((byte)move);
             }
-            Send();
+            Send();*/
         }
     }
 }

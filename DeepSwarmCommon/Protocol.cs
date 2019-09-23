@@ -16,7 +16,7 @@
 
         public enum ClientPacketType : byte
         {
-            Tick,
+            PlanMoves,
             Chat,
         }
     }
