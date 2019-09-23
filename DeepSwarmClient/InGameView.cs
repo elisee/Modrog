@@ -58,7 +58,7 @@ namespace DeepSwarmClient
             new Element(Desktop, _entityStatsContainer)
             {
                 AnchorRectangle = new Rectangle(12, 48, 24, 24),
-                BackroundTexture = Engine.SpritesheetTexture,
+                BackgroundTexture = Engine.SpritesheetTexture,
                 BackgroundTextureArea = new Rectangle(72, 24, 24, 24)
             };
 
@@ -71,7 +71,7 @@ namespace DeepSwarmClient
             new Element(Desktop, _entityStatsContainer)
             {
                 AnchorRectangle = new Rectangle(EntityStatsContainerWidth / 2 + 12, 48, 24, 24),
-                BackroundTexture = Engine.SpritesheetTexture,
+                BackgroundTexture = Engine.SpritesheetTexture,
                 BackgroundTextureArea = new Rectangle(96, 24, 24, 24)
             };
 
