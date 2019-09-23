@@ -288,19 +288,17 @@ namespace DeepSwarmClient
                 for (var x = 0; x < tilesPerRow; x++)
                 {
                     var index = (startTileY + y) * Map.MapSize + (startTileX + x);
+                    var tile = (int)Engine.Map.Tiles[index];
 
-                    var rect = new SDL.SDL_Rect
+                    var sourceRect = Desktop.ToSDL_Rect(new Rectangle(24 * (5 + tile), 0, 24, 24));
+                    var destRect = new SDL.SDL_Rect
                     {
                         x = (startTileX + x) * Map.TileSize - (int)Engine.ScrollingPixelsX,
                         y = (startTileY + y) * Map.TileSize - (int)Engine.ScrollingPixelsY,
                         w = Map.TileSize,
                         h = Map.TileSize
                     };
-
-                    var color = new Color(Map.TileColors[(int)Engine.Map.Tiles[index]]);
-                    color.UseAsDrawColor(Engine.Renderer);
-
-                    SDL.SDL_RenderFillRect(Engine.Renderer, ref rect);
+                    SDL.SDL_RenderCopy(Engine.Renderer, Engine.SpritesheetTexture, ref sourceRect, ref destRect);
                 }
             }
 

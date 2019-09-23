@@ -21,20 +21,6 @@ namespace DeepSwarmCommon
             Crystal1, Crystal2, Crystal3, Crystal4, Crystal5
         }
 
-        public static readonly uint[] TileColors = new uint[] {
-            0x000000ff, // Unknown
-            0x625b5bff, // Rock
-            0x51260aff, // Dirt1
-            0x69270aff, // Dirt2
-            0x912a0aff, // Dirt3
-            0x271104ff, // Path
-            0x16d8acff, // Crystal1
-            0x66deb9ff, // Crystal2
-            0x80e1c2ff, // Crystal3
-            0xb0ead5ff, // Crystal4
-            0xdff5edff, // Crystal5
-        };
-
         [Flags]
         enum ConnectionFlags : byte
         {

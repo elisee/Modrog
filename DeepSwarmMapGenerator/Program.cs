@@ -1,6 +1,7 @@
 using DeepSwarmCommon;
 using SDL2;
 using System;
+using System.IO;
 using System.Runtime.InteropServices;
 using static DeepSwarmCommon.Map;
 
@@ -14,12 +15,13 @@ namespace DeepSwarmMapGenerator
             SDL.SDL_Init(SDL.SDL_INIT_VIDEO);
             SDL.SDL_CreateWindowAndRenderer(MapSize, MapSize, 0, out var window, out var renderer);
 
+            if (SDL_image.IMG_Init(SDL_image.IMG_InitFlags.IMG_INIT_PNG) != (int)SDL_image.IMG_InitFlags.IMG_INIT_PNG) throw new Exception();
+
+            var assetsPath = FileHelper.FindAppFolder("Assets");
+            var spritesheetTexture = SDL_image.IMG_LoadTexture(renderer, Path.Combine(assetsPath, "Spritesheet.png"));
+
             var map = new Map();
-
-            var mapTexture = SDL.SDL_CreateTexture(renderer, SDL.SDL_PIXELFORMAT_RGB888, (int)SDL.SDL_TextureAccess.SDL_TEXTUREACCESS_STREAMING, MapSize, MapSize);
-            var mapRect = new SDL.SDL_Rect { x = 0, y = 0, w = MapSize, h = MapSize };
-
-            MakeMap();
+            map.Generate();
 
             var isRunning = true;
 
@@ -31,39 +33,29 @@ namespace DeepSwarmMapGenerator
                     {
                         case SDL.SDL_EventType.SDL_QUIT: isRunning = false; break;
                         case SDL.SDL_EventType.SDL_WINDOWEVENT: if (@event.window.windowEvent == SDL.SDL_WindowEventID.SDL_WINDOWEVENT_CLOSE) isRunning = false; break;
-                        case SDL.SDL_EventType.SDL_KEYDOWN: if (@event.key.keysym.sym == SDL.SDL_Keycode.SDLK_RETURN) MakeMap(); break;
+                        case SDL.SDL_EventType.SDL_KEYDOWN: if (@event.key.keysym.sym == SDL.SDL_Keycode.SDLK_RETURN) map.Generate(); break;
                     }
                 }
 
                 if (!isRunning) break;
 
                 SDL.SDL_RenderClear(renderer);
-                SDL.SDL_RenderCopy(renderer, mapTexture, ref mapRect, ref mapRect);
-                SDL.SDL_RenderPresent(renderer);
-            }
 
-
-            void MakeMap()
-            {
-                map.Generate();
-
-                SDL.SDL_LockTexture(mapTexture, IntPtr.Zero, out var pixels, out var pitch);
-
-                unsafe
+                for (var y = 0; y < MapSize; y++)
                 {
-                    for (var index = 0; index < map.Tiles.Length; index++)
+                    for (var x = 0; x < MapSize; x++)
                     {
-                        uint color = Map.TileColors[(int)map.Tiles[index]];
+                        var index = y * MapSize + x;
+                        var tile = (int)map.Tiles[index];
 
-                        Marshal.WriteByte(pixels + index * 4 + 0, (byte)(color >> 8));
-                        Marshal.WriteByte(pixels + index * 4 + 1, (byte)(color >> 16));
-                        Marshal.WriteByte(pixels + index * 4 + 2, (byte)(color >> 24));
+                        var sourceRect = new SDL.SDL_Rect { x = TileSize * (5 + tile), y = 0, w = 1, h = 1 };
+                        var destRect = new SDL.SDL_Rect { x = x, y = y, w = 1, h = 1 };
+                        SDL.SDL_RenderCopy(renderer, spritesheetTexture, ref sourceRect, ref destRect);
                     }
                 }
 
-                SDL.SDL_UnlockTexture(mapTexture);
+                SDL.SDL_RenderPresent(renderer);
             }
-
         }
     }
 }
