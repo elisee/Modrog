@@ -92,6 +92,8 @@ namespace DeepSwarmClient
             }
 
             ScriptsPath = Path.Combine(AppContext.BaseDirectory, "Scripts");
+            if (!Directory.Exists(ScriptsPath)) Directory.CreateDirectory(ScriptsPath);
+
             foreach (var scriptFilePath in Directory.EnumerateFiles(ScriptsPath, "*.lua", SearchOption.AllDirectories))
             {
                 var relativeFilePath = scriptFilePath.Substring(ScriptsPath.Length + 1);
