@@ -1,4 +1,5 @@
-﻿using SDL2;
+﻿using DeepSwarmCommon;
+using SDL2;
 using System;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -11,6 +12,8 @@ namespace DeepSwarmClient.UI
 
         public Element RootElement { get; private set; }
         public Element FocusedElement;
+
+        public static SDL.SDL_Rect ToSDL_Rect(Rectangle rect) => new SDL.SDL_Rect { x = rect.X, y = rect.Y, w = rect.Width, h = rect.Height };
 
         public Desktop(IntPtr renderer)
         {

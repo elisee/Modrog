@@ -57,7 +57,7 @@ namespace DeepSwarmClient
             for (var i = 0; i < Engine.PlayerList.Count; i++)
             {
                 var entry = Engine.PlayerList[i];
-                var label = new Label(Desktop, _playerListPopup) { Text = $"[{entry.Team.ToString()}] {entry.Name}" };
+                var label = new Label(Desktop, _playerListPopup) { Text = $"[{entry.Team.ToString()}] {entry.Name}{(entry.IsOnline ? "" : " (offline)")}" };
                 label.AnchorRectangle = new Rectangle(16, 16 + 16 * i, _playerListPopup.AnchorRectangle.Width, 16);
             }
 
@@ -76,30 +76,51 @@ namespace DeepSwarmClient
             var startTileX = (int)Engine.ScrollingPixelsX / Map.TileSize;
             var startTileY = (int)Engine.ScrollingPixelsY / Map.TileSize;
 
-            var tilesPerRow = (int)Math.Ceiling((float)Engine.Viewport.Width / Map.TileSize + 1);
-            var tilesPerColumn = (int)Math.Ceiling((float)Engine.Viewport.Height / Map.TileSize + 1);
+            var tilesPerRow = (int)MathF.Ceiling((float)Engine.Viewport.Width / Map.TileSize + 1);
+            var tilesPerColumn = (int)MathF.Ceiling((float)Engine.Viewport.Height / Map.TileSize + 1);
+
+            var tileViewport = new Rectangle(startTileX, startTileY, tilesPerRow, tilesPerColumn);
 
             for (var y = 0; y < tilesPerColumn; y++)
             {
                 for (var x = 0; x < tilesPerRow; x++)
                 {
                     var index = (startTileY + y) * Map.MapSize + (startTileX + x);
-                    var color = new Color(Map.TileColors[(int)Engine.Map.Tiles[index]]);
 
+                    var color = new Color(Map.TileColors[(int)Engine.Map.Tiles[index]]);
                     color.UseAsDrawColor(Engine.Renderer);
 
                     var rect = new SDL.SDL_Rect
                     {
                         x = (startTileX + x) * Map.TileSize - (int)Engine.ScrollingPixelsX,
                         y = (startTileY + y) * Map.TileSize - (int)Engine.ScrollingPixelsY,
-                        // x = x * Map.TileSize,
-                        // y = y * Map.TileSize,
                         w = Map.TileSize,
                         h = Map.TileSize
                     };
 
                     SDL.SDL_RenderFillRect(Engine.Renderer, ref rect);
                 }
+            }
+
+            foreach (var entity in Engine.Map.Entities)
+            {
+                if (!tileViewport.Contains(entity.X, entity.Y)) continue;
+
+                var stats = Entity.EntityStatsByType[(int)entity.Type];
+                var color = new Color(stats.NeutralColor);
+                if (entity.PlayerIndex != -1) color.RGBA = Engine.PlayerList[entity.PlayerIndex].Team == Player.PlayerTeam.Blue ? stats.BlueColor : stats.RedColor;
+
+                color.UseAsDrawColor(Engine.Renderer);
+
+                var rect = new SDL.SDL_Rect
+                {
+                    x = (entity.X) * Map.TileSize - (int)Engine.ScrollingPixelsX,
+                    y = (entity.Y) * Map.TileSize - (int)Engine.ScrollingPixelsY,
+                    w = Map.TileSize,
+                    h = Map.TileSize
+                };
+
+                SDL.SDL_RenderFillRect(Engine.Renderer, ref rect);
             }
         }
     }

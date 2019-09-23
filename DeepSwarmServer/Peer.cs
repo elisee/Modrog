@@ -8,7 +8,6 @@ namespace DeepSwarmServer
         public enum PeerStage
         {
             WaitingForHandshake,
-            WaitingForName,
             Playing,
         }
 

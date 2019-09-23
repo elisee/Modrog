@@ -6,5 +6,6 @@ namespace DeepSwarmClient
     {
         public string Name;
         public PlayerTeam Team;
+        public bool IsOnline;
     }
 }

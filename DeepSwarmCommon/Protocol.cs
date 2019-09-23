@@ -8,9 +8,16 @@
 
         public enum ServerPacketType : byte
         {
+            SetupPlayerIndex,
             PlayerList,
-            Setup,
             Tick,
+            Chat,
+        }
+
+        public enum ClientPacketType : byte
+        {
+            Tick,
+            Chat,
         }
     }
 }

@@ -1,8 +1,6 @@
-﻿using SDL2;
-
-namespace DeepSwarmClient.UI
+﻿namespace DeepSwarmCommon
 {
-    struct Rectangle
+    public struct Rectangle
     {
         public int X;
         public int Y;
@@ -21,7 +19,5 @@ namespace DeepSwarmClient.UI
         {
             return x >= X && y >= Y && x < X + Width && y < Y + Height;
         }
-
-        public SDL.SDL_Rect ToSDL_Rect() => new SDL.SDL_Rect { x = X, y = Y, w = Width, h = Height };
     }
 }

@@ -15,7 +15,6 @@ namespace DeepSwarmClient
 {
     class Engine
     {
-
         public readonly Rectangle Viewport = new Rectangle(0, 0, 1280, 720);
         public readonly IntPtr Window;
         public readonly IntPtr Renderer;
@@ -27,6 +26,7 @@ namespace DeepSwarmClient
 
         public readonly Guid SelfGuid;
         public readonly List<PlayerListEntry> PlayerList = new List<PlayerListEntry>();
+        public int SelfPlayerIndex = -1;
         public int SelfBaseChunkX { get; private set; }
         public int SelfBaseChunkY { get; private set; }
 
@@ -90,11 +90,6 @@ namespace DeepSwarmClient
 
             _socket.Connect(new IPEndPoint(IPAddress.Loopback, Protocol.Port));
 
-            _writer.ResetCursor();
-            _writer.WriteByteLengthString(Protocol.VersionString);
-            _writer.WriteBytes(SelfGuid.ToByteArray());
-            _socket.Send(_writer.Buffer, 0, _writer.Cursor, SocketFlags.None);
-
             Desktop.SetRootElement(EnterNameView);
             Desktop.FocusedElement = EnterNameView.NameInput;
 
@@ -112,18 +107,17 @@ namespace DeepSwarmClient
                 // Network
                 if (_socket.Poll(0, SelectMode.SelectRead))
                 {
-                    int bytesRead;
-                    try { bytesRead = _socket.Receive(_reader.Buffer); }
-                    catch (SocketException) { OnDisconnectedFromServer(); break; }
-                    if (bytesRead == 0) { OnDisconnectedFromServer(); break; }
+                    int bytesRead = 0;
+                    try { bytesRead = _socket.Receive(_reader.Buffer); } catch (SocketException) { }
 
-                    Trace.WriteLine($"Received {bytesRead} bytes.");
-
-                    void OnDisconnectedFromServer()
+                    if (bytesRead == 0)
                     {
                         Trace.WriteLine($"Disconnected from server.");
-                        isRunning = false;
+                        // isRunning = false;
+                        break;
                     }
+
+                    Trace.WriteLine($"Received {bytesRead} bytes.");
 
                     void Abort(string reason)
                     {
@@ -134,54 +128,59 @@ namespace DeepSwarmClient
 
                     _reader.ResetCursor();
 
-                    while (_reader.Cursor < bytesRead)
+                    while (isRunning && _reader.Cursor < bytesRead)
                     {
                         try
                         {
-                            switch (ActiveStage)
+                            var packetType = (Protocol.ServerPacketType)_reader.ReadByte();
+
+                            bool EnsureStage(EngineStage stage)
                             {
-                                case EngineStage.EnterName:
-                                    Abort($"Received packet during {nameof(EngineStage.EnterName)} stage.");
+                                if (ActiveStage == stage) return true;
+                                Abort($"Received packet {packetType} during wrong stage (expected {stage} but in {ActiveStage}.");
+                                return false;
+                            }
+
+                            bool EnsureLoadingOrPlayingStage()
+                            {
+                                if (ActiveStage == EngineStage.Loading || ActiveStage == EngineStage.Playing) return true;
+                                Abort($"Received packet {packetType} during wrong stage (expected Loading or Playing but in {ActiveStage}.");
+                                return false;
+                            }
+
+                            switch (packetType)
+                            {
+                                case ServerPacketType.SetupPlayerIndex:
+                                    if (!EnsureStage(EngineStage.Loading)) break;
+                                    SelfPlayerIndex = _reader.ReadInt();
                                     break;
 
-                                case EngineStage.Loading:
-                                    {
-                                        var packetType = (Protocol.ServerPacketType)_reader.ReadByte();
-
-                                        switch (packetType)
-                                        {
-                                            case ServerPacketType.PlayerList:
-                                                ReadPlayerList();
-                                                break;
-                                            case ServerPacketType.Setup:
-                                                SelfBaseChunkX = _reader.ReadShort();
-                                                SelfBaseChunkY = _reader.ReadShort();
-                                                ReadMapArea();
-
-                                                ActiveStage = EngineStage.Playing;
-                                                ScrollingPixelsX = (int)((SelfBaseChunkX + 0.5f) * Map.ChunkSize * Map.TileSize) - Viewport.Width / 2;
-                                                ScrollingPixelsY = (int)((SelfBaseChunkY + 0.5f) * Map.ChunkSize * Map.TileSize) - Viewport.Height / 2;
-
-                                                Desktop.SetRootElement(InGameView);
-                                                Desktop.FocusedElement = InGameView;
-                                                break;
-                                            default:
-                                                Abort($"Received unexpected packet type during {nameof(EngineStage.Loading)}: {packetType}");
-                                                break;
-                                        }
-                                    }
+                                case ServerPacketType.PlayerList:
+                                    if (!EnsureLoadingOrPlayingStage()) break;
+                                    ReadPlayerList();
                                     break;
 
-                                case EngineStage.Playing:
+                                case ServerPacketType.Chat:
+                                    if (!EnsureLoadingOrPlayingStage()) break;
+                                    ReadChat();
+                                    break;
+
+                                case ServerPacketType.Tick:
+                                    if (!EnsureLoadingOrPlayingStage()) break;
+                                    if (SelfPlayerIndex == -1) { Abort("Received tick before receiving self player index."); break; }
+
+                                    ReadTick();
+
+                                    if (ActiveStage == EngineStage.Loading)
                                     {
-                                        var packetType = (Protocol.ServerPacketType)_reader.ReadByte();
-                                        switch (packetType)
-                                        {
-                                            case ServerPacketType.PlayerList: ReadPlayerList(); break;
-                                            case ServerPacketType.Tick: ReadTick(); break;
-                                            default: Abort($"Received invalid packet type: {packetType}"); break;
-                                        }
+                                        ScrollingPixelsX = (int)((SelfBaseChunkX + 0.5f) * Map.ChunkSize * Map.TileSize) - Viewport.Width / 2;
+                                        ScrollingPixelsY = (int)((SelfBaseChunkY + 0.5f) * Map.ChunkSize * Map.TileSize) - Viewport.Height / 2;
+
+                                        Desktop.SetRootElement(InGameView);
+                                        Desktop.FocusedElement = InGameView;
+                                        ActiveStage = EngineStage.Playing;
                                     }
+
                                     break;
                             }
                         }
@@ -260,10 +259,15 @@ namespace DeepSwarmClient
 
             if (dx != 0 || dy != 0)
             {
-                var angle = Math.Atan2(dy, dx);
-                ScrollingPixelsX += (float)Math.Cos(angle) * ScrollingSpeed * deltaTime;
-                ScrollingPixelsY -= (float)Math.Sin(angle) * ScrollingSpeed * deltaTime;
+                var angle = MathF.Atan2(dy, dx);
+                ScrollingPixelsX += MathF.Cos(angle) * ScrollingSpeed * deltaTime;
+                ScrollingPixelsY -= MathF.Sin(angle) * ScrollingSpeed * deltaTime;
             }
+        }
+
+        void Send()
+        {
+            try { _socket.Send(_writer.Buffer, 0, _writer.Cursor, SocketFlags.None); } catch { }
         }
 
         public void SetName(string name)
@@ -273,8 +277,10 @@ namespace DeepSwarmClient
             Desktop.FocusedElement = null;
 
             _writer.ResetCursor();
+            _writer.WriteByteLengthString(Protocol.VersionString);
+            _writer.WriteBytes(SelfGuid.ToByteArray());
             _writer.WriteByteLengthString(name);
-            _socket.Send(_writer.Buffer, 0, _writer.Cursor, SocketFlags.None);
+            Send();
         }
 
         void ReadPlayerList()
@@ -286,15 +292,21 @@ namespace DeepSwarmClient
             for (var i = 0; i < playerCount; i++)
             {
                 var name = _reader.ReadByteSizeString();
-                var team = _reader.ReadByte() == 0 ? PlayerTeam.Blue : PlayerTeam.Red;
+                var team = (PlayerTeam)_reader.ReadByte();
+                var isOnline = _reader.ReadByte() == 0;
 
-                PlayerList.Add(new PlayerListEntry { Name = name, Team = team });
+                PlayerList.Add(new PlayerListEntry { Name = name, Team = team, IsOnline = isOnline });
             }
 
             InGameView.OnPlayerListUpdated();
         }
 
-        void ReadMapArea()
+        void ReadChat()
+        {
+            // TODO
+        }
+
+        /* void ReadMapArea()
         {
             var x = _reader.ReadShort();
             var y = _reader.ReadShort();
@@ -303,11 +315,40 @@ namespace DeepSwarmClient
 
             var area = _reader.ReadBytes(width * height).ToArray();
             for (var j = 0; j < height; j++) Buffer.BlockCopy(area, j * width, Map.Tiles, (y + j) * Map.MapSize + x, width);
-        }
+        } */
 
         void ReadTick()
         {
+            Map.Entities.Clear();
 
+            // TODO: Handle fog of war with an additional array holding whether each tile is currently being seen or not
+
+            var seenEntitiesCount = _reader.ReadShort();
+            for (var i = 0; i < seenEntitiesCount; i++)
+            {
+                var x = (int)_reader.ReadShort();
+                var y = (int)_reader.ReadShort();
+                var playerIndex = _reader.ReadShort();
+                var type = (Entity.EntityType)_reader.ReadByte();
+                var direction = (Entity.EntityDirection)_reader.ReadByte();
+                var health = (int)_reader.ReadByte();
+                var entity = new Entity(type, playerIndex, x, y, direction) { Health = health };
+                Map.Entities.Add(entity);
+
+                if (playerIndex == SelfPlayerIndex && type == Entity.EntityType.Factory)
+                {
+                    SelfBaseChunkX = x / Map.ChunkSize;
+                    SelfBaseChunkY = y / Map.ChunkSize;
+                }
+            }
+
+            var seenTilesCount = _reader.ReadShort();
+            for (var i = 0; i < seenTilesCount; i++)
+            {
+                var x = _reader.ReadShort();
+                var y = _reader.ReadShort();
+                Map.Tiles[y * Map.MapSize + x] = _reader.ReadByte();
+            }
         }
     }
 }

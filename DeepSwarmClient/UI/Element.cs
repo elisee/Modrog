@@ -1,4 +1,5 @@
-﻿using SDL2;
+﻿using DeepSwarmCommon;
+using SDL2;
 using System.Collections.Generic;
 using System.Diagnostics;
 
@@ -83,7 +84,7 @@ namespace DeepSwarmClient.UI
         {
             if (BackgroundColor.A != 0)
             {
-                var rect = _layoutRectangle.ToSDL_Rect();
+                var rect = Desktop.ToSDL_Rect(_layoutRectangle);
                 BackgroundColor.UseAsDrawColor(Desktop.Renderer);
                 SDL.SDL_RenderFillRect(Desktop.Renderer, ref rect);
             }

@@ -39,31 +39,85 @@ namespace DeepSwarmCommon
         public readonly List<int> FreeChunkIndices = new List<int>();
 
         public readonly Dictionary<Guid, Player> PlayersByGuid = new Dictionary<Guid, Player>();
-        public readonly List<Robot> Robots = new List<Robot>();
+        public readonly List<Player> PlayersInOrder = new List<Player>();
+
+        public readonly List<Entity> Entities = new List<Entity>();
+
+        public int BluePlayerCount = 0;
+        public int RedPlayerCount = 0;
 
         public void LoadFromFile(string path)
         {
-            using (var file = File.OpenRead(path))
-            using (var mapReader = new BinaryReader(file))
-            {
-                mapReader.Read(Tiles, 0, Tiles.Length);
-                var freeChunksCount = mapReader.ReadInt32();
-                for (var i = 0; i < freeChunksCount; i++) FreeChunkIndices.Add(mapReader.ReadInt32());
+            using var file = File.OpenRead(path);
+            using var mapReader = new BinaryReader(file);
 
-                // TODO: Load players & robots
+            mapReader.Read(Tiles, 0, Tiles.Length);
+            var freeChunksCount = mapReader.ReadInt32();
+            for (var i = 0; i < freeChunksCount; i++) FreeChunkIndices.Add(mapReader.ReadInt32());
+
+            var playerCount = mapReader.ReadInt32();
+            for (var i = 0; i < playerCount; i++)
+            {
+                var player = new Player
+                {
+                    Guid = new Guid(mapReader.ReadBytes(16)),
+                    Name = mapReader.ReadString(),
+                    Team = (Player.PlayerTeam)mapReader.ReadByte(),
+                    BaseChunkX = mapReader.ReadInt16(),
+                    BaseChunkY = mapReader.ReadInt16(),
+                    PlayerIndex = PlayersInOrder.Count
+                };
+
+                if (player.Team == Player.PlayerTeam.Blue) BluePlayerCount++;
+                else if (player.Team == Player.PlayerTeam.Red) RedPlayerCount++;
+
+                PlayersInOrder.Add(player);
+                PlayersByGuid.Add(player.Guid, player);
+            }
+
+            var entitiesCount = mapReader.ReadInt32();
+            for (var i = 0; i < entitiesCount; i++)
+            {
+                var x = mapReader.ReadInt16();
+                var y = mapReader.ReadInt16();
+                var playerIndex = (int)mapReader.ReadByte();
+                var type = (Entity.EntityType)mapReader.ReadByte();
+                var direction = (Entity.EntityDirection)mapReader.ReadByte();
+                var entity = MakeEntity(type, playerIndex, x, y, direction);
+
+                entity.Health = mapReader.ReadByte();
+
             }
         }
 
         public void SaveToFile(string path)
         {
-            using (var file = File.OpenWrite(path))
-            using (var mapWriter = new BinaryWriter(file))
-            {
-                mapWriter.Write(Tiles, 0, Tiles.Length);
-                mapWriter.Write(FreeChunkIndices.Count);
-                foreach (var freeChunkIndex in FreeChunkIndices) mapWriter.Write(freeChunkIndex);
+            using var file = File.OpenWrite(path);
+            using var mapWriter = new BinaryWriter(file);
 
-                // TODO: Save players & robots
+            mapWriter.Write(Tiles, 0, Tiles.Length);
+            mapWriter.Write(FreeChunkIndices.Count);
+            foreach (var freeChunkIndex in FreeChunkIndices) mapWriter.Write(freeChunkIndex);
+
+            mapWriter.Write(PlayersByGuid.Count);
+            foreach (var player in PlayersInOrder)
+            {
+                mapWriter.Write(player.Guid.ToByteArray());
+                mapWriter.Write(player.Name);
+                mapWriter.Write((byte)player.Team);
+                mapWriter.Write((short)player.BaseChunkX);
+                mapWriter.Write((short)player.BaseChunkY);
+            }
+
+            mapWriter.Write(Entities.Count);
+            foreach (var entity in Entities)
+            {
+                mapWriter.Write((short)entity.X);
+                mapWriter.Write((short)entity.Y);
+                mapWriter.Write((byte)entity.PlayerIndex);
+                mapWriter.Write((byte)entity.Type);
+                mapWriter.Write((byte)entity.Direction);
+                mapWriter.Write((byte)entity.Health);
             }
         }
 
@@ -166,7 +220,7 @@ namespace DeepSwarmCommon
                 {
                     for (var i = x - radius; i <= x + radius; i++)
                     {
-                        if (Peek(i, j) == tile) return true;
+                        if (PeekTile(i, j) == tile) return true;
                     }
                 }
 
@@ -184,7 +238,7 @@ namespace DeepSwarmCommon
                 var x = x1;
                 var y = y1;
 
-                Poke(x, y, Tile.Path);
+                PokeTile(x, y, Tile.Path);
 
                 while (true)
                 {
@@ -202,7 +256,7 @@ namespace DeepSwarmCommon
                     {
                         for (var u = 0; u < size; u++)
                         {
-                            Poke(x - size / 2 + u, y - size / 2 + v, Tile.Path);
+                            PokeTile(x - size / 2 + u, y - size / 2 + v, Tile.Path);
                         }
                     }
                 }
@@ -215,12 +269,12 @@ namespace DeepSwarmCommon
             {
                 for (var i = x - radius; i <= x + radius; i++)
                 {
-                    if (Math.Ceiling(Math.Pow(i - x, 2) + Math.Pow(j - y, 2)) <= radius * radius) Poke(i, j, tile);
+                    if (MathF.Ceiling(MathF.Pow(i - x, 2) + MathF.Pow(j - y, 2)) <= radius * radius) PokeTile(i, j, tile);
                 }
             }
         }
 
-        void Poke(int x, int y, Tile tile)
+        void PokeTile(int x, int y, Tile tile)
         {
             if (x < 0) x += MapSize;
             if (x >= MapSize) x -= MapSize;
@@ -231,7 +285,7 @@ namespace DeepSwarmCommon
             Tiles[y * MapSize + x] = (byte)tile;
         }
 
-        Tile Peek(int x, int y)
+        public Tile PeekTile(int x, int y)
         {
             if (x < 0) x += MapSize;
             if (x >= MapSize) x -= MapSize;
@@ -240,6 +294,46 @@ namespace DeepSwarmCommon
             if (y >= MapSize) y -= MapSize;
 
             return (Tile)Tiles[y * MapSize + x];
+        }
+
+        public Entity MakeEntity(Entity.EntityType type, int playerIndex, int x, int y, Entity.EntityDirection direction)
+        {
+            var entity = new Entity(type, playerIndex, x, y, direction);
+            Entities.Add(entity);
+            if (playerIndex != -1) PlayersInOrder[playerIndex].OwnedEntities.Add(entity);
+            return entity;
+        }
+
+        public Entity PeekEntity(int x, int y)
+        {
+            // TODO: Optimize with space partitioning
+            for (var i = 0; i < Entities.Count; i++)
+            {
+                if (Entities[i].X == x && Entities[i].Y == y) return Entities[i];
+            }
+
+            return null;
+        }
+
+        // http://www.roguebasin.com/index.php?title=Bresenham%27s_Line_Algorithm
+        public bool HasLineOfSight(int x0, int y0, int x1, int y1)
+        {
+            static void Swap<T>(ref T lhs, ref T rhs) { T temp; temp = lhs; lhs = rhs; rhs = temp; }
+            bool IsTileTransparent(int x, int y) => PeekTile(x, y) == Tile.Path;
+
+            bool steep = Math.Abs(y1 - y0) > Math.Abs(x1 - x0);
+            if (steep) { Swap(ref x0, ref y0); Swap(ref x1, ref y1); }
+            if (x0 > x1) { Swap(ref x0, ref x1); Swap(ref y0, ref y1); }
+            int dX = (x1 - x0), dY = Math.Abs(y1 - y0), err = (dX / 2), ystep = (y0 < y1 ? 1 : -1), y = y0;
+
+            for (int x = x0; x <= x1; ++x)
+            {
+                if (!(steep ? IsTileTransparent(y, x) : IsTileTransparent(x, y))) return false;
+                err = err - dY;
+                if (err < 0) { y += ystep; err += dX; }
+            }
+
+            return true;
         }
     }
 }
