@@ -45,9 +45,11 @@ namespace DeepSwarmClient.UI
             if (Desktop.FocusedElement == this)
             {
                 new Color(0xffffffff).UseAsDrawColor(Desktop.Renderer);
-                SDL.SDL_RenderDrawLine(Desktop.Renderer,
-                    LayoutRectangle.X + Value.Length * 16, LayoutRectangle.Y,
-                    LayoutRectangle.X + Value.Length * 16, LayoutRectangle.Y + LayoutRectangle.Height);
+
+                var cursorRect = Desktop.ToSDL_Rect(new DeepSwarmCommon.Rectangle(
+                    LayoutRectangle.X + Value.Length * RendererHelper.FontRenderSize, LayoutRectangle.Y,
+                    2, LayoutRectangle.Height));
+                SDL.SDL_RenderDrawRect(Desktop.Renderer, ref cursorRect);
             }
         }
     }
