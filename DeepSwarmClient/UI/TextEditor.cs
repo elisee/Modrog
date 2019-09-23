@@ -13,6 +13,9 @@ namespace DeepSwarmClient.UI
         public int CursorX;
         public int CursorY;
 
+        public int ScrollingPixelsX;
+        public int ScrollingPixelsY;
+
         public TextEditor(Desktop desktop, Element parent)
             : base(desktop, parent)
         {
@@ -43,6 +46,8 @@ namespace DeepSwarmClient.UI
                     CursorY--;
                     CursorX = Lines[CursorY].Length;
                 }
+
+                ClampScrolling();
             }
 
             void GoRight()
@@ -53,6 +58,8 @@ namespace DeepSwarmClient.UI
                     CursorY++;
                     CursorX = 0;
                 }
+
+                ClampScrolling();
             }
 
             void GoUp()
@@ -66,6 +73,8 @@ namespace DeepSwarmClient.UI
                 {
                     CursorX = 0;
                 }
+
+                ClampScrolling();
             }
 
             void GoDown()
@@ -79,6 +88,8 @@ namespace DeepSwarmClient.UI
                 {
                     CursorX = Lines[CursorY].Length;
                 }
+
+                ClampScrolling();
             }
 
             void Erase()
@@ -97,6 +108,8 @@ namespace DeepSwarmClient.UI
                     Lines[CursorY] += line;
                     CursorX = Lines[CursorY].Length;
                 }
+
+                ClampScrolling();
             }
 
             void Delete()
@@ -112,6 +125,8 @@ namespace DeepSwarmClient.UI
                     Lines[CursorY] += Lines[CursorY + 1];
                     Lines.RemoveAt(CursorY + 1);
                 }
+
+                ClampScrolling();
             }
 
             void BreakLine()
@@ -136,6 +151,8 @@ namespace DeepSwarmClient.UI
                     CursorY++;
                     Lines.Insert(CursorY, endOfLine);
                 }
+
+                ClampScrolling();
             }
         }
 
@@ -149,6 +166,17 @@ namespace DeepSwarmClient.UI
             if (button == 1)
             {
                 Desktop.FocusedElement = this;
+                var x = Desktop.MouseX + ScrollingPixelsX - LayoutRectangle.X;
+                var y = Desktop.MouseY + ScrollingPixelsY - LayoutRectangle.Y;
+            }
+        }
+
+        public override void OnMouseWheel(int dx, int dy)
+        {
+            if (dy != 0)
+            {
+                ScrollingPixelsY -= dy * 16;
+                ClampScrolling();
             }
         }
 
@@ -157,23 +185,43 @@ namespace DeepSwarmClient.UI
             var line = Lines[CursorY];
             Lines[CursorY] = line.Substring(0, CursorX) + text + line.Substring(CursorX);
             CursorX += text.Length;
+            ClampScrolling();
+        }
+
+        void ClampScrolling()
+        {
+            ScrollingPixelsY = Math.Clamp(ScrollingPixelsY,
+                Math.Max(0, (CursorY + 1) * RendererHelper.FontRenderSize - LayoutRectangle.Height),
+                Math.Max(0, Math.Min(CursorY * RendererHelper.FontRenderSize, Lines.Count * RendererHelper.FontRenderSize - LayoutRectangle.Height)));
         }
 
         protected override void DrawSelf()
         {
             base.DrawSelf();
 
-            for (var y = 0; y < Lines.Count; y++)
+            var startY = ScrollingPixelsY / RendererHelper.FontRenderSize;
+            var endY = Math.Min(Lines.Count - 1, (ScrollingPixelsY + LayoutRectangle.Height) / RendererHelper.FontRenderSize);
+
+            var clipRect = Desktop.ToSDL_Rect(LayoutRectangle);
+            SDL.SDL_RenderSetClipRect(Desktop.Renderer, ref clipRect);
+
+            for (var y = startY; y <= endY; y++)
             {
-                RendererHelper.DrawText(Desktop.Renderer, LayoutRectangle.X, LayoutRectangle.Y + y * RendererHelper.FontRenderSize, Lines[y], TextColor);
+                RendererHelper.DrawText(Desktop.Renderer,
+                    LayoutRectangle.X - ScrollingPixelsX,
+                    LayoutRectangle.Y + y * RendererHelper.FontRenderSize - ScrollingPixelsY,
+                    Lines[y], TextColor);
             }
+
+            SDL.SDL_RenderSetClipRect(Desktop.Renderer, IntPtr.Zero);
 
             if (Desktop.FocusedElement == this)
             {
                 new Color(0xffffffff).UseAsDrawColor(Desktop.Renderer);
 
                 var cursorRect = Desktop.ToSDL_Rect(new DeepSwarmCommon.Rectangle(
-                    LayoutRectangle.X + CursorX * RendererHelper.FontRenderSize, LayoutRectangle.Y + CursorY * RendererHelper.FontRenderSize,
+                    LayoutRectangle.X + CursorX * RendererHelper.FontRenderSize - ScrollingPixelsX,
+                    LayoutRectangle.Y + CursorY * RendererHelper.FontRenderSize - ScrollingPixelsY,
                     2, RendererHelper.FontRenderSize));
                 SDL.SDL_RenderDrawRect(Desktop.Renderer, ref cursorRect);
             }
