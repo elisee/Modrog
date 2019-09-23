@@ -57,6 +57,7 @@ namespace DeepSwarmServer
             var stopwatch = Stopwatch.StartNew();
             var accumulatedTime = 0f;
             const float TickInterval = 1000f / 2f;
+            int tickIndex = -1;
 
             while (!cancelTokenSource.IsCancellationRequested)
             {
@@ -72,7 +73,7 @@ namespace DeepSwarmServer
                     {
                         var newSocket = listenerSocket.Accept();
                         peerSockets.Add(newSocket);
-                        peersBySocket.Add(newSocket, new Peer { Socket = newSocket });
+                        peersBySocket.Add(newSocket, new Peer(newSocket));
                         Console.WriteLine($"{newSocket.RemoteEndPoint} - Socket connected.");
                     }
                     else
@@ -93,6 +94,9 @@ namespace DeepSwarmServer
                 Thread.Sleep(1);
             }
 
+            listenerSocket.Close();
+            cancelTokenSource.Dispose();
+
             Console.WriteLine($"Saving map to {mapFilePath} before quitting...");
             map.SaveToFile(mapFilePath);
             Console.WriteLine("Map saved, quitting.");
@@ -101,9 +105,7 @@ namespace DeepSwarmServer
             {
                 var peer = peersBySocket[socket];
 
-                int bytesRead = 0;
-                try { bytesRead = socket.Receive(reader.Buffer); } catch (SocketException) { }
-                if (bytesRead == 0) { KickPeer(null); return; }
+                if (!peer.Receiver.Read(out var packets)) { KickPeer(null); return; }
 
                 void KickPeer(string kickReason)
                 {
@@ -122,68 +124,110 @@ namespace DeepSwarmServer
                     else Console.WriteLine($"{endPoint} - Kicked: {kickReason}");
                 }
 
-                reader.ResetCursor();
-
-                switch (peer.Stage)
+                foreach (var packet in packets)
                 {
-                    case Peer.PeerStage.WaitingForHandshake:
-                        string versionString;
-                        try { versionString = reader.ReadByteSizeString(); }
-                        catch { KickPeer($"Invalid {nameof(Peer.PeerStage.WaitingForHandshake)} packet."); return; }
-                        if (versionString != Protocol.VersionString) { KickPeer($"Invalid protocol string, expected {Protocol.VersionString}, got {versionString}."); return; }
+                    reader.Open(packet);
 
-                        Guid playerGuid;
-                        try { playerGuid = new Guid(reader.ReadBytes(16)); if (playerGuid == Guid.Empty) throw new Exception(); }
-                        catch { KickPeer($"Received invalid player Guid."); return; }
+                    switch (peer.Stage)
+                    {
+                        case Peer.PeerStage.WaitingForHandshake:
+                            string versionString;
+                            try { versionString = reader.ReadByteSizeString(); }
+                            catch { KickPeer($"Invalid {nameof(Peer.PeerStage.WaitingForHandshake)} packet."); return; }
+                            if (versionString != Protocol.VersionString) { KickPeer($"Invalid protocol string, expected {Protocol.VersionString}, got {versionString}."); return; }
 
-                        string peerName;
-                        try { peerName = reader.ReadByteSizeString(); }
-                        catch { KickPeer($"Invalid {nameof(Peer.PeerStage.WaitingForHandshake)} packet."); return; }
-                        if (peerName.Length == 0 || peerName.Length > Protocol.MaxPlayerNameLength) { KickPeer($"Invalid player name: {peerName}."); return; }
+                            Guid playerGuid;
+                            try { playerGuid = new Guid(reader.ReadBytes(16)); if (playerGuid == Guid.Empty) throw new Exception(); }
+                            catch { KickPeer($"Received invalid player Guid."); return; }
 
-                        if (!peersByGuid.TryAdd(playerGuid, peer)) { KickPeer($"There is already someone connected with that Guid."); return; }
+                            string peerName;
+                            try { peerName = reader.ReadByteSizeString(); }
+                            catch { KickPeer($"Invalid {nameof(Peer.PeerStage.WaitingForHandshake)} packet."); return; }
+                            if (peerName.Length == 0 || peerName.Length > Protocol.MaxPlayerNameLength) { KickPeer($"Invalid player name: {peerName}."); return; }
 
-                        if (!map.PlayersByGuid.TryGetValue(playerGuid, out peer.Player))
-                        {
-                            peer.Player = new Player { Guid = playerGuid, PlayerIndex = map.PlayersInOrder.Count };
-                            map.PlayersInOrder.Add(peer.Player);
-                            map.PlayersByGuid.Add(playerGuid, peer.Player);
-                        }
+                            if (!peersByGuid.TryAdd(playerGuid, peer)) { KickPeer($"There is already someone connected with that Guid."); return; }
 
-                        peer.Player.Name = peerName;
-                        Console.WriteLine($"{socket.RemoteEndPoint} - Player name set to: " + peer.Player.Name);
+                            if (!map.PlayersByGuid.TryGetValue(playerGuid, out peer.Player))
+                            {
+                                peer.Player = new Player { Guid = playerGuid, PlayerIndex = map.PlayersInOrder.Count };
+                                map.PlayersInOrder.Add(peer.Player);
+                                map.PlayersByGuid.Add(playerGuid, peer.Player);
+                            }
 
-                        writer.ResetCursor();
-                        writer.WriteByte((byte)Protocol.ServerPacketType.SetupPlayerIndex);
-                        writer.WriteInt(peer.Player.PlayerIndex);
-                        Send(socket);
+                            peer.Player.Name = peerName;
+                            Console.WriteLine($"{socket.RemoteEndPoint} - Player name set to: " + peer.Player.Name);
 
-                        peer.Stage = Peer.PeerStage.Playing;
-                        playingPeers.Add(peer);
+                            writer.WriteByte((byte)Protocol.ServerPacketType.SetupPlayerIndex);
+                            writer.WriteInt(peer.Player.PlayerIndex);
+                            Send(socket);
 
-                        BroadcastPlayerList();
-                        break;
+                            peer.Stage = Peer.PeerStage.Playing;
+                            playingPeers.Add(peer);
 
-                    case Peer.PeerStage.Playing:
-                        // TODO: Read upcoming moves packet or chat
-                        break;
+                            BroadcastPlayerList();
+                            break;
+
+                        case Peer.PeerStage.Playing:
+                            var packetType = (Protocol.ClientPacketType)reader.ReadByte();
+
+                            switch (packetType)
+                            {
+                                case Protocol.ClientPacketType.Chat:
+                                    // throw new NotImplementedException();
+                                    break;
+
+                                case Protocol.ClientPacketType.Tick:
+                                    var clientTickIndex = reader.ReadInt();
+                                    if (clientTickIndex != tickIndex)
+                                    {
+                                        Console.WriteLine($"{socket.RemoteEndPoint} - Ignoring tick packet from tick {clientTickIndex}, we're at {tickIndex}.");
+                                        return;
+                                    }
+
+                                    var moveCount = reader.ReadShort();
+                                    for (var i = 0; i < moveCount; i++)
+                                    {
+                                        var entityId = reader.ReadInt();
+                                        var move = (Entity.EntityMove)reader.ReadByte();
+                                        if (!map.EntitiesById.TryGetValue(entityId, out var entity))
+                                        {
+                                            KickPeer($"Invalid entity id in tick packet.");
+                                            return;
+                                        }
+
+                                        if (entity.PlayerIndex != peer.Player.PlayerIndex)
+                                        {
+                                            KickPeer($"Can't move entity not owned in tick packet.");
+                                            return;
+                                        }
+
+                                        entity.UpcomingMove = move;
+                                    }
+
+                                    break;
+                            }
+                            break;
+                    }
                 }
             }
 
             void Broadcast()
             {
-                // Console.WriteLine($"Broadcasting {writer.Cursor} bytes");
+                var length = writer.Finish();
+                // Console.WriteLine($"Broadcasting {length} bytes");
 
                 foreach (var peer in playingPeers)
                 {
-                    try { peer.Socket.Send(writer.Buffer, 0, writer.Cursor, SocketFlags.None); } catch { }
+                    try { peer.Socket.Send(writer.Buffer, 0, length, SocketFlags.None); } catch { }
                 }
             }
 
             void Send(Socket socket)
             {
-                // Console.WriteLine($"Sending {writer.Cursor} bytes");
-                try { socket.Send(writer.Buffer, 0, writer.Cursor, SocketFlags.None); } catch { }
+                var length = writer.Finish();
+                // Console.WriteLine($"Sending {length} bytes");
+
+                try { socket.Send(writer.Buffer, 0, length, SocketFlags.None); } catch { }
             }
 
             /* void WriteMapArea(int x, int y, int width, int height)
@@ -203,7 +247,6 @@ namespace DeepSwarmServer
 
             void BroadcastPlayerList()
             {
-                writer.ResetCursor();
                 writer.WriteByte((byte)Protocol.ServerPacketType.PlayerList);
                 writer.WriteInt(map.PlayersInOrder.Count);
 
@@ -221,7 +264,11 @@ namespace DeepSwarmServer
 
             void Tick()
             {
+                tickIndex++;
+
                 // Spawn new players
+                var hasAnyoneChangedTeam = false;
+
                 foreach (var player in map.PlayersInOrder)
                 {
                     if (player.Team != Player.PlayerTeam.None) continue;
@@ -229,6 +276,7 @@ namespace DeepSwarmServer
                     player.Team = (map.BluePlayerCount <= map.RedPlayerCount) ? Player.PlayerTeam.Blue : Player.PlayerTeam.Red;
                     if (player.Team == Player.PlayerTeam.Blue) map.BluePlayerCount++;
                     else map.RedPlayerCount++;
+                    hasAnyoneChangedTeam = true;
 
                     var index = random.Next(map.FreeChunkIndices.Count);
                     var chunkIndex = map.FreeChunkIndices[index];
@@ -244,6 +292,10 @@ namespace DeepSwarmServer
                     map.MakeEntity(Entity.EntityType.Factory, player.PlayerIndex, centerX, centerY - 2, Entity.EntityDirection.Down);
                     map.MakeEntity(Entity.EntityType.Heart, player.PlayerIndex, centerX, centerY - 3, Entity.EntityDirection.Up);
                 }
+
+                map.AddUpcomingEntities();
+
+                if (hasAnyoneChangedTeam) BroadcastPlayerList();
 
                 // Apply planned moves
                 // TODO: Decide movement priority, maybe based on robot type or time the moves were received
@@ -268,6 +320,10 @@ namespace DeepSwarmServer
                             break;
 
                         case Entity.EntityMove.Build:
+                            if (entity.Type == Entity.EntityType.Factory)
+                            {
+                                map.MakeEntity(Entity.EntityType.Robot, entity.PlayerIndex, entity.X, entity.Y + 1, Entity.EntityDirection.Down);
+                            }
                             break;
 
                         case Entity.EntityMove.Idle:
@@ -276,6 +332,8 @@ namespace DeepSwarmServer
 
                     entity.UpcomingMove = Entity.EntityMove.Idle;
                 }
+
+                map.AddUpcomingEntities();
 
                 // TODO: Resolve damage
 
@@ -315,7 +373,10 @@ namespace DeepSwarmServer
                                 var targetX = ownedEntity.X + dx;
                                 var targetY = ownedEntity.Y + dy;
 
-                                var hasLineOfSight = map.HasLineOfSight(ownedEntity.X, ownedEntity.Y, targetX, targetY);
+                                var hasLineOfSight =
+                                    map.HasLineOfSight(ownedEntity.X, ownedEntity.Y, targetX, targetY) ||
+                                    map.HasLineOfSight(ownedEntity.X, ownedEntity.Y, targetX - Math.Sign(dx), targetY) ||
+                                    map.HasLineOfSight(ownedEntity.X, ownedEntity.Y, targetX, targetY - Math.Sign(dy));
                                 if (!hasLineOfSight) continue;
 
                                 seenTiles.TryAdd((targetX, targetY), map.PeekTile(targetX, targetY));
@@ -325,14 +386,15 @@ namespace DeepSwarmServer
                         }
                     }
 
-                    // TODO: Send seen tiles & seen entities
-                    writer.ResetCursor();
+                    // Send seen state to player
                     writer.WriteByte((byte)Protocol.ServerPacketType.Tick);
+                    writer.WriteInt(tickIndex);
 
                     writer.WriteShort((short)(player.OwnedEntities.Count + seenEntities.Count));
 
                     foreach (var entity in player.OwnedEntities)
                     {
+                        writer.WriteInt(entity.Id);
                         writer.WriteShort((short)entity.X);
                         writer.WriteShort((short)entity.Y);
                         writer.WriteShort((byte)entity.PlayerIndex);

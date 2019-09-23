@@ -5,7 +5,10 @@ namespace DeepSwarmClient.UI
     class Button : Element
     {
         public Color TextColor = new Color(0xffffffff);
+        public Color PressedTextColor = new Color(0xff0000ff);
         public string Text = "";
+
+        bool _isPressed;
 
         public Action OnActivate;
 
@@ -20,6 +23,15 @@ namespace DeepSwarmClient.UI
         {
             if (button == 1)
             {
+                _isPressed = true;
+            }
+        }
+
+        public override void OnMouseUp(int button)
+        {
+            if (button == 1)
+            {
+                _isPressed = false;
                 OnActivate?.Invoke();
             }
         }
@@ -28,8 +40,7 @@ namespace DeepSwarmClient.UI
         {
             base.DrawSelf();
 
-            TextColor.UseAsDrawColor(Desktop.Renderer);
-            RendererHelper.DrawText(Desktop.Renderer, _layoutRectangle.X, _layoutRectangle.Y, Text);
+            RendererHelper.DrawText(Desktop.Renderer, _layoutRectangle.X, _layoutRectangle.Y, Text, _isPressed ? PressedTextColor : TextColor);
         }
     }
 }

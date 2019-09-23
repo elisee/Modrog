@@ -37,8 +37,7 @@ namespace DeepSwarmClient.UI
         {
             base.DrawSelf();
 
-            TextColor.UseAsDrawColor(Desktop.Renderer);
-            RendererHelper.DrawText(Desktop.Renderer, _layoutRectangle.X, _layoutRectangle.Y, Value);
+            RendererHelper.DrawText(Desktop.Renderer, _layoutRectangle.X, _layoutRectangle.Y, Value, TextColor);
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using SDL2;
+﻿using DeepSwarmClient.UI;
+using SDL2;
 using System;
 
 namespace DeepSwarmClient
@@ -9,8 +10,10 @@ namespace DeepSwarmClient
         public const int FontSourceSize = 8;
         public const int FontRenderSize = 16;
 
-        public static void DrawText(IntPtr renderer, int x, int y, string text)
+        public static void DrawText(IntPtr renderer, int x, int y, string text, Color color)
         {
+            SDL.SDL_SetTextureColorMod(FontTexture, color.R, color.G, color.B);
+
             for (var i = 0; i < text.Length; i++)
             {
                 var index = text[i] - 32;

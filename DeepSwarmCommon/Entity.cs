@@ -32,20 +32,11 @@ namespace DeepSwarmCommon
             new EntityStats { BlueColor = 0x6879e4ff, RedColor = 0xd36565ff, NeutralColor = 0x807d7cff, OmniViewRadius = 2, DirectionalViewRadius = 8, HalfFieldOfView = MathF.PI / 3f },
         };
 
-
         public enum EntityDirection { Right, Down, Left, Up }
         public enum EntityMove { Idle, RotateCW, RotateCCW, Move, Attack, PickUp, Use, Build }
 
-        public Entity(EntityType type, int playerIndex, int x, int y, EntityDirection direction)
-        {
-            Type = type;
-            PlayerIndex = playerIndex;
-            X = x;
-            Y = y;
-            Direction = direction;
-        }
-
-        public readonly EntityType Type;
+        public int Id;
+        public EntityType Type;
         public int PlayerIndex = -1;
         public int X;
         public int Y;
@@ -54,16 +45,13 @@ namespace DeepSwarmCommon
         public EntityDirection Direction;
         public EntityMove UpcomingMove;
 
-        public float GetDirectionAngle()
+        public float GetDirectionAngle() => Direction switch
         {
-            switch (Direction)
-            {
-                case EntityDirection.Right: return 0f;
-                case EntityDirection.Down: return MathF.PI / 2f;
-                case EntityDirection.Left: return MathF.PI;
-                case EntityDirection.Up: return MathF.PI * 3f / 2f;
-                default: throw new NotSupportedException();
-            }
-        }
+            EntityDirection.Right => 0f,
+            EntityDirection.Down => MathF.PI / 2f,
+            EntityDirection.Left => MathF.PI,
+            EntityDirection.Up => MathF.PI * 3f / 2f,
+            _ => throw new NotSupportedException(),
+        };
     }
 }

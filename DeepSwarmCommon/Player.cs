@@ -5,7 +5,7 @@ namespace DeepSwarmCommon
 {
     public class Player
     {
-        public enum PlayerTeam { None, Blue, Red }
+        public enum PlayerTeam : byte { None, Blue, Red }
 
         public int PlayerIndex;
         public Guid Guid;

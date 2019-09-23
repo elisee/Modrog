@@ -27,7 +27,7 @@ namespace DeepSwarmClient
                 MaxLength = Protocol.MaxPlayerNameLength
             };
 
-            var enterNamePopupButton = new Button(Desktop, panel)
+            new Button(Desktop, panel)
             {
                 Text = "OK",
                 AnchorRectangle = new Rectangle(16, 64, ("OK".Length + 2) * 16, 16),

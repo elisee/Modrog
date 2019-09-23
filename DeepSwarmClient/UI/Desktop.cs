@@ -13,6 +13,9 @@ namespace DeepSwarmClient.UI
         public Element RootElement { get; private set; }
         public Element FocusedElement;
 
+        public int MouseX { get; private set; }
+        public int MouseY { get; private set; }
+
         public static SDL.SDL_Rect ToSDL_Rect(Rectangle rect) => new SDL.SDL_Rect { x = rect.X, y = rect.Y, w = rect.Width, h = rect.Height };
 
         public Desktop(IntPtr renderer)
@@ -32,6 +35,16 @@ namespace DeepSwarmClient.UI
 
                 case SDL.SDL_EventType.SDL_KEYUP:
                     FocusedElement.OnKeyUp(@event.key.keysym.sym);
+                    break;
+
+                case SDL.SDL_EventType.SDL_MOUSEMOTION:
+                    MouseX = @event.motion.x;
+                    MouseY = @event.motion.y;
+
+                    {
+                        var hitElement = RootElement.HitTest(@event.button.x, @event.button.y);
+                        hitElement?.OnMouseMove();
+                    }
                     break;
 
                 case SDL.SDL_EventType.SDL_MOUSEBUTTONDOWN:

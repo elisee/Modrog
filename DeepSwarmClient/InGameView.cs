@@ -7,18 +7,65 @@ namespace DeepSwarmClient
 {
     class InGameView : EngineElement
     {
-        readonly Element _playerListPopup;
+        readonly Element _playerListPanel;
+        readonly Element _actionPanel;
 
         public InGameView(Engine engine)
             : base(engine, null)
         {
             AnchorRectangle = engine.Viewport;
 
-            _playerListPopup = new Element(Desktop, null)
+            _playerListPanel = new Element(Desktop, null)
             {
                 AnchorRectangle = new Rectangle(0, 0, (Protocol.MaxPlayerNameLength + 2) * 16, 720),
                 BackgroundColor = new Color(0x123456ff)
             };
+
+            var actionButtons = 4;
+            var buttonWidth = 96;
+
+            _actionPanel = new Element(Desktop, null)
+            {
+                AnchorRectangle = new Rectangle(Engine.Viewport.Width / 2 - actionButtons * buttonWidth / 2, 50, buttonWidth * actionButtons + 16 * (1 + actionButtons), 64 + 16 * 2),
+                BackgroundColor = new Color(0x123456ff)
+            };
+
+            new Button(Desktop, _actionPanel)
+            {
+                Text = "BUILD",
+                AnchorRectangle = new Rectangle(16, 16, buttonWidth, 64),
+                BackgroundColor = new Color(0x4444ccff),
+                OnActivate = () => Engine.PlanMove(Entity.EntityMove.Build)
+            };
+
+            new Button(Desktop, _actionPanel)
+            {
+                Text = "CW",
+                AnchorRectangle = new Rectangle(16 + (buttonWidth + 16) * 1, 16, buttonWidth, 64),
+                BackgroundColor = new Color(0x4444ccff),
+                OnActivate = () => Engine.PlanMove(Entity.EntityMove.RotateCW)
+            };
+
+            new Button(Desktop, _actionPanel)
+            {
+                Text = "MOVE",
+                AnchorRectangle = new Rectangle(16 + (buttonWidth + 16) * 2, 16, buttonWidth, 64),
+                BackgroundColor = new Color(0x4444ccff),
+                OnActivate = () => Engine.PlanMove(Entity.EntityMove.Move)
+            };
+
+            new Button(Desktop, _actionPanel)
+            {
+                Text = "CCW",
+                AnchorRectangle = new Rectangle(16 + (buttonWidth + 16) * 3, 16, buttonWidth, 64),
+                BackgroundColor = new Color(0x4444ccff),
+                OnActivate = () => Engine.PlanMove(Entity.EntityMove.RotateCCW)
+            };
+        }
+
+        public override Element HitTest(int x, int y)
+        {
+            return base.HitTest(x, y) ?? (_layoutRectangle.Contains(x, y) ? this : null);
         }
 
         public override void OnKeyDown(SDL.SDL_Keycode key, bool repeat)
@@ -27,8 +74,8 @@ namespace DeepSwarmClient
 
             if (key == SDL.SDL_Keycode.SDLK_TAB)
             {
-                Add(_playerListPopup);
-                _playerListPopup.Layout(_layoutRectangle);
+                Add(_playerListPanel);
+                _playerListPanel.Layout(_layoutRectangle);
             }
 
             if (key == SDL.SDL_Keycode.SDLK_a || key == SDL.SDL_Keycode.SDLK_q) Engine.IsScrollingLeft = true;
@@ -41,7 +88,7 @@ namespace DeepSwarmClient
         {
             if (key == SDL.SDL_Keycode.SDLK_TAB)
             {
-                Remove(_playerListPopup);
+                Remove(_playerListPanel);
             }
 
             if (key == SDL.SDL_Keycode.SDLK_a || key == SDL.SDL_Keycode.SDLK_q) Engine.IsScrollingLeft = false;
@@ -50,18 +97,50 @@ namespace DeepSwarmClient
             if (key == SDL.SDL_Keycode.SDLK_s) Engine.IsScrollingDown = false;
         }
 
+        public override void OnMouseMove()
+        {
+        }
+
+        public override void OnMouseDown(int button)
+        {
+            if (button == 1)
+            {
+                foreach (var entity in Engine.Map.Entities)
+                {
+                    if (entity.X == Engine.HoveredTileX && entity.Y == Engine.HoveredTileY)
+                    {
+                        Engine.SetSelectedEntity(entity);
+                        if (_actionPanel.Parent == null)
+                        {
+                            Add(_actionPanel);
+                            _actionPanel.Layout(_layoutRectangle);
+                        }
+                        return;
+                    }
+                }
+
+                Engine.SetSelectedEntity(null);
+                if (_actionPanel.Parent != null) Remove(_actionPanel);
+                return;
+            }
+        }
+
+        public override void OnMouseUp(int button)
+        {
+        }
+
         public void OnPlayerListUpdated()
         {
-            _playerListPopup.Clear();
+            _playerListPanel.Clear();
 
             for (var i = 0; i < Engine.PlayerList.Count; i++)
             {
                 var entry = Engine.PlayerList[i];
-                var label = new Label(Desktop, _playerListPopup) { Text = $"[{entry.Team.ToString()}] {entry.Name}{(entry.IsOnline ? "" : " (offline)")}" };
-                label.AnchorRectangle = new Rectangle(16, 16 + 16 * i, _playerListPopup.AnchorRectangle.Width, 16);
+                var label = new Label(Desktop, _playerListPanel) { Text = $"[{entry.Team.ToString()}] {entry.Name}{(entry.IsOnline ? "" : " (offline)")}" };
+                label.AnchorRectangle = new Rectangle(16, 16 + 16 * i, _playerListPanel.AnchorRectangle.Width, 16);
             }
 
-            _playerListPopup.Layout(_layoutRectangle);
+            _playerListPanel.Layout(_layoutRectangle);
         }
 
         protected override void DrawSelf()
@@ -106,21 +185,105 @@ namespace DeepSwarmClient
             {
                 if (!tileViewport.Contains(entity.X, entity.Y)) continue;
 
-                var stats = Entity.EntityStatsByType[(int)entity.Type];
-                var color = new Color(stats.NeutralColor);
-                if (entity.PlayerIndex != -1) color.RGBA = Engine.PlayerList[entity.PlayerIndex].Team == Player.PlayerTeam.Blue ? stats.BlueColor : stats.RedColor;
+                var x = entity.X * Map.TileSize - (int)Engine.ScrollingPixelsX;
+                var y = entity.Y * Map.TileSize - (int)Engine.ScrollingPixelsY;
 
+                switch (entity.Type)
+                {
+                    case Entity.EntityType.Factory:
+                        {
+                            var sourceRect = Desktop.ToSDL_Rect(new Rectangle(0, 0, 24 * 3, 24 * 3));
+                            var destRect = Desktop.ToSDL_Rect(new Rectangle(x - 24, y - 24, 24 * 3, 24 * 3));
+                            SDL.SDL_RenderCopy(Engine.Renderer, Engine.SpritesheetTexture, ref sourceRect, ref destRect);
+                            break;
+                        }
+
+                    case Entity.EntityType.Heart:
+                        {
+                            var teamOffset = Engine.PlayerList[entity.PlayerIndex].Team == Player.PlayerTeam.Blue ? 0 : 1;
+
+                            var sourceRect = Desktop.ToSDL_Rect(new Rectangle(24 * (3 + teamOffset), 0, 24, 24));
+                            var destRect = Desktop.ToSDL_Rect(new Rectangle(x, y, 24, 24));
+                            SDL.SDL_RenderCopy(Engine.Renderer, Engine.SpritesheetTexture, ref sourceRect, ref destRect);
+                            break;
+                        }
+
+                    case Entity.EntityType.Robot:
+                        {
+                            var teamOffset = Engine.PlayerList[entity.PlayerIndex].Team == Player.PlayerTeam.Blue ? 0 : 1;
+
+                            SDL.SDL_Rect sourceRect;
+                            SDL.SDL_Rect destRect;
+
+                            switch (entity.Direction)
+                            {
+                                case Entity.EntityDirection.Left:
+                                    sourceRect = Desktop.ToSDL_Rect(new Rectangle(0, 24 * (3 + teamOffset * 3), 24 * 2, 24 * 3));
+                                    destRect = Desktop.ToSDL_Rect(new Rectangle(x - 24, y - 24, 24 * 2, 24 * 3));
+                                    break;
+
+                                case Entity.EntityDirection.Down:
+                                    sourceRect = Desktop.ToSDL_Rect(new Rectangle(24 * 2, 24 * (3 + teamOffset * 3), 24, 24 * 3));
+                                    destRect = Desktop.ToSDL_Rect(new Rectangle(x, y - 24, 24, 24 * 3));
+                                    break;
+
+                                case Entity.EntityDirection.Up:
+                                    sourceRect = Desktop.ToSDL_Rect(new Rectangle(24 * 3, 24 * (3 + teamOffset * 3), 24, 24 * 3));
+                                    destRect = Desktop.ToSDL_Rect(new Rectangle(x, y - 24, 24, 24 * 3));
+                                    break;
+
+                                case Entity.EntityDirection.Right:
+                                    sourceRect = Desktop.ToSDL_Rect(new Rectangle(24 * 4, 24 * (3 + teamOffset * 3), 24 * 2, 24 * 3));
+                                    destRect = Desktop.ToSDL_Rect(new Rectangle(x, y - 24, 24 * 2, 24 * 3));
+                                    break;
+
+                                default: throw new NotSupportedException();
+                            }
+
+                            SDL.SDL_RenderCopy(Engine.Renderer, Engine.SpritesheetTexture, ref sourceRect, ref destRect);
+                            break;
+                        }
+
+                    default:
+                        {
+                            var stats = Entity.EntityStatsByType[(int)entity.Type];
+                            var color = new Color(stats.NeutralColor);
+                            if (entity.PlayerIndex != -1) color.RGBA = Engine.PlayerList[entity.PlayerIndex].Team == Player.PlayerTeam.Blue ? stats.BlueColor : stats.RedColor;
+
+                            color.UseAsDrawColor(Engine.Renderer);
+
+                            var rect = Desktop.ToSDL_Rect(new Rectangle(x, y, Map.TileSize, Map.TileSize));
+                            SDL.SDL_RenderFillRect(Engine.Renderer, ref rect);
+                            break;
+                        }
+                }
+
+            }
+
+            if (Engine.SelectedEntity != null)
+            {
+                var color = new Color(0x00ff00ff);
                 color.UseAsDrawColor(Engine.Renderer);
 
-                var rect = new SDL.SDL_Rect
-                {
-                    x = (entity.X) * Map.TileSize - (int)Engine.ScrollingPixelsX,
-                    y = (entity.Y) * Map.TileSize - (int)Engine.ScrollingPixelsY,
-                    w = Map.TileSize,
-                    h = Map.TileSize
-                };
+                var x = Engine.SelectedEntity.X;
+                var y = Engine.SelectedEntity.Y;
+                var w = 1;
+                var h = 1;
 
-                SDL.SDL_RenderFillRect(Engine.Renderer, ref rect);
+                switch (Engine.SelectedEntity.Type)
+                {
+                    case Entity.EntityType.Factory: x -= 1; y -= 1; w = 3; h = 2; break;
+                }
+
+                var rect = new Rectangle(
+                    x * Map.TileSize - (int)Engine.ScrollingPixelsX,
+                    y * Map.TileSize - (int)Engine.ScrollingPixelsY,
+                    w * Map.TileSize, h * Map.TileSize);
+
+                SDL.SDL_RenderDrawLine(Engine.Renderer, rect.X, rect.Y, rect.X + rect.Width, rect.Y);
+                SDL.SDL_RenderDrawLine(Engine.Renderer, rect.X + rect.Width, rect.Y, rect.X + rect.Width, rect.Y + rect.Height);
+                SDL.SDL_RenderDrawLine(Engine.Renderer, rect.X + rect.Width, rect.Y + rect.Height, rect.X, rect.Y + rect.Height);
+                SDL.SDL_RenderDrawLine(Engine.Renderer, rect.X, rect.Y + rect.Height, rect.X, rect.Y);
             }
         }
     }

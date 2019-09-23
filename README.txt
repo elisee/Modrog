@@ -17,11 +17,19 @@ DeepSwarm
 (x) Serveur tick
 (x) Serveur génère grottes & cristaux
 (x) Serveur envoie données appropriées au client après chaque tour
-( ) Coeur peut créer robot
-( ) Déplacer un robot (tourner / avancer)
+(x) Joueur peut sélectionner entité
+(x) Afficher du noir là où on ne voit pas + extension line of sight de 1
+(x) Afficher des graphismes au lieu de juste des couleurs plates
+(x) Ajouter en-tête pour pouvoir reconstruire les packets logiques à partir des segments TCP
+(x) Factory peut créer robot
+(x) Déplacer un robot (tourner / avancer)
+(x) Valider l'id du tick quand on reçoit un paquet Tick
+(x) Afficher les parties inconnues de la map en noir
+( ) si un déplacement rentre dans un chunk qui était free, le marquer comme pas free pour éviter qu'on spawne sur des gens (ou alors il faut au moins garder une liste d'entités par chunk)
+( ) Collisions
 ( ) Creuser avec un robot
+( ) Brouillard de guerre
 ( ) Robots scriptables avec Lua (entièrement coté client)
-( ) Afficher les parties inconnues de la map en noir
 ( ) Serveur génère ennemis
 ( ) Le coeur a une quantité limitée de cristaux et doit être approvisionné régulièrement sinon il meurt
 ( ) Objectif : Trouver les joueurs amis et relier un maximum de coeurs

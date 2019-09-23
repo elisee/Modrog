@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.CompilerServices;
 
 namespace DeepSwarmCommon
 {
@@ -13,15 +14,17 @@ namespace DeepSwarmCommon
 
         public enum Tile : byte
         {
-            Rock = 0,
-            Path = 1,
-            Crystal = 2
+            Unknown = 0,
+            Rock = 1,
+            Path = 2,
+            Crystal = 3
         }
 
         public static readonly uint[] TileColors = new uint[] {
+            0x000000ff,
             0x51260aff,
             0x271104ff,
-            0xa8d618ff
+            0xa8d618ff,
         };
 
         [Flags]
@@ -42,6 +45,8 @@ namespace DeepSwarmCommon
         public readonly List<Player> PlayersInOrder = new List<Player>();
 
         public readonly List<Entity> Entities = new List<Entity>();
+        public readonly Dictionary<int, Entity> EntitiesById = new Dictionary<int, Entity>();
+        public int NextEntityId;
 
         public int BluePlayerCount = 0;
         public int RedPlayerCount = 0;
@@ -76,6 +81,7 @@ namespace DeepSwarmCommon
             }
 
             var entitiesCount = mapReader.ReadInt32();
+            NextEntityId = mapReader.ReadInt32();
             for (var i = 0; i < entitiesCount; i++)
             {
                 var x = mapReader.ReadInt16();
@@ -110,6 +116,7 @@ namespace DeepSwarmCommon
             }
 
             mapWriter.Write(Entities.Count);
+            mapWriter.Write(NextEntityId);
             foreach (var entity in Entities)
             {
                 mapWriter.Write((short)entity.X);
@@ -123,7 +130,7 @@ namespace DeepSwarmCommon
 
         public void Generate()
         {
-            Array.Clear(Tiles, 0, Tiles.Length);
+            Unsafe.InitBlock(ref Tiles[0], (byte)Tile.Rock, (uint)Tiles.Length);
             FreeChunkIndices.Clear();
 
             var random = new Random();
@@ -208,7 +215,6 @@ namespace DeepSwarmCommon
             {
                 for (var x = 0; x < MapSize; x++)
                 {
-                    var index = y * MapSize + x;
                     var rarity = HasNearby(x, y, Tile.Path) ? 2000 : 500;
                     if (random.Next(rarity) == 0) PokeCircle(x, y, Tile.Crystal, random.Next(1, 4));
                 }
@@ -296,12 +302,34 @@ namespace DeepSwarmCommon
             return (Tile)Tiles[y * MapSize + x];
         }
 
+        readonly List<Entity> _upcomingEntities = new List<Entity>();
+
         public Entity MakeEntity(Entity.EntityType type, int playerIndex, int x, int y, Entity.EntityDirection direction)
         {
-            var entity = new Entity(type, playerIndex, x, y, direction);
-            Entities.Add(entity);
-            if (playerIndex != -1) PlayersInOrder[playerIndex].OwnedEntities.Add(entity);
+            var entity = new Entity
+            {
+                Id = NextEntityId++,
+                Type = type,
+                PlayerIndex = playerIndex,
+                X = x,
+                Y = y,
+                Direction = direction
+            };
+
+            _upcomingEntities.Add(entity);
             return entity;
+        }
+
+        public void AddUpcomingEntities()
+        {
+            foreach (var entity in _upcomingEntities)
+            {
+                Entities.Add(entity);
+                EntitiesById.Add(entity.Id, entity);
+                if (entity.PlayerIndex != -1) PlayersInOrder[entity.PlayerIndex].OwnedEntities.Add(entity);
+            }
+
+            _upcomingEntities.Clear();
         }
 
         public Entity PeekEntity(int x, int y)
@@ -329,7 +357,7 @@ namespace DeepSwarmCommon
             for (int x = x0; x <= x1; ++x)
             {
                 if (!(steep ? IsTileTransparent(y, x) : IsTileTransparent(x, y))) return false;
-                err = err - dY;
+                err -= dY;
                 if (err < 0) { y += ystep; err += dX; }
             }
 

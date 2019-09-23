@@ -33,6 +33,12 @@ namespace DeepSwarmClient
         public float ScrollingPixelsX { get; private set; }
         public float ScrollingPixelsY { get; private set; }
 
+        public int HoveredTileX { get; private set; }
+
+        public int HoveredTileY { get; private set; }
+        public Entity SelectedEntity { get; private set; }
+        readonly Dictionary<int, Entity.EntityMove> _plannedMovesByEntityId = new Dictionary<int, Entity.EntityMove>();
+
         public bool IsScrollingLeft;
         public bool IsScrollingRight;
         public bool IsScrollingUp;
@@ -41,6 +47,7 @@ namespace DeepSwarmClient
         public Map Map = new Map();
 
         Socket _socket;
+        PacketReceiver _receiver;
         readonly PacketWriter _writer = new PacketWriter();
         readonly PacketReader _reader = new PacketReader();
 
@@ -48,6 +55,8 @@ namespace DeepSwarmClient
         public readonly EnterNameView EnterNameView;
         public readonly LoadingView LoadingView;
         public readonly InGameView InGameView;
+
+        public readonly IntPtr SpritesheetTexture;
 
         public Engine()
         {
@@ -72,6 +81,7 @@ namespace DeepSwarmClient
 
             SDL_image.IMG_Init(SDL_image.IMG_InitFlags.IMG_INIT_PNG);
             RendererHelper.FontTexture = SDL_image.IMG_LoadTexture(Renderer, Path.Combine(AssetsPath, "Font.png"));
+            SpritesheetTexture = SDL_image.IMG_LoadTexture(Renderer, Path.Combine(AssetsPath, "Spritesheet.png"));
 
             Desktop = new Desktop(Renderer);
 
@@ -90,6 +100,8 @@ namespace DeepSwarmClient
 
             _socket.Connect(new IPEndPoint(IPAddress.Loopback, Protocol.Port));
 
+            _receiver = new PacketReceiver(_socket);
+
             Desktop.SetRootElement(EnterNameView);
             Desktop.FocusedElement = EnterNameView.NameInput;
 
@@ -107,17 +119,12 @@ namespace DeepSwarmClient
                 // Network
                 if (_socket.Poll(0, SelectMode.SelectRead))
                 {
-                    int bytesRead = 0;
-                    try { bytesRead = _socket.Receive(_reader.Buffer); } catch (SocketException) { }
-
-                    if (bytesRead == 0)
+                    if (!_receiver.Read(out var packets))
                     {
                         Trace.WriteLine($"Disconnected from server.");
                         // isRunning = false;
                         break;
                     }
-
-                    Trace.WriteLine($"Received {bytesRead} bytes.");
 
                     void Abort(string reason)
                     {
@@ -126,10 +133,11 @@ namespace DeepSwarmClient
                         Trace.WriteLine($"Abort: {reason}");
                     }
 
-                    _reader.ResetCursor();
-
-                    while (isRunning && _reader.Cursor < bytesRead)
+                    foreach (var packet in packets)
                     {
+                        _reader.Open(packet);
+                        if (!isRunning) break;
+
                         try
                         {
                             var packetType = (Protocol.ServerPacketType)_reader.ReadByte();
@@ -263,11 +271,14 @@ namespace DeepSwarmClient
                 ScrollingPixelsX += MathF.Cos(angle) * ScrollingSpeed * deltaTime;
                 ScrollingPixelsY -= MathF.Sin(angle) * ScrollingSpeed * deltaTime;
             }
+
+            HoveredTileX = ((int)ScrollingPixelsX + Desktop.MouseX) / Map.TileSize;
+            HoveredTileY = ((int)ScrollingPixelsY + Desktop.MouseY) / Map.TileSize;
         }
 
         void Send()
         {
-            try { _socket.Send(_writer.Buffer, 0, _writer.Cursor, SocketFlags.None); } catch { }
+            try { _socket.Send(_writer.Buffer, 0, _writer.Finish(), SocketFlags.None); } catch { }
         }
 
         public void SetName(string name)
@@ -276,11 +287,20 @@ namespace DeepSwarmClient
             Desktop.SetRootElement(LoadingView);
             Desktop.FocusedElement = null;
 
-            _writer.ResetCursor();
             _writer.WriteByteLengthString(Protocol.VersionString);
             _writer.WriteBytes(SelfGuid.ToByteArray());
             _writer.WriteByteLengthString(name);
             Send();
+        }
+
+        public void SetSelectedEntity(Entity entity)
+        {
+            SelectedEntity = entity;
+        }
+
+        public void PlanMove(Entity.EntityMove move)
+        {
+            _plannedMovesByEntityId[SelectedEntity.Id] = move;
         }
 
         void ReadPlayerList()
@@ -293,7 +313,7 @@ namespace DeepSwarmClient
             {
                 var name = _reader.ReadByteSizeString();
                 var team = (PlayerTeam)_reader.ReadByte();
-                var isOnline = _reader.ReadByte() == 0;
+                var isOnline = _reader.ReadByte() != 0;
 
                 PlayerList.Add(new PlayerListEntry { Name = name, Team = team, IsOnline = isOnline });
             }
@@ -323,24 +343,40 @@ namespace DeepSwarmClient
 
             // TODO: Handle fog of war with an additional array holding whether each tile is currently being seen or not
 
+            var tickIndex = _reader.ReadInt();
+
+            Entity newSelectedEntity = null;
+            var validPlannedMoves = new Dictionary<int, Entity.EntityMove>();
+
             var seenEntitiesCount = _reader.ReadShort();
             for (var i = 0; i < seenEntitiesCount; i++)
             {
-                var x = (int)_reader.ReadShort();
-                var y = (int)_reader.ReadShort();
-                var playerIndex = _reader.ReadShort();
-                var type = (Entity.EntityType)_reader.ReadByte();
-                var direction = (Entity.EntityDirection)_reader.ReadByte();
-                var health = (int)_reader.ReadByte();
-                var entity = new Entity(type, playerIndex, x, y, direction) { Health = health };
+                var entity = new Entity
+                {
+                    Id = _reader.ReadInt(),
+                    X = _reader.ReadShort(),
+                    Y = _reader.ReadShort(),
+                    PlayerIndex = _reader.ReadShort(),
+                    Type = (Entity.EntityType)_reader.ReadByte(),
+                    Direction = (Entity.EntityDirection)_reader.ReadByte(),
+                    Health = _reader.ReadByte(),
+                };
+
+                if (_plannedMovesByEntityId.TryGetValue(entity.Id, out var move)) validPlannedMoves.Add(entity.Id, move);
+
+                if (SelectedEntity?.Id == entity.Id) newSelectedEntity = entity;
+
                 Map.Entities.Add(entity);
 
-                if (playerIndex == SelfPlayerIndex && type == Entity.EntityType.Factory)
+                if (entity.PlayerIndex == SelfPlayerIndex && entity.Type == Entity.EntityType.Factory)
                 {
-                    SelfBaseChunkX = x / Map.ChunkSize;
-                    SelfBaseChunkY = y / Map.ChunkSize;
+                    SelfBaseChunkX = entity.X / Map.ChunkSize;
+                    SelfBaseChunkY = entity.Y / Map.ChunkSize;
                 }
             }
+
+            SelectedEntity = newSelectedEntity;
+            _plannedMovesByEntityId.Clear();
 
             var seenTilesCount = _reader.ReadShort();
             for (var i = 0; i < seenTilesCount; i++)
@@ -349,6 +385,16 @@ namespace DeepSwarmClient
                 var y = _reader.ReadShort();
                 Map.Tiles[y * Map.MapSize + x] = _reader.ReadByte();
             }
+
+            _writer.WriteByte((byte)Protocol.ClientPacketType.Tick);
+            _writer.WriteInt(tickIndex);
+            _writer.WriteShort((short)validPlannedMoves.Count);
+            foreach (var (entityId, move) in validPlannedMoves)
+            {
+                _writer.WriteInt(entityId);
+                _writer.WriteByte((byte)move);
+            }
+            Send();
         }
     }
 }

@@ -5,53 +5,49 @@ namespace DeepSwarmCommon
 {
     public class PacketReader
     {
-        public readonly byte[] Buffer;
-        public int Cursor { get; private set; }
+        byte[] _buffer;
+        int _cursor;
 
-        public PacketReader(int size = 8192)
+        public void Open(byte[] packet)
         {
-            Buffer = new byte[size];
-        }
-
-        public void ResetCursor()
-        {
-            Cursor = 0;
+            _buffer = packet;
+            _cursor = 0;
         }
 
         void EnsureBytesAvailable(int bytes)
         {
-            if (Cursor + bytes >= Buffer.Length) throw new PacketException($"Not enough bytes left in packet (want {bytes} but got {Buffer.Length - Cursor} left)");
+            if (_cursor + bytes > _buffer.Length) throw new PacketException($"Not enough bytes left in packet (want {bytes} but got {_buffer.Length - _cursor} left)");
         }
 
         public byte ReadByte()
         {
             EnsureBytesAvailable(sizeof(byte));
-            var value = Buffer[Cursor];
-            Cursor += sizeof(byte);
+            var value = _buffer[_cursor];
+            _cursor += sizeof(byte);
             return value;
         }
 
         public Span<byte> ReadBytes(int size)
         {
             EnsureBytesAvailable(size);
-            var value = new Span<byte>(Buffer, Cursor, size);
-            Cursor += size;
+            var value = new Span<byte>(_buffer, _cursor, size);
+            _cursor += size;
             return value;
         }
 
         public short ReadShort()
         {
             EnsureBytesAvailable(sizeof(short));
-            var value = (short)((Buffer[Cursor] << 8) + Buffer[Cursor + 1]);
-            Cursor += sizeof(short);
+            var value = (short)((_buffer[_cursor] << 8) + _buffer[_cursor + 1]);
+            _cursor += sizeof(short);
             return value;
         }
 
         public int ReadInt()
         {
             EnsureBytesAvailable(sizeof(int));
-            var value = (int)(Buffer[Cursor + 0] << 24) + (int)(Buffer[Cursor + 1] << 16) + (int)(Buffer[Cursor + 2] << 8) + (int)Buffer[Cursor + 3];
-            Cursor += sizeof(int);
+            var value = (int)(_buffer[_cursor + 0] << 24) + (int)(_buffer[_cursor + 1] << 16) + (int)(_buffer[_cursor + 2] << 8) + (int)_buffer[_cursor + 3];
+            _cursor += sizeof(int);
             return value;
         }
 
@@ -59,8 +55,8 @@ namespace DeepSwarmCommon
         {
             var sizeInBytes = ReadByte();
             EnsureBytesAvailable(sizeInBytes);
-            var value = Encoding.UTF8.GetString(Buffer, Cursor, sizeInBytes);
-            Cursor += sizeInBytes;
+            var value = Encoding.UTF8.GetString(_buffer, _cursor, sizeInBytes);
+            _cursor += sizeInBytes;
             return value;
         }
     }

@@ -14,8 +14,7 @@
         {
             base.DrawSelf();
 
-            TextColor.UseAsDrawColor(Desktop.Renderer);
-            RendererHelper.DrawText(Desktop.Renderer, _layoutRectangle.X, _layoutRectangle.Y, Text);
+            RendererHelper.DrawText(Desktop.Renderer, _layoutRectangle.X, _layoutRectangle.Y, Text, TextColor);
         }
     }
 }

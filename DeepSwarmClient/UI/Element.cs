@@ -70,6 +70,7 @@ namespace DeepSwarmClient.UI
 
         public virtual void OnKeyDown(SDL.SDL_Keycode key, bool repeat) { }
         public virtual void OnKeyUp(SDL.SDL_Keycode key) { }
+        public virtual void OnMouseMove() { }
         public virtual void OnMouseDown(int button) { }
         public virtual void OnMouseUp(int button) { }
         public virtual void OnTextEntered(string text) { }
