@@ -43,7 +43,7 @@ namespace DeepSwarmClient.UI
                     MouseY = @event.motion.y;
 
                     {
-                        var hitElement = RootElement.HitTest(@event.button.x, @event.button.y);
+                        var hitElement = RootElement.HitTest(@event.motion.x, @event.motion.y);
 
                         if (hitElement != HoveredElement)
                         {
