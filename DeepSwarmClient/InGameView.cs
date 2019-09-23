@@ -13,6 +13,12 @@ namespace DeepSwarmClient
 
         readonly Element _playerListPanel;
 
+        const int EntityStatsContainerWidth = 300;
+        readonly Element _entityStatsContainer;
+        readonly Label _entityNameLabel;
+        readonly Label _entityHealthValue;
+        readonly Label _entityCrystalsValue;
+
         readonly Element _sidebarContainer;
 
         readonly Element _manualModeSidebar;
@@ -35,6 +41,46 @@ namespace DeepSwarmClient
                 BackgroundColor = new Color(0x123456ff)
             };
 
+            // Entity stats
+
+            _entityStatsContainer = new Element(Desktop, null)
+            {
+                AnchorRectangle = new Rectangle((Engine.Viewport.Width - EntityStatsContainerWidth) / 2, 24, EntityStatsContainerWidth, 96),
+                BackgroundColor = new Color(0x123456ff)
+            };
+
+            _entityNameLabel = new Label(Desktop, _entityStatsContainer)
+            {
+                AnchorRectangle = new Rectangle(0, 12, EntityStatsContainerWidth, 16)
+            };
+
+            // Health icon
+            new Element(Desktop, _entityStatsContainer)
+            {
+                AnchorRectangle = new Rectangle(12, 48, 24, 24),
+                BackroundTexture = Engine.SpritesheetTexture,
+                BackgroundTextureArea = new Rectangle(72, 24, 24, 24)
+            };
+
+            _entityHealthValue = new Label(Desktop, _entityStatsContainer)
+            {
+                AnchorRectangle = new Rectangle(48, 52, EntityStatsContainerWidth, 16)
+            };
+
+            // Crystals icon
+            new Element(Desktop, _entityStatsContainer)
+            {
+                AnchorRectangle = new Rectangle(EntityStatsContainerWidth / 2 + 12, 48, 24, 24),
+                BackroundTexture = Engine.SpritesheetTexture,
+                BackgroundTextureArea = new Rectangle(96, 24, 24, 24)
+            };
+
+            _entityCrystalsValue = new Label(Desktop, _entityStatsContainer)
+            {
+                AnchorRectangle = new Rectangle(EntityStatsContainerWidth / 2 + 48, 52, EntityStatsContainerWidth, 16)
+            };
+
+            // Sidebar
             _sidebarContainer = new Element(Desktop, this)
             {
                 AnchorRectangle = new Rectangle(0, 0, Engine.Viewport.Width, Engine.Viewport.Height)
@@ -280,8 +326,21 @@ namespace DeepSwarmClient
 
         public void OnSelectedEntityChanged()
         {
+            if (_entityStatsContainer.Parent != null) Remove(_entityStatsContainer);
             _sidebarContainer.Clear();
+
             if (Engine.SelectedEntity == null) return;
+
+            Add(_entityStatsContainer);
+            _entityStatsContainer.Layout(Engine.Viewport);
+
+            _entityNameLabel.Text = Engine.SelectedEntity.Type.ToString();
+            var entityNameLength = _entityNameLabel.Text.Length * RendererHelper.FontRenderSize;
+            _entityNameLabel.AnchorRectangle.X = (EntityStatsContainerWidth - entityNameLength) / 2;
+            _entityNameLabel.Layout(_entityStatsContainer.LayoutRectangle);
+
+            _entityHealthValue.Text = Engine.SelectedEntity.Health.ToString();
+            _entityCrystalsValue.Text = Engine.SelectedEntity.Crystals.ToString();
 
             if (Engine.EntityScripts.TryGetValue(Engine.SelectedEntity.Id, out var scriptPath))
             {

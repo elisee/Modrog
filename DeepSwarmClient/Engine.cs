@@ -439,6 +439,7 @@ namespace DeepSwarmClient
                     Type = (Entity.EntityType)_reader.ReadByte(),
                     Direction = (Entity.EntityDirection)_reader.ReadByte(),
                     Health = _reader.ReadByte(),
+                    Crystals = _reader.ReadInt(),
                 };
 
                 if (SelectedEntity?.Id == entity.Id) newSelectedEntity = entity;

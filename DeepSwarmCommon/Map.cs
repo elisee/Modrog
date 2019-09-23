@@ -86,6 +86,7 @@ namespace DeepSwarmCommon
                 var entity = MakeEntity(type, playerIndex, x, y, direction);
 
                 entity.Health = mapReader.ReadByte();
+                entity.Crystals = mapReader.ReadInt32();
 
             }
         }
@@ -119,6 +120,7 @@ namespace DeepSwarmCommon
                 mapWriter.Write((byte)entity.Type);
                 mapWriter.Write((byte)entity.Direction);
                 mapWriter.Write((byte)entity.Health);
+                mapWriter.Write(entity.Crystals);
             }
         }
 
@@ -307,7 +309,10 @@ namespace DeepSwarmCommon
                 PlayerIndex = playerIndex,
                 X = x,
                 Y = y,
-                Direction = direction
+                Direction = direction,
+
+                Health = Entity.EntityStatsByType[(int)type].InitialHealth,
+                Crystals = Entity.EntityStatsByType[(int)type].InitialCrystals
             };
 
             _upcomingEntities.Add(entity);

@@ -453,6 +453,7 @@ namespace DeepSwarmServer
                         writer.WriteByte((byte)entity.Type);
                         writer.WriteByte((byte)entity.Direction);
                         writer.WriteByte((byte)entity.Health);
+                        writer.WriteInt(entity.Crystals);
                     }
 
                     foreach (var entity in seenEntities)
@@ -463,6 +464,7 @@ namespace DeepSwarmServer
                         writer.WriteByte((byte)entity.Type);
                         writer.WriteByte((byte)entity.Direction);
                         writer.WriteByte((byte)entity.Health);
+                        writer.WriteInt(entity.Crystals);
                     }
 
                     writer.WriteShort((short)seenTiles.Count);
