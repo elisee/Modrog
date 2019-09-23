@@ -453,7 +453,7 @@ namespace DeepSwarmClient
                 }
             }
 
-            SelectedEntity = newSelectedEntity;
+            SetSelectedEntity(newSelectedEntity);
 
             var seenTilesCount = _reader.ReadShort();
             for (var i = 0; i < seenTilesCount; i++)

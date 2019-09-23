@@ -358,7 +358,7 @@ namespace DeepSwarmServer
                                         break;
                                     case Map.Tile.Crystal5:
                                         map.PokeTile(newX, newY, Map.Tile.Path);
-                                        // TODO: Add crystal to entity inventory
+                                        entity.Crystals += 1;
                                         break;
                                 }
                             }
