@@ -144,6 +144,14 @@ namespace DeepSwarmClient.UI
             InsertText(text);
         }
 
+        public override void OnMouseDown(int button)
+        {
+            if (button == 1)
+            {
+                Desktop.FocusedElement = this;
+            }
+        }
+
         void InsertText(string text)
         {
             var line = Lines[CursorY];

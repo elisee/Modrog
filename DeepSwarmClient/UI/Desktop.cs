@@ -90,7 +90,9 @@ namespace DeepSwarmClient.UI
 
         public void SetRootElement(Element element)
         {
+            RootElement?.Unmount();
             RootElement = element;
+            RootElement?.Mount();
             RootElement.Layout(new Rectangle(0, 0, 1280, 720));
         }
 

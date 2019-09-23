@@ -254,7 +254,6 @@ namespace DeepSwarmClient
                     _sidebarContainer.Add(_scriptEditorSidebar);
                     _scriptNameInput.Value = scriptPath;
                     _scriptTextEditor.SetText(Engine.Scripts[scriptPath]);
-                    Desktop.FocusedElement = _scriptTextEditor;
                 }
             }
             else

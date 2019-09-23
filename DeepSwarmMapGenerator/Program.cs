@@ -2,7 +2,6 @@ using DeepSwarmCommon;
 using SDL2;
 using System;
 using System.IO;
-using System.Runtime.InteropServices;
 using static DeepSwarmCommon.Map;
 
 namespace DeepSwarmMapGenerator

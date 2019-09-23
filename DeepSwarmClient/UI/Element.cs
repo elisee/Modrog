@@ -16,6 +16,12 @@ namespace DeepSwarmClient.UI
 
         public Rectangle LayoutRectangle;
 
+        bool _isMounted;
+
+        public bool IsFocused => Desktop.FocusedElement == this;
+        public bool IsHovered { get; protected set; }
+        public bool IsPressed { get; protected set; }
+
         public Element(Desktop desktop, Element parent)
         {
             Desktop = desktop;
@@ -25,7 +31,11 @@ namespace DeepSwarmClient.UI
 
         public void Clear()
         {
-            foreach (var child in Children) child.Parent = null;
+            foreach (var child in Children)
+            {
+                if (_isMounted) child.Unmount();
+                child.Parent = null;
+            }
             Children.Clear();
         }
 
@@ -35,12 +45,14 @@ namespace DeepSwarmClient.UI
 
             Children.Add(child);
             child.Parent = this;
+            if (_isMounted) child.Mount();
         }
 
         public void Remove(Element child)
         {
             Debug.Assert(child.Parent == this);
 
+            if (_isMounted) child.Unmount();
             child.Parent = null;
             Children.Remove(child);
         }
@@ -68,6 +80,33 @@ namespace DeepSwarmClient.UI
             return null;
         }
 
+        internal void Mount()
+        {
+            Debug.Assert(!_isMounted);
+            _isMounted = true;
+
+            foreach (var child in Children) child.Mount();
+
+            OnMounted();
+        }
+
+        internal void Unmount()
+        {
+            Debug.Assert(_isMounted);
+            _isMounted = false;
+
+            if (IsFocused) Desktop.FocusedElement = Desktop.RootElement;
+            IsHovered = false;
+            IsPressed = false;
+
+            foreach (var child in Children) child.Unmount();
+
+            OnUnmounted();
+        }
+
+        public virtual void OnMounted() { }
+        public virtual void OnUnmounted() { }
+
         public virtual void OnKeyDown(SDL.SDL_Keycode key, bool repeat)
         {
             if (!repeat && key == SDL.SDL_Keycode.SDLK_RETURN) Validate();
@@ -89,6 +128,8 @@ namespace DeepSwarmClient.UI
 
         public void Draw()
         {
+            Debug.Assert(_isMounted);
+
             DrawSelf();
             foreach (var child in Children) child.Draw();
         }
