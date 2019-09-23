@@ -33,7 +33,7 @@ namespace DeepSwarmCommon
         };
 
         public enum EntityDirection { Right, Down, Left, Up }
-        public enum EntityMove { Idle, RotateCW, RotateCCW, Move, Attack, PickUp, Use, Build }
+        public enum EntityMove { Idle, RotateCW, RotateCCW, Forward, Attack, PickUp, Use, Build }
 
         public int Id;
         public EntityType Type;

@@ -7,6 +7,10 @@ namespace DeepSwarmClient
 {
     class InGameView : EngineElement
     {
+        bool _isDragging;
+        int _dragX;
+        int _dragY;
+
         readonly Element _playerListPanel;
 
         readonly Element _sidebarContainer;
@@ -74,7 +78,7 @@ namespace DeepSwarmClient
             AddButtonToStrip("SCRIPT", () => Engine.SetupScriptForSelectedEntity(null));
             AddButtonToStrip("BUILD", () => Engine.PlanMove(Entity.EntityMove.Build));
             AddButtonToStrip("CW", () => Engine.PlanMove(Entity.EntityMove.RotateCW));
-            AddButtonToStrip("MOVE", () => Engine.PlanMove(Entity.EntityMove.Move));
+            AddButtonToStrip("MOVE", () => Engine.PlanMove(Entity.EntityMove.Forward));
             AddButtonToStrip("CCW", () => Engine.PlanMove(Entity.EntityMove.RotateCCW));
 
             // Script selector
@@ -159,10 +163,21 @@ namespace DeepSwarmClient
                 _playerListPanel.Layout(LayoutRectangle);
             }
 
-            if (key == SDL.SDL_Keycode.SDLK_a || key == SDL.SDL_Keycode.SDLK_q) Engine.IsScrollingLeft = true;
-            if (key == SDL.SDL_Keycode.SDLK_d) Engine.IsScrollingRight = true;
-            if (key == SDL.SDL_Keycode.SDLK_w || key == SDL.SDL_Keycode.SDLK_z) Engine.IsScrollingUp = true;
-            if (key == SDL.SDL_Keycode.SDLK_s) Engine.IsScrollingDown = true;
+            if (!_isDragging)
+            {
+                if (key == SDL.SDL_Keycode.SDLK_LEFT) Engine.IsScrollingLeft = true;
+                if (key == SDL.SDL_Keycode.SDLK_RIGHT) Engine.IsScrollingRight = true;
+                if (key == SDL.SDL_Keycode.SDLK_UP) Engine.IsScrollingUp = true;
+                if (key == SDL.SDL_Keycode.SDLK_DOWN) Engine.IsScrollingDown = true;
+            }
+
+            if (Engine.SelectedEntity != null)
+            {
+                if (key == SDL.SDL_Keycode.SDLK_a || key == SDL.SDL_Keycode.SDLK_q) Engine.MoveTowards(Entity.EntityDirection.Left);
+                if (key == SDL.SDL_Keycode.SDLK_d) Engine.MoveTowards(Entity.EntityDirection.Right);
+                if (key == SDL.SDL_Keycode.SDLK_w || key == SDL.SDL_Keycode.SDLK_z) Engine.MoveTowards(Entity.EntityDirection.Up);
+                if (key == SDL.SDL_Keycode.SDLK_s) Engine.MoveTowards(Entity.EntityDirection.Down);
+            }
         }
 
         public override void OnKeyUp(SDL.SDL_Keycode key)
@@ -172,14 +187,24 @@ namespace DeepSwarmClient
                 Remove(_playerListPanel);
             }
 
-            if (key == SDL.SDL_Keycode.SDLK_a || key == SDL.SDL_Keycode.SDLK_q) Engine.IsScrollingLeft = false;
-            if (key == SDL.SDL_Keycode.SDLK_d) Engine.IsScrollingRight = false;
-            if (key == SDL.SDL_Keycode.SDLK_w || key == SDL.SDL_Keycode.SDLK_z) Engine.IsScrollingUp = false;
-            if (key == SDL.SDL_Keycode.SDLK_s) Engine.IsScrollingDown = false;
+            if (key == SDL.SDL_Keycode.SDLK_LEFT) Engine.IsScrollingLeft = false;
+            if (key == SDL.SDL_Keycode.SDLK_RIGHT) Engine.IsScrollingRight = false;
+            if (key == SDL.SDL_Keycode.SDLK_UP) Engine.IsScrollingUp = false;
+            if (key == SDL.SDL_Keycode.SDLK_DOWN) Engine.IsScrollingDown = false;
+
+            if (key == SDL.SDL_Keycode.SDLK_a || key == SDL.SDL_Keycode.SDLK_q) Engine.StopMovingTowards(Entity.EntityDirection.Left);
+            if (key == SDL.SDL_Keycode.SDLK_d) Engine.StopMovingTowards(Entity.EntityDirection.Right);
+            if (key == SDL.SDL_Keycode.SDLK_w || key == SDL.SDL_Keycode.SDLK_z) Engine.StopMovingTowards(Entity.EntityDirection.Up);
+            if (key == SDL.SDL_Keycode.SDLK_s) Engine.StopMovingTowards(Entity.EntityDirection.Down);
         }
 
         public override void OnMouseMove()
         {
+            if (_isDragging)
+            {
+                Engine.ScrollingPixelsX = _dragX - Desktop.MouseX;
+                Engine.ScrollingPixelsY = _dragY - Desktop.MouseY;
+            }
         }
 
         public override void OnMouseDown(int button)
@@ -198,10 +223,25 @@ namespace DeepSwarmClient
                 Engine.SetSelectedEntity(null);
                 return;
             }
+            else if (button == 2)
+            {
+                Engine.IsScrollingLeft = false;
+                Engine.IsScrollingRight = false;
+                Engine.IsScrollingUp = false;
+                Engine.IsScrollingDown = false;
+
+                _isDragging = true;
+                _dragX = (int)Engine.ScrollingPixelsX + Desktop.MouseX;
+                _dragY = (int)Engine.ScrollingPixelsY + Desktop.MouseY;
+            }
         }
 
         public override void OnMouseUp(int button)
         {
+            if (button == 2)
+            {
+                _isDragging = false;
+            }
         }
 
         public void OnPlayerListUpdated()

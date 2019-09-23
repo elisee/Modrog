@@ -33,8 +33,8 @@ namespace DeepSwarmClient
         public int SelfBaseChunkX { get; private set; }
         public int SelfBaseChunkY { get; private set; }
 
-        public float ScrollingPixelsX { get; private set; }
-        public float ScrollingPixelsY { get; private set; }
+        public float ScrollingPixelsX;
+        public float ScrollingPixelsY;
 
         public int HoveredTileX { get; private set; }
         public int HoveredTileY { get; private set; }
@@ -49,6 +49,8 @@ namespace DeepSwarmClient
         public bool IsScrollingRight;
         public bool IsScrollingUp;
         public bool IsScrollingDown;
+
+        Entity.EntityDirection? _moveDirection;
 
         public Map Map = new Map();
 
@@ -349,6 +351,28 @@ namespace DeepSwarmClient
             InGameView.OnSelectedEntityChanged();
         }
 
+        public void MoveTowards(Entity.EntityDirection direction)
+        {
+            _moveDirection = direction;
+            PlanMove(GetSelectedEntityMoveFromDirection());
+        }
+
+        Entity.EntityMove GetSelectedEntityMoveFromDirection()
+        {
+            if (_moveDirection.Value == SelectedEntity.Direction) return Entity.EntityMove.Forward;
+            else
+            {
+                var diff = (SelectedEntity.Direction - _moveDirection.Value + 4) % 4 - 2;
+                if (diff < 0) return Entity.EntityMove.RotateCCW;
+                else return Entity.EntityMove.RotateCW;
+            }
+        }
+
+        public void StopMovingTowards(Entity.EntityDirection direction)
+        {
+            if (_moveDirection == direction) _moveDirection = null;
+        }
+
         public void PlanMove(Entity.EntityMove move)
         {
             _writer.WriteByte((byte)Protocol.ClientPacketType.PlanMoves);
@@ -439,18 +463,22 @@ namespace DeepSwarmClient
                 Map.Tiles[y * Map.MapSize + x] = _reader.ReadByte();
             }
 
+            // Planned moves
+            var plannedMoves = new Dictionary<int, Entity.EntityMove>();
+
             // TODO: Scripting
-            /* var validPlannedMoves = new Dictionary<int, Entity.EntityMove>();
+
+            if (_moveDirection != null && SelectedEntity != null) plannedMoves[SelectedEntity.Id] = GetSelectedEntityMoveFromDirection();
 
             _writer.WriteByte((byte)Protocol.ClientPacketType.PlanMoves);
             _writer.WriteInt(_tickIndex);
-            _writer.WriteShort((short)validPlannedMoves.Count);
-            foreach (var (entityId, move) in validPlannedMoves)
+            _writer.WriteShort((short)plannedMoves.Count);
+            foreach (var (entityId, move) in plannedMoves)
             {
                 _writer.WriteInt(entityId);
                 _writer.WriteByte((byte)move);
             }
-            Send();*/
+            Send();
         }
     }
 }

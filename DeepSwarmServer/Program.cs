@@ -320,7 +320,7 @@ namespace DeepSwarmServer
                             }
                             break;
 
-                        case Entity.EntityMove.Move:
+                        case Entity.EntityMove.Forward:
                             if (entity.Type == Entity.EntityType.Robot)
                             {
                                 var newX = entity.X;
