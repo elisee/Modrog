@@ -1,5 +1,6 @@
 ﻿using DeepSwarmCommon;
 using SDL2;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 
@@ -13,6 +14,9 @@ namespace DeepSwarmClient.UI
 
         public Rectangle AnchorRectangle;
         public Color BackgroundColor;
+
+        public IntPtr BackroundTexture;
+        public Rectangle BackgroundTextureArea;
 
         public Rectangle LayoutRectangle;
 
@@ -141,6 +145,13 @@ namespace DeepSwarmClient.UI
                 var rect = Desktop.ToSDL_Rect(LayoutRectangle);
                 BackgroundColor.UseAsDrawColor(Desktop.Renderer);
                 SDL.SDL_RenderFillRect(Desktop.Renderer, ref rect);
+            }
+
+            if (BackroundTexture != IntPtr.Zero)
+            {
+                var sourceRect = Desktop.ToSDL_Rect(BackgroundTextureArea);
+                var destRect = Desktop.ToSDL_Rect(LayoutRectangle);
+                SDL.SDL_RenderCopy(Desktop.Renderer, BackroundTexture, ref sourceRect, ref destRect);
             }
         }
     }
