@@ -15,10 +15,9 @@ namespace DeepSwarmClient
             const int PanelWidth = 320 + 16 * 2;
             const int PanelHeight = 160 + 16 * 2;
 
-            var panel = new Element(Desktop, this)
+            var panel = new Panel(Desktop, this, new Color(0x88aa88ff))
             {
                 AnchorRectangle = MakeCenteredRectangle(PanelWidth, PanelHeight),
-                BackgroundColor = new Color(0x88aa88ff)
             };
 
             new Label(Desktop, panel)

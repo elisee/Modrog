@@ -151,7 +151,7 @@ namespace DeepSwarmClient
             _receiver = new PacketReceiver(_socket);
 
             Desktop.SetRootElement(EnterNameView);
-            EnterNameView.NameInput.Value = SelfPlayerName ?? "";
+            EnterNameView.NameInput.SetValue(SelfPlayerName ?? "");
             Desktop.FocusedElement = EnterNameView.NameInput;
 
             Run();

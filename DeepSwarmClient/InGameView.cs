@@ -37,10 +37,9 @@ namespace DeepSwarmClient
         {
             AnchorRectangle = engine.Viewport;
 
-            _playerListPanel = new Element(Desktop, null)
+            _playerListPanel = new Panel(Desktop, null, new Color(0x123456ff))
             {
                 AnchorRectangle = new Rectangle(0, 0, (Protocol.MaxPlayerNameLength + 2) * 16, 720),
-                BackgroundColor = new Color(0x123456ff)
             };
 
             // Entity stats
@@ -147,10 +146,9 @@ namespace DeepSwarmClient
 
             AddButtonToStrip("MANUAL", () => Engine.ClearScriptForSelectedEntity());
 
-            var scriptSelectorPanel = new Element(Desktop, _scriptSelectorSidebar)
+            var scriptSelectorPanel = new Panel(Desktop, _scriptSelectorSidebar, new Color(0x123456ff))
             {
                 AnchorRectangle = new Rectangle(ButtonStripWidth, 0, SidebarPanelWidth, Engine.Viewport.Height),
-                BackgroundColor = new Color(0x123456ff)
             };
 
             new Button(Desktop, scriptSelectorPanel)
@@ -179,10 +177,9 @@ namespace DeepSwarmClient
             AddButtonToStrip("STOP", () => Engine.SetupScriptForSelectedEntity(null));
             AddButtonToStrip("SAVE", () => { /* Engine.SaveScript() */ });
 
-            var scriptEditorPanel = new Element(Desktop, _scriptEditorSidebar)
+            var scriptEditorPanel = new Panel(Desktop, _scriptEditorSidebar, new Color(0x123456ff))
             {
                 AnchorRectangle = new Rectangle(ButtonStripWidth, 0, SidebarPanelWidth, Engine.Viewport.Height),
-                BackgroundColor = new Color(0x123456ff)
             };
 
             _scriptNameInput = new TextInput(Desktop, scriptEditorPanel)
@@ -361,7 +358,7 @@ namespace DeepSwarmClient
                 else
                 {
                     _sidebarContainer.Add(_scriptEditorSidebar);
-                    _scriptNameInput.Value = scriptPath;
+                    _scriptNameInput.SetValue(scriptPath);
                     _scriptTextEditor.SetText(Engine.Scripts[scriptPath]);
                 }
             }
