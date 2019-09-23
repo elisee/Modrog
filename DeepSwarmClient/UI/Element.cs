@@ -118,14 +118,15 @@ namespace DeepSwarmClient.UI
         }
 
         public virtual void OnKeyUp(SDL.SDL_Keycode key) { }
+        public virtual void OnTextEntered(string text) { }
 
         public virtual void OnMouseEnter() { }
         public virtual void OnMouseExit() { }
-
         public virtual void OnMouseMove() { }
+
         public virtual void OnMouseDown(int button) { }
         public virtual void OnMouseUp(int button) { }
-        public virtual void OnTextEntered(string text) { }
+        public virtual void OnMouseWheel(int dx, int dy) { }
 
         public virtual void Validate() => Parent?.Validate();
         public virtual void Dismiss() => Parent?.Dismiss();

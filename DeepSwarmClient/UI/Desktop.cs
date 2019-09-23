@@ -70,6 +70,14 @@ namespace DeepSwarmClient.UI
                     }
                     break;
 
+                case SDL.SDL_EventType.SDL_MOUSEWHEEL:
+                    {
+                        var hitElement = RootElement.HitTest(MouseX, MouseY);
+                        hitElement?.OnMouseWheel(@event.wheel.x, @event.wheel.y);
+                    }
+                    break;
+
+
                 case SDL.SDL_EventType.SDL_TEXTINPUT:
                     var textBytes = new byte[256];
                     string text;
