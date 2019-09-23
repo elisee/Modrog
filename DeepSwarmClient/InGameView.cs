@@ -18,7 +18,7 @@ namespace DeepSwarmClient
 
         readonly Element _scriptEditorSidebar;
         readonly TextInput _scriptNameInput;
-        readonly Element _scriptTextEditor;
+        readonly TextEditor _scriptTextEditor;
 
         public InGameView(Engine engine)
             : base(engine, null)
@@ -135,7 +135,7 @@ namespace DeepSwarmClient
                 MaxLength = Protocol.MaxScriptNameLength
             };
 
-            _scriptTextEditor = new Element(Desktop, scriptEditorPanel)
+            _scriptTextEditor = new TextEditor(Desktop, scriptEditorPanel)
             {
                 AnchorRectangle = new Rectangle(8, 8 + 16 + 8, SidebarPanelWidth - 16, Engine.Viewport.Height - (8 + 16 + 8 + 8)),
                 BackgroundColor = new Color(0x004400ff),
@@ -229,7 +229,7 @@ namespace DeepSwarmClient
                 {
                     AnchorRectangle = new Rectangle(0, i * 16, _scriptSelectorList.AnchorRectangle.Width, 16),
                     Text = scriptPath,
-                    OnActivate = () => { }
+                    OnActivate = () => Engine.SetupScriptForSelectedEntity(scriptPath)
                 };
 
                 i++;
@@ -253,6 +253,8 @@ namespace DeepSwarmClient
                 {
                     _sidebarContainer.Add(_scriptEditorSidebar);
                     _scriptNameInput.Value = scriptPath;
+                    _scriptTextEditor.SetText(Engine.Scripts[scriptPath]);
+                    Desktop.FocusedElement = _scriptTextEditor;
                 }
             }
             else
