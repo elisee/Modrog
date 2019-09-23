@@ -14,7 +14,7 @@ namespace DeepSwarmClient.UI
         public Rectangle AnchorRectangle;
         public Color BackgroundColor;
 
-        protected Rectangle _layoutRectangle;
+        public Rectangle LayoutRectangle;
 
         public Element(Desktop desktop, Element parent)
         {
@@ -47,17 +47,17 @@ namespace DeepSwarmClient.UI
 
         public void Layout(Rectangle container)
         {
-            _layoutRectangle = new Rectangle(
+            LayoutRectangle = new Rectangle(
                 container.X + AnchorRectangle.X,
                 container.Y + AnchorRectangle.Y,
                 AnchorRectangle.Width, AnchorRectangle.Height);
 
-            foreach (var child in Children) child.Layout(_layoutRectangle);
+            foreach (var child in Children) child.Layout(LayoutRectangle);
         }
 
         public virtual Element HitTest(int x, int y)
         {
-            if (!_layoutRectangle.Contains(x, y)) return null;
+            if (!LayoutRectangle.Contains(x, y)) return null;
 
             foreach (var child in Children)
             {
@@ -75,6 +75,10 @@ namespace DeepSwarmClient.UI
         }
 
         public virtual void OnKeyUp(SDL.SDL_Keycode key) { }
+
+        public virtual void OnMouseEnter() { }
+        public virtual void OnMouseExit() { }
+
         public virtual void OnMouseMove() { }
         public virtual void OnMouseDown(int button) { }
         public virtual void OnMouseUp(int button) { }
@@ -93,7 +97,7 @@ namespace DeepSwarmClient.UI
         {
             if (BackgroundColor.A != 0)
             {
-                var rect = Desktop.ToSDL_Rect(_layoutRectangle);
+                var rect = Desktop.ToSDL_Rect(LayoutRectangle);
                 BackgroundColor.UseAsDrawColor(Desktop.Renderer);
                 SDL.SDL_RenderFillRect(Desktop.Renderer, ref rect);
             }

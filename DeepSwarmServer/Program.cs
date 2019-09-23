@@ -11,14 +11,16 @@ namespace DeepSwarmServer
 {
     class Program
     {
-        static void Main()
+        static void Main(string[] args)
         {
+            var isNew = args.Length > 0 && args[0] == "new";
+
             var random = new Random();
 
             var mapFilePath = Path.Combine(AppContext.BaseDirectory, "Map.dat");
             var map = new Map();
 
-            if (File.Exists(mapFilePath))
+            if (!isNew && File.Exists(mapFilePath))
             {
                 Console.WriteLine($"Loading map from {mapFilePath}...");
                 map.LoadFromFile(mapFilePath);

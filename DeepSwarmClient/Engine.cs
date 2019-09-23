@@ -39,6 +39,8 @@ namespace DeepSwarmClient
         public int HoveredTileX { get; private set; }
         public int HoveredTileY { get; private set; }
         public Entity SelectedEntity { get; private set; }
+        public readonly Dictionary<int, string> EntityScripts = new Dictionary<int, string>();
+
         int _tickIndex;
 
         public readonly byte[] FogOfWar = new byte[Map.MapSize * Map.MapSize];
@@ -49,6 +51,9 @@ namespace DeepSwarmClient
         public bool IsScrollingDown;
 
         public Map Map = new Map();
+
+        public readonly string ScriptsPath;
+        public readonly Dictionary<string, string> Scripts = new Dictionary<string, string>();
 
         Socket _socket;
         PacketReceiver _receiver;
@@ -86,6 +91,13 @@ namespace DeepSwarmClient
                 try { SelfPlayerName = File.ReadAllText(SettingsFilePath); } catch { }
             }
 
+            ScriptsPath = Path.Combine(AppContext.BaseDirectory, "Scripts");
+            foreach (var scriptFilePath in Directory.EnumerateFiles(ScriptsPath, "*.lua", SearchOption.AllDirectories))
+            {
+                var relativeFilePath = scriptFilePath.Substring(ScriptsPath.Length + 1);
+                Scripts.Add(relativeFilePath, File.ReadAllText(scriptFilePath));
+            }
+
             AssetsPath = FileHelper.FindAppFolder("Assets");
 
             if (SDL_image.IMG_Init(SDL_image.IMG_InitFlags.IMG_INIT_PNG) != (int)SDL_image.IMG_InitFlags.IMG_INIT_PNG) throw new Exception();
@@ -98,6 +110,28 @@ namespace DeepSwarmClient
             EnterNameView = new EnterNameView(this);
             LoadingView = new LoadingView(this);
             InGameView = new InGameView(this);
+        }
+
+        public void CreateScriptForSelectedEntity()
+        {
+            string relativePath;
+            var index = 0;
+            var suffix = "";
+
+            while (true)
+            {
+                relativePath = $"Script{suffix}.lua";
+                if (!File.Exists(Path.Combine(ScriptsPath, relativePath))) break;
+                index++;
+                suffix = $"_{index}";
+            }
+
+            var defaultScriptText = "function tick(self)\n  \nend\n";
+            File.WriteAllText(Path.Combine(ScriptsPath, relativePath), defaultScriptText);
+            Scripts.Add(relativePath, defaultScriptText);
+            InGameView.OnScriptListUpdated();
+
+            SetupScriptForSelectedEntity(relativePath);
         }
 
         public void Start()
@@ -310,6 +344,7 @@ namespace DeepSwarmClient
         public void SetSelectedEntity(Entity entity)
         {
             SelectedEntity = entity;
+            InGameView.OnSelectedEntityChanged();
         }
 
         public void PlanMove(Entity.EntityMove move)
@@ -320,6 +355,18 @@ namespace DeepSwarmClient
             _writer.WriteInt(SelectedEntity.Id);
             _writer.WriteByte((byte)move);
             Send();
+        }
+
+        public void SetupScriptForSelectedEntity(string scriptFilePath)
+        {
+            EntityScripts[SelectedEntity.Id] = scriptFilePath;
+            InGameView.OnSelectedEntityChanged();
+        }
+
+        public void ClearScriptForSelectedEntity()
+        {
+            EntityScripts.Remove(SelectedEntity.Id);
+            InGameView.OnSelectedEntityChanged();
         }
 
         void ReadPlayerList()
@@ -345,23 +392,10 @@ namespace DeepSwarmClient
             // TODO
         }
 
-        /* void ReadMapArea()
-        {
-            var x = _reader.ReadShort();
-            var y = _reader.ReadShort();
-            var width = _reader.ReadShort();
-            var height = _reader.ReadShort();
-
-            var area = _reader.ReadBytes(width * height).ToArray();
-            for (var j = 0; j < height; j++) Buffer.BlockCopy(area, j * width, Map.Tiles, (y + j) * Map.MapSize + x, width);
-        } */
-
         void ReadTick()
         {
             Unsafe.InitBlock(ref FogOfWar[0], 0, (uint)FogOfWar.Length);
             Map.Entities.Clear();
-
-            // TODO: Handle fog of war with an additional array holding whether each tile is currently being seen or not
 
             _tickIndex = _reader.ReadInt();
 

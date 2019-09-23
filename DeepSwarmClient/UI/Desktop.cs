@@ -12,6 +12,7 @@ namespace DeepSwarmClient.UI
 
         public Element RootElement { get; private set; }
         public Element FocusedElement;
+        public Element HoveredElement;
 
         public int MouseX { get; private set; }
         public int MouseY { get; private set; }
@@ -43,6 +44,14 @@ namespace DeepSwarmClient.UI
 
                     {
                         var hitElement = RootElement.HitTest(@event.button.x, @event.button.y);
+
+                        if (hitElement != HoveredElement)
+                        {
+                            HoveredElement?.OnMouseExit();
+                            hitElement?.OnMouseEnter();
+                            HoveredElement = hitElement;
+                        }
+
                         hitElement?.OnMouseMove();
                     }
                     break;

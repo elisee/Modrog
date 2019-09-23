@@ -1,1 +1,1 @@
-Build\DeepSwarmServer-Debug\netcoreapp3.0\DeepSwarmServer.exe
+Build\DeepSwarmServer-Debug\netcoreapp3.0\DeepSwarmServer.exe %*

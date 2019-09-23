@@ -6,6 +6,8 @@
         public const int MaxPlayerNameLength = 16;
         public static readonly string VersionString = "DEEPSWARM0";
 
+        public const int MaxScriptNameLength = 64;
+
         public enum ServerPacketType : byte
         {
             SetupPlayerIndex,

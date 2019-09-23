@@ -8,7 +8,17 @@ namespace DeepSwarmClient
     class InGameView : EngineElement
     {
         readonly Element _playerListPanel;
-        readonly Element _actionPanel;
+
+        readonly Element _sidebarContainer;
+
+        readonly Element _manualModeSidebar;
+
+        readonly Element _scriptSelectorSidebar;
+        readonly Element _scriptSelectorList;
+
+        readonly Element _scriptEditorSidebar;
+        readonly TextInput _scriptNameInput;
+        readonly Element _scriptTextEditor;
 
         public InGameView(Engine engine)
             : base(engine, null)
@@ -21,51 +31,122 @@ namespace DeepSwarmClient
                 BackgroundColor = new Color(0x123456ff)
             };
 
-            var actionButtons = 4;
-            var buttonWidth = 96;
-
-            _actionPanel = new Element(Desktop, null)
+            _sidebarContainer = new Element(Desktop, this)
             {
-                AnchorRectangle = new Rectangle(Engine.Viewport.Width / 2 - actionButtons * buttonWidth / 2, 50, buttonWidth * actionButtons + 16 * (1 + actionButtons), 64 + 16 * 2),
+                AnchorRectangle = new Rectangle(0, 0, Engine.Viewport.Width, Engine.Viewport.Height)
+            };
+
+            const int ButtonStripWidth = (128 + 2 * 8);
+            const int SidebarPanelWidth = 400;
+
+            Element activeStrip = null;
+            int stripButtons = 0;
+
+            Element StartButtonStrip(Element strip)
+            {
+                activeStrip = strip;
+                stripButtons = 0;
+                return strip;
+            }
+
+            void AddButtonToStrip(string label, Action action)
+            {
+                var buttonHeight = 64;
+
+                new Button(Desktop, activeStrip)
+                {
+                    Text = label,
+                    AnchorRectangle = new Rectangle(8, 8 + stripButtons * (buttonHeight + 8), activeStrip.AnchorRectangle.Width - 16, buttonHeight),
+                    BackgroundColor = new Color(0x4444ccff),
+                    OnActivate = action
+                };
+
+                stripButtons++;
+            }
+
+            // Manual mode
+            _manualModeSidebar = new Element(Desktop, null)
+            {
+                AnchorRectangle = new Rectangle(Engine.Viewport.Width - ButtonStripWidth, 0, ButtonStripWidth, Engine.Viewport.Height),
+            };
+
+            StartButtonStrip(_manualModeSidebar);
+            AddButtonToStrip("SCRIPT", () => Engine.SetupScriptForSelectedEntity(null));
+            AddButtonToStrip("BUILD", () => Engine.PlanMove(Entity.EntityMove.Build));
+            AddButtonToStrip("CW", () => Engine.PlanMove(Entity.EntityMove.RotateCW));
+            AddButtonToStrip("MOVE", () => Engine.PlanMove(Entity.EntityMove.Move));
+            AddButtonToStrip("CCW", () => Engine.PlanMove(Entity.EntityMove.RotateCCW));
+
+            // Script selector
+            _scriptSelectorSidebar = new Element(Desktop, null)
+            {
+                AnchorRectangle = new Rectangle(Engine.Viewport.Width - ButtonStripWidth - SidebarPanelWidth, 0, ButtonStripWidth + SidebarPanelWidth, Engine.Viewport.Height)
+            };
+
+            var scriptSelectorButtonStrip = StartButtonStrip(new Element(Desktop, _scriptSelectorSidebar)
+            {
+                AnchorRectangle = new Rectangle(0, 0, ButtonStripWidth, Engine.Viewport.Height)
+            });
+
+            AddButtonToStrip("MANUAL", () => Engine.ClearScriptForSelectedEntity());
+
+            var scriptSelectorPanel = new Element(Desktop, _scriptSelectorSidebar)
+            {
+                AnchorRectangle = new Rectangle(ButtonStripWidth, 0, SidebarPanelWidth, Engine.Viewport.Height),
                 BackgroundColor = new Color(0x123456ff)
             };
 
-            new Button(Desktop, _actionPanel)
+            new Button(Desktop, scriptSelectorPanel)
             {
-                Text = "BUILD",
-                AnchorRectangle = new Rectangle(16, 16, buttonWidth, 64),
-                BackgroundColor = new Color(0x4444ccff),
-                OnActivate = () => Engine.PlanMove(Entity.EntityMove.Build)
+                AnchorRectangle = new Rectangle(8, 8, SidebarPanelWidth - 16, 16),
+                Text = "[+] New Script",
+                OnActivate = () => Engine.CreateScriptForSelectedEntity()
             };
 
-            new Button(Desktop, _actionPanel)
+            _scriptSelectorList = new Element(Desktop, scriptSelectorPanel)
             {
-                Text = "CW",
-                AnchorRectangle = new Rectangle(16 + (buttonWidth + 16) * 1, 16, buttonWidth, 64),
-                BackgroundColor = new Color(0x4444ccff),
-                OnActivate = () => Engine.PlanMove(Entity.EntityMove.RotateCW)
+                AnchorRectangle = new Rectangle(8, 32 + 8, SidebarPanelWidth - 16, Engine.Viewport.Height - 32 - 16)
             };
 
-            new Button(Desktop, _actionPanel)
+            // Script editor
+            _scriptEditorSidebar = new Element(Desktop, null)
             {
-                Text = "MOVE",
-                AnchorRectangle = new Rectangle(16 + (buttonWidth + 16) * 2, 16, buttonWidth, 64),
-                BackgroundColor = new Color(0x4444ccff),
-                OnActivate = () => Engine.PlanMove(Entity.EntityMove.Move)
+                AnchorRectangle = new Rectangle(Engine.Viewport.Width - ButtonStripWidth - SidebarPanelWidth, 0, ButtonStripWidth + SidebarPanelWidth, Engine.Viewport.Height),
             };
 
-            new Button(Desktop, _actionPanel)
+            var scriptEditorButtonStrip = StartButtonStrip(new Element(Desktop, _scriptEditorSidebar)
             {
-                Text = "CCW",
-                AnchorRectangle = new Rectangle(16 + (buttonWidth + 16) * 3, 16, buttonWidth, 64),
-                BackgroundColor = new Color(0x4444ccff),
-                OnActivate = () => Engine.PlanMove(Entity.EntityMove.RotateCCW)
+                AnchorRectangle = new Rectangle(0, 0, ButtonStripWidth, Engine.Viewport.Height)
+            });
+
+            AddButtonToStrip("STOP", () => Engine.SetupScriptForSelectedEntity(null));
+            AddButtonToStrip("SAVE", () => { /* Engine.SaveScript() */ });
+
+            var scriptEditorPanel = new Element(Desktop, _scriptEditorSidebar)
+            {
+                AnchorRectangle = new Rectangle(ButtonStripWidth, 0, SidebarPanelWidth, Engine.Viewport.Height),
+                BackgroundColor = new Color(0x123456ff)
             };
+
+            _scriptNameInput = new TextInput(Desktop, scriptEditorPanel)
+            {
+                AnchorRectangle = new Rectangle(8, 8, SidebarPanelWidth - 16, 16),
+                BackgroundColor = new Color(0x004400ff),
+                MaxLength = Protocol.MaxScriptNameLength
+            };
+
+            _scriptTextEditor = new Element(Desktop, scriptEditorPanel)
+            {
+                AnchorRectangle = new Rectangle(8, 8 + 16 + 8, SidebarPanelWidth - 16, Engine.Viewport.Height - (8 + 16 + 8 + 8)),
+                BackgroundColor = new Color(0x004400ff),
+            };
+
+            OnScriptListUpdated();
         }
 
         public override Element HitTest(int x, int y)
         {
-            return base.HitTest(x, y) ?? (_layoutRectangle.Contains(x, y) ? this : null);
+            return base.HitTest(x, y) ?? (LayoutRectangle.Contains(x, y) ? this : null);
         }
 
         public override void OnKeyDown(SDL.SDL_Keycode key, bool repeat)
@@ -75,7 +156,7 @@ namespace DeepSwarmClient
             if (key == SDL.SDL_Keycode.SDLK_TAB)
             {
                 Add(_playerListPanel);
-                _playerListPanel.Layout(_layoutRectangle);
+                _playerListPanel.Layout(LayoutRectangle);
             }
 
             if (key == SDL.SDL_Keycode.SDLK_a || key == SDL.SDL_Keycode.SDLK_q) Engine.IsScrollingLeft = true;
@@ -110,17 +191,11 @@ namespace DeepSwarmClient
                     if (entity.X == Engine.HoveredTileX && entity.Y == Engine.HoveredTileY)
                     {
                         Engine.SetSelectedEntity(entity);
-                        if (_actionPanel.Parent == null)
-                        {
-                            Add(_actionPanel);
-                            _actionPanel.Layout(_layoutRectangle);
-                        }
                         return;
                     }
                 }
 
                 Engine.SetSelectedEntity(null);
-                if (_actionPanel.Parent != null) Remove(_actionPanel);
                 return;
             }
         }
@@ -140,7 +215,52 @@ namespace DeepSwarmClient
                 label.AnchorRectangle = new Rectangle(16, 16 + 16 * i, _playerListPanel.AnchorRectangle.Width, 16);
             }
 
-            _playerListPanel.Layout(_layoutRectangle);
+            _playerListPanel.Layout(LayoutRectangle);
+        }
+
+        public void OnScriptListUpdated()
+        {
+            _scriptSelectorList.Clear();
+
+            var i = 0;
+            foreach (var scriptPath in Engine.Scripts.Keys)
+            {
+                new Button(Desktop, _scriptSelectorList)
+                {
+                    AnchorRectangle = new Rectangle(0, i * 16, _scriptSelectorList.AnchorRectangle.Width, 16),
+                    Text = scriptPath,
+                    OnActivate = () => { }
+                };
+
+                i++;
+            }
+
+            _scriptSelectorList.Layout(_scriptSelectorList.Parent.LayoutRectangle);
+        }
+
+        public void OnSelectedEntityChanged()
+        {
+            _sidebarContainer.Clear();
+            if (Engine.SelectedEntity == null) return;
+
+            if (Engine.EntityScripts.TryGetValue(Engine.SelectedEntity.Id, out var scriptPath))
+            {
+                if (scriptPath == null)
+                {
+                    _sidebarContainer.Add(_scriptSelectorSidebar);
+                }
+                else
+                {
+                    _sidebarContainer.Add(_scriptEditorSidebar);
+                    _scriptNameInput.Value = scriptPath;
+                }
+            }
+            else
+            {
+                _sidebarContainer.Add(_manualModeSidebar);
+            }
+
+            _sidebarContainer.Layout(Engine.Viewport);
         }
 
         protected override void DrawSelf()

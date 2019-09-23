@@ -13,7 +13,7 @@ namespace DeepSwarmClient.UI
         {
         }
 
-        public override Element HitTest(int x, int y) => _layoutRectangle.Contains(x, y) ? this : null;
+        public override Element HitTest(int x, int y) => LayoutRectangle.Contains(x, y) ? this : null;
 
         public override void OnKeyDown(SDL.SDL_Keycode key, bool repeat)
         {
@@ -40,7 +40,15 @@ namespace DeepSwarmClient.UI
         {
             base.DrawSelf();
 
-            RendererHelper.DrawText(Desktop.Renderer, _layoutRectangle.X, _layoutRectangle.Y, Value, TextColor);
+            RendererHelper.DrawText(Desktop.Renderer, LayoutRectangle.X, LayoutRectangle.Y, Value, TextColor);
+
+            if (Desktop.FocusedElement == this)
+            {
+                new Color(0xffffffff).UseAsDrawColor(Desktop.Renderer);
+                SDL.SDL_RenderDrawLine(Desktop.Renderer,
+                    LayoutRectangle.X + Value.Length * 16, LayoutRectangle.Y,
+                    LayoutRectangle.X + Value.Length * 16, LayoutRectangle.Y + LayoutRectangle.Height);
+            }
         }
     }
 }

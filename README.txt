@@ -30,9 +30,11 @@
 (x) Creuser avec un robot
 (x) Brouillard de guerre
 ( ) Robots scriptables avec Lua (entièrement coté client)
+( ) Pouvoir laisser les boutons enfoncés
 ( ) Si un déplacement rentre dans un chunk qui était free, le marquer comme pas free pour éviter qu'on spawne sur des gens (ou alors il faut au moins garder une liste d'entités par chunk)
 ( ) Serveur génère ennemis
 ( ) Le coeur a une quantité limitée de cristaux et doit être approvisionné régulièrement sinon il meurt
 ( ) Objectif : Trouver les joueurs amis et relier un maximum de coeurs
 ( ) Server envoie liste des groupes reliés par équipe (rouge vs bleu)
 ( ) Remplacer la police par une police pixel art de Chevy Ray
+( ) Roche
