@@ -453,7 +453,8 @@ namespace DeepSwarmClient
                 }
             }
 
-            SetSelectedEntity(newSelectedEntity);
+            SelectedEntity = newSelectedEntity;
+            if (SelectedEntity != null) InGameView.OnSelectedEntityUpdated();
 
             var seenTilesCount = _reader.ReadShort();
             for (var i = 0; i < seenTilesCount; i++)

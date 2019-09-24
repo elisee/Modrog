@@ -334,8 +334,6 @@ namespace DeepSwarmClient
 
             if (Engine.SelectedEntity == null) return;
 
-            Add(_entityStatsContainer);
-
             _entityNameLabel.Text = Engine.SelectedEntity.Type.ToString();
             var entityNameLength = _entityNameLabel.Text.Length * RendererHelper.FontRenderSize;
             _entityNameLabel.AnchorRectangle.X = (EntityStatsContainerWidth - entityNameLength) / 2;
@@ -344,8 +342,8 @@ namespace DeepSwarmClient
             var entityOwnerLength = _entityOwnerLabel.Text.Length * RendererHelper.FontRenderSize;
             _entityOwnerLabel.AnchorRectangle.X = (EntityStatsContainerWidth - entityOwnerLength) / 2;
 
-            _entityHealthValue.Text = Engine.SelectedEntity.Health.ToString();
-            _entityCrystalsValue.Text = Engine.SelectedEntity.Crystals.ToString();
+            Add(_entityStatsContainer);
+            OnSelectedEntityUpdated();
 
             if (Engine.EntityScripts.TryGetValue(Engine.SelectedEntity.Id, out var scriptPath))
             {
@@ -372,6 +370,12 @@ namespace DeepSwarmClient
             _entityStatsContainer.Layout(Engine.Viewport);
 
             _sidebarContainer.Layout(Engine.Viewport);
+        }
+
+        public void OnSelectedEntityUpdated()
+        {
+            _entityHealthValue.Text = Engine.SelectedEntity.Health.ToString();
+            _entityCrystalsValue.Text = Engine.SelectedEntity.Crystals.ToString();
         }
 
         protected override void DrawSelf()
