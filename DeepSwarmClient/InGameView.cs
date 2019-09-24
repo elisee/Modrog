@@ -128,7 +128,7 @@ namespace DeepSwarmClient
             };
 
             StartButtonStrip(_manualModeSidebar);
-            AddButtonToStrip("SCRIPT", () => Engine.SetupScriptForSelectedEntity(null));
+            AddButtonToStrip("SCRIPT", () => Engine.SetupScriptPathForSelectedEntity(null));
             AddButtonToStrip("BUILD", () => Engine.PlanMove(Entity.EntityMove.Build));
             AddButtonToStrip("CW", () => Engine.PlanMove(Entity.EntityMove.RotateCW));
             AddButtonToStrip("MOVE", () => Engine.PlanMove(Entity.EntityMove.Forward));
@@ -145,7 +145,7 @@ namespace DeepSwarmClient
                 AnchorRectangle = new Rectangle(0, 0, ButtonStripWidth, Engine.Viewport.Height)
             });
 
-            AddButtonToStrip("MANUAL", () => Engine.ClearScriptForSelectedEntity());
+            AddButtonToStrip("MANUAL", () => Engine.ClearScriptPathForSelectedEntity());
 
             var scriptSelectorPanel = new Panel(Desktop, _scriptSelectorSidebar, new Color(0x123456ff))
             {
@@ -175,8 +175,8 @@ namespace DeepSwarmClient
                 AnchorRectangle = new Rectangle(0, 0, ButtonStripWidth, Engine.Viewport.Height)
             });
 
-            AddButtonToStrip("STOP", () => Engine.SetupScriptForSelectedEntity(null));
-            AddButtonToStrip("SAVE", () => { /* Engine.SaveScript() */ });
+            AddButtonToStrip("STOP", () => Engine.SetupScriptPathForSelectedEntity(null));
+            AddButtonToStrip("SAVE", () => Engine.UpdateScriptForSelectedEntity(_scriptTextEditor.GetText()));
 
             var scriptEditorPanel = new Panel(Desktop, _scriptEditorSidebar, new Color(0x123456ff))
             {
@@ -329,7 +329,7 @@ namespace DeepSwarmClient
                 {
                     AnchorRectangle = new Rectangle(0, i * 16, _scriptSelectorList.AnchorRectangle.Width, 16),
                     Text = scriptPath,
-                    OnActivate = () => Engine.SetupScriptForSelectedEntity(scriptPath)
+                    OnActivate = () => Engine.SetupScriptPathForSelectedEntity(scriptPath)
                 };
 
                 i++;
@@ -356,7 +356,7 @@ namespace DeepSwarmClient
             Add(_entityStatsContainer);
             OnSelectedEntityUpdated();
 
-            if (Engine.EntityScripts.TryGetValue(Engine.SelectedEntity.Id, out var scriptPath))
+            if (Engine.EntityScriptPaths.TryGetValue(Engine.SelectedEntity.Id, out var scriptPath))
             {
                 _entityStatsContainer.AnchorRectangle.X = (Engine.Viewport.Width - EntityStatsContainerWidth - SidebarPanelWidth) / 2;
 

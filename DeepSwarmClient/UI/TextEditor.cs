@@ -235,5 +235,7 @@ namespace DeepSwarmClient.UI
             _cursorX = 0;
             _cursorY = 0;
         }
+
+        public string GetText() => string.Join('\n', Lines);
     }
 }

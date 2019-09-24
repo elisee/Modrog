@@ -39,7 +39,7 @@ namespace DeepSwarmClient
         public int HoveredTileX { get; private set; }
         public int HoveredTileY { get; private set; }
         public Entity SelectedEntity { get; private set; }
-        public readonly Dictionary<int, string> EntityScripts = new Dictionary<int, string>();
+        public readonly Dictionary<int, string> EntityScriptPaths = new Dictionary<int, string>();
 
         int _tickIndex;
 
@@ -135,7 +135,7 @@ namespace DeepSwarmClient
             Scripts.Add(relativePath, defaultScriptText);
             InGameView.OnScriptListUpdated();
 
-            SetupScriptForSelectedEntity(relativePath);
+            SetupScriptPathForSelectedEntity(relativePath);
         }
 
         public void Start()
@@ -383,16 +383,23 @@ namespace DeepSwarmClient
             Send();
         }
 
-        public void SetupScriptForSelectedEntity(string scriptFilePath)
+        public void SetupScriptPathForSelectedEntity(string scriptFilePath)
         {
-            EntityScripts[SelectedEntity.Id] = scriptFilePath;
+            EntityScriptPaths[SelectedEntity.Id] = scriptFilePath;
             InGameView.OnSelectedEntityChanged();
         }
 
-        public void ClearScriptForSelectedEntity()
+        public void ClearScriptPathForSelectedEntity()
         {
-            EntityScripts.Remove(SelectedEntity.Id);
+            EntityScriptPaths.Remove(SelectedEntity.Id);
             InGameView.OnSelectedEntityChanged();
+        }
+
+        internal void UpdateScriptForSelectedEntity(string scriptText)
+        {
+            var relativePath = EntityScriptPaths[SelectedEntity.Id];
+            Scripts[relativePath] = scriptText;
+            File.WriteAllText(Path.Combine(ScriptsPath, relativePath), scriptText);
         }
 
         void ReadPlayerList()
