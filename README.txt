@@ -41,7 +41,11 @@
 (x) bouton STOP qui marche
 (x) ne pas crasher si script invalide
 ( ) afficher numéro de version au lancement
+( ) fixer crash coordonnées invalides fog of war
+( ) afficher les erreurs de script quelque part
+( ) augmenter taille de la fenêtre de script
 
+( ) pouvoir renommer les scripts
 ( ) Map qui boucle
 ( ) Si un déplacement rentre dans un chunk qui était free, le marquer comme pas free pour éviter qu'on spawne sur des gens (ou alors il faut au moins garder une liste d'entités par chunk)
 ( ) Serveur génère ennemis
