@@ -411,51 +411,51 @@ namespace DeepSwarmClient
             var tilesPerColumn = (int)MathF.Ceiling((float)Engine.Viewport.Height / Map.TileSize + 1);
 
             // Tiles
-            for (var y = -1; y < tilesPerColumn; y++)
-            {
-                for (var x = -1; x < tilesPerRow; x++)
-                {
-                    var tileX = Map.Wrap(startTileX + x);
-                    var tileY = Map.Wrap(startTileY + y);
-
-                    var tileIndex = tileY * Map.MapSize + tileX;
-                    var tile = (int)Engine.Map.Tiles[tileIndex];
-
-                    var renderX = (startTileX + x) * Map.TileSize - (int)Engine.ScrollingPixelsX;
-                    var renderY = (startTileY + y) * Map.TileSize - (int)Engine.ScrollingPixelsY;
-
-                    var sourceRect = Desktop.ToSDL_Rect(new Rectangle((5 + tile) * 24, 0, 24, 24));
-                    var destRect = Desktop.ToSDL_Rect(new Rectangle(renderX, renderY, Map.TileSize, Map.TileSize));
-                    SDL.SDL_RenderCopy(Engine.Renderer, Engine.SpritesheetTexture, ref sourceRect, ref destRect);
-                }
-            }
+            DrawTiles(startTileX, startTileY, tilesPerRow, tilesPerColumn);
 
             // Fog of war
-            var fogColor = new Color(0x00000044);
-            fogColor.UseAsDrawColor(Engine.Renderer);
-            SDL.SDL_SetRenderDrawBlendMode(Engine.Renderer, SDL.SDL_BlendMode.SDL_BLENDMODE_BLEND);
-
-            for (var y = -1; y < tilesPerColumn; y++)
-            {
-                for (var x = -1; x < tilesPerRow; x++)
-                {
-                    var tileX = Map.Wrap(startTileX + x);
-                    var tileY = Map.Wrap(startTileY + y);
-
-                    var tileIndex = tileY * Map.MapSize + tileX;
-                    if (Engine.FogOfWar[tileIndex] != 0) continue;
-
-                    var renderX = (startTileX + x) * Map.TileSize - (int)Engine.ScrollingPixelsX;
-                    var renderY = (startTileY + y) * Map.TileSize - (int)Engine.ScrollingPixelsY;
-
-                    var rect = Desktop.ToSDL_Rect(new Rectangle(renderX, renderY, Map.TileSize, Map.TileSize));
-                    SDL.SDL_RenderFillRect(Engine.Renderer, ref rect);
-                }
-            }
-
-            SDL.SDL_SetRenderDrawBlendMode(Engine.Renderer, SDL.SDL_BlendMode.SDL_BLENDMODE_NONE);
+            DrawFogOfWar(startTileX, startTileY, tilesPerRow, tilesPerColumn);
 
             // Entities
+            DrawEntities(startTileX, startTileY);
+
+            if (Engine.SelectedEntity != null)
+            {
+                DrawSelectedEntity(startTileX, startTileY);
+            }
+        }
+
+        private void DrawSelectedEntity(int startTileX, int startTileY)
+        {
+            var color = new Color(0x00ff00ff);
+            color.UseAsDrawColor(Engine.Renderer);
+
+            var x = Engine.SelectedEntity.X;
+            var y = Engine.SelectedEntity.Y;
+            var w = 1;
+            var h = 1;
+
+            switch (Engine.SelectedEntity.Type)
+            {
+                case Entity.EntityType.Factory: x -= 1; y -= 1; w = 3; h = 2; break;
+            }
+
+            var tileX = Map.Wrap(x - startTileX) + startTileX;
+            var tileY = Map.Wrap(y - startTileY) + startTileY;
+
+            var renderX = tileX * Map.TileSize - (int)Engine.ScrollingPixelsX;
+            var renderY = tileY * Map.TileSize - (int)Engine.ScrollingPixelsY;
+
+            var rect = new Rectangle(renderX, renderY, w * Map.TileSize, h * Map.TileSize);
+
+            SDL.SDL_RenderDrawLine(Engine.Renderer, rect.X, rect.Y, rect.X + rect.Width, rect.Y);
+            SDL.SDL_RenderDrawLine(Engine.Renderer, rect.X + rect.Width, rect.Y, rect.X + rect.Width, rect.Y + rect.Height);
+            SDL.SDL_RenderDrawLine(Engine.Renderer, rect.X + rect.Width, rect.Y + rect.Height, rect.X, rect.Y + rect.Height);
+            SDL.SDL_RenderDrawLine(Engine.Renderer, rect.X, rect.Y + rect.Height, rect.X, rect.Y);
+        }
+
+        private void DrawEntities(int startTileX, int startTileY)
+        {
             foreach (var entity in Engine.Map.Entities)
             {
                 var tileX = Map.Wrap(entity.X - startTileX) + startTileX;
@@ -547,34 +547,54 @@ namespace DeepSwarmClient
                 }
 
             }
+        }
 
-            if (Engine.SelectedEntity != null)
+        private void DrawFogOfWar(int startTileX, int startTileY, int tilesPerRow, int tilesPerColumn)
+        {
+            var fogColor = new Color(0x00000044);
+            fogColor.UseAsDrawColor(Engine.Renderer);
+            SDL.SDL_SetRenderDrawBlendMode(Engine.Renderer, SDL.SDL_BlendMode.SDL_BLENDMODE_BLEND);
+
+            for (var y = -1; y < tilesPerColumn; y++)
             {
-                var color = new Color(0x00ff00ff);
-                color.UseAsDrawColor(Engine.Renderer);
-
-                var x = Engine.SelectedEntity.X;
-                var y = Engine.SelectedEntity.Y;
-                var w = 1;
-                var h = 1;
-
-                switch (Engine.SelectedEntity.Type)
+                for (var x = -1; x < tilesPerRow; x++)
                 {
-                    case Entity.EntityType.Factory: x -= 1; y -= 1; w = 3; h = 2; break;
+                    var tileX = Map.Wrap(startTileX + x);
+                    var tileY = Map.Wrap(startTileY + y);
+
+                    var tileIndex = tileY * Map.MapSize + tileX;
+                    if (Engine.FogOfWar[tileIndex] != 0) continue;
+
+                    var renderX = (startTileX + x) * Map.TileSize - (int)Engine.ScrollingPixelsX;
+                    var renderY = (startTileY + y) * Map.TileSize - (int)Engine.ScrollingPixelsY;
+
+                    var rect = Desktop.ToSDL_Rect(new Rectangle(renderX, renderY, Map.TileSize, Map.TileSize));
+                    SDL.SDL_RenderFillRect(Engine.Renderer, ref rect);
                 }
+            }
 
-                var tileX = Map.Wrap(x - startTileX) + startTileX;
-                var tileY = Map.Wrap(y - startTileY) + startTileY;
+            SDL.SDL_SetRenderDrawBlendMode(Engine.Renderer, SDL.SDL_BlendMode.SDL_BLENDMODE_NONE);
+        }
 
-                var renderX = tileX * Map.TileSize - (int)Engine.ScrollingPixelsX;
-                var renderY = tileY * Map.TileSize - (int)Engine.ScrollingPixelsY;
+        private void DrawTiles(int startTileX, int startTileY, int tilesPerRow, int tilesPerColumn)
+        {
+            for (var y = -1; y < tilesPerColumn; y++)
+            {
+                for (var x = -1; x < tilesPerRow; x++)
+                {
+                    var tileX = Map.Wrap(startTileX + x);
+                    var tileY = Map.Wrap(startTileY + y);
 
-                var rect = new Rectangle(renderX, renderY, w * Map.TileSize, h * Map.TileSize);
+                    var tileIndex = tileY * Map.MapSize + tileX;
+                    var tile = (int)Engine.Map.Tiles[tileIndex];
 
-                SDL.SDL_RenderDrawLine(Engine.Renderer, rect.X, rect.Y, rect.X + rect.Width, rect.Y);
-                SDL.SDL_RenderDrawLine(Engine.Renderer, rect.X + rect.Width, rect.Y, rect.X + rect.Width, rect.Y + rect.Height);
-                SDL.SDL_RenderDrawLine(Engine.Renderer, rect.X + rect.Width, rect.Y + rect.Height, rect.X, rect.Y + rect.Height);
-                SDL.SDL_RenderDrawLine(Engine.Renderer, rect.X, rect.Y + rect.Height, rect.X, rect.Y);
+                    var renderX = (startTileX + x) * Map.TileSize - (int)Engine.ScrollingPixelsX;
+                    var renderY = (startTileY + y) * Map.TileSize - (int)Engine.ScrollingPixelsY;
+
+                    var sourceRect = Desktop.ToSDL_Rect(new Rectangle((5 + tile) * 24, 0, 24, 24));
+                    var destRect = Desktop.ToSDL_Rect(new Rectangle(renderX, renderY, Map.TileSize, Map.TileSize));
+                    SDL.SDL_RenderCopy(Engine.Renderer, Engine.SpritesheetTexture, ref sourceRect, ref destRect);
+                }
             }
         }
     }
