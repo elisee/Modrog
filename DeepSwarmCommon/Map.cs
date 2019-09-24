@@ -8,7 +8,7 @@ namespace DeepSwarmCommon
     public class Map
     {
         public const int ChunkSize = 15;
-        public const int ChunkCount = 50;
+        public const int ChunkCount = 10;
         public const int MapSize = ChunkSize * ChunkCount;
         public const int TileSize = 24;
 
