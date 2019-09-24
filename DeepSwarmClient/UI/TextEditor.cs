@@ -105,8 +105,8 @@ namespace DeepSwarmClient.UI
                 {
                     Lines.RemoveAt(_cursorY);
                     _cursorY--;
-                    Lines[_cursorY] += line;
                     _cursorX = Lines[_cursorY].Length;
+                    Lines[_cursorY] += line;
                 }
 
                 ClampScrolling();
