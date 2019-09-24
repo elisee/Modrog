@@ -410,13 +410,10 @@ namespace DeepSwarmClient
             var tilesPerRow = (int)MathF.Ceiling((float)Engine.Viewport.Width / Map.TileSize + 1);
             var tilesPerColumn = (int)MathF.Ceiling((float)Engine.Viewport.Height / Map.TileSize + 1);
 
-            // Tiles
             DrawTiles(startTileX, startTileY, tilesPerRow, tilesPerColumn);
 
-            // Fog of war
             DrawFogOfWar(startTileX, startTileY, tilesPerRow, tilesPerColumn);
 
-            // Entities
             DrawEntities(startTileX, startTileY);
 
             if (Engine.SelectedEntity != null)
