@@ -2,6 +2,7 @@
 using DeepSwarmCommon;
 using SDL2;
 using System;
+using System.Collections.Generic;
 
 namespace DeepSwarmClient
 {
@@ -261,17 +262,27 @@ namespace DeepSwarmClient
         {
             if (button == 1)
             {
+                var hoveredEntities = new List<Entity>();
+
                 foreach (var entity in Engine.Map.Entities)
                 {
-                    if (entity.X == Engine.HoveredTileX && entity.Y == Engine.HoveredTileY)
-                    {
-                        Engine.SetSelectedEntity(entity);
-                        return;
-                    }
+                    if (entity.X == Engine.HoveredTileX && entity.Y == Engine.HoveredTileY) hoveredEntities.Add(entity);
                 }
 
-                Engine.SetSelectedEntity(null);
-                return;
+                if (hoveredEntities.Count > 0)
+                {
+                    if (Engine.SelectedEntity == null || hoveredEntities.Count == 1) 
+                    {
+                        Engine.SetSelectedEntity(hoveredEntities[0]);
+                    }
+                    else
+                    {
+                        var selectedEntityIndex = hoveredEntities.IndexOf(Engine.SelectedEntity);
+                        var newSelectedEntityIndex = selectedEntityIndex < hoveredEntities.Count - 1 ? selectedEntityIndex + 1 : 0;
+                        Engine.SetSelectedEntity(hoveredEntities[newSelectedEntityIndex]);
+                    }
+                }
+                else Engine.SetSelectedEntity(null);
             }
             else if (button == 2)
             {
