@@ -1,5 +1,7 @@
 # DeepSwarm
 
+Public link: https://sparklinlabs.itch.io/deepswarm
+
 ## Building
 
 You'll need .NET Core 3 and Visual Studio 2019. VS Code might work.
