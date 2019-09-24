@@ -36,8 +36,12 @@
   ( ) Sélection / Copier / Coller
 (x) Pouvoir ouvrir un script existant
 (x) Mount / Unmount
-( ) Robots scriptables avec Lua (entièrement coté client)
+(x) Robots scriptables avec Lua (entièrement coté client)
 (x) Pouvoir laisser les boutons enfoncés
+(x) bouton STOP qui marche
+(x) ne pas crasher si script invalide
+( ) afficher numéro de version au lancement
+
 ( ) Map qui boucle
 ( ) Si un déplacement rentre dans un chunk qui était free, le marquer comme pas free pour éviter qu'on spawne sur des gens (ou alors il faut au moins garder une liste d'entités par chunk)
 ( ) Serveur génère ennemis

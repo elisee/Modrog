@@ -388,6 +388,7 @@ namespace DeepSwarmClient
         public void SetupScriptPathForSelectedEntity(string scriptFilePath)
         {
             if (scriptFilePath != null) UpdateScriptForSelectedEntity(Scripts[scriptFilePath], write: false);
+            else ClearLuaForSelectedEntity();
 
             EntityScriptPaths[SelectedEntity.Id] = scriptFilePath;
             InGameView.OnSelectedEntityChanged();
@@ -398,6 +399,11 @@ namespace DeepSwarmClient
             EntityScriptPaths.Remove(SelectedEntity.Id);
             InGameView.OnSelectedEntityChanged();
 
+            ClearLuaForSelectedEntity();
+        }
+
+        void ClearLuaForSelectedEntity()
+        {
             if (_luasByEntityId.TryGetValue(SelectedEntity.Id, out var oldLua))
             {
                 oldLua.Dispose();
@@ -414,21 +420,15 @@ namespace DeepSwarmClient
                 Scripts[relativePath] = scriptText;
             }
 
-            if (_luasByEntityId.TryGetValue(SelectedEntity.Id, out var oldLua))
-            {
-                oldLua.Dispose();
-                _luasByEntityId.Remove(SelectedEntity.Id);
-            }
+            ClearLuaForSelectedEntity();
 
             var lua = new KeraLua.Lua(openLibs: true);
             _luasByEntityId.Add(SelectedEntity.Id, lua);
             if (lua.DoString(scriptText))
             {
                 var error = lua.ToString(-1);
-                Console.WriteLine("Error: " + error);
+                Trace.WriteLine("Error: " + error);
             }
-
-            // TODO: If an entity is removed, we need to dispose its lua VM too
         }
 
         void ReadPlayerList()
@@ -572,7 +572,13 @@ namespace DeepSwarmClient
                 lua.PushCFunction((_) => { plannedMoves[entity.Id] = Entity.EntityMove.Build; return 0; });
                 lua.RawSet(-3);
 
-                lua.Call(1, 0);
+                var status = lua.PCall(1, 0, 0);
+                if (status != KeraLua.LuaStatus.OK)
+                {
+                    Trace.WriteLine($"Error running script: {status}");
+                    var error = lua.ToString(-1);
+                    Trace.WriteLine(error);
+                }
             }
         }
     }
