@@ -262,11 +262,17 @@ namespace DeepSwarmClient
         {
             if (button == 1)
             {
+                var startTileX = (int)Engine.ScrollingPixelsX / Map.TileSize;
+                var startTileY = (int)Engine.ScrollingPixelsY / Map.TileSize;
+
                 var hoveredEntities = new List<Entity>();
 
                 foreach (var entity in Engine.Map.Entities)
                 {
-                    if (entity.X == Engine.HoveredTileX && entity.Y == Engine.HoveredTileY) hoveredEntities.Add(entity);
+                    var tileX = Map.Wrap(entity.X - startTileX) + startTileX;
+                    var tileY = Map.Wrap(entity.Y - startTileY) + startTileY;
+
+                    if (tileX == Engine.HoveredTileX && tileY == Engine.HoveredTileY) hoveredEntities.Add(entity);
                 }
 
                 if (hoveredEntities.Count > 0)
@@ -404,29 +410,22 @@ namespace DeepSwarmClient
             var tilesPerRow = (int)MathF.Ceiling((float)Engine.Viewport.Width / Map.TileSize + 1);
             var tilesPerColumn = (int)MathF.Ceiling((float)Engine.Viewport.Height / Map.TileSize + 1);
 
-            var tileViewport = new Rectangle(startTileX, startTileY, tilesPerRow, tilesPerColumn);
-
             // Tiles
-            for (var y = 0; y < tilesPerColumn; y++)
+            for (var y = -1; y < tilesPerColumn; y++)
             {
-                for (var x = 0; x < tilesPerRow; x++)
+                for (var x = -1; x < tilesPerRow; x++)
                 {
-                    if (startTileX + x < 0) continue;
-                    if (startTileY + y < 0) continue;
-                    if (startTileX + x >= Map.MapSize) continue;
-                    if (startTileY + y >= Map.MapSize) continue;
+                    var tileX = Map.Wrap(startTileX + x);
+                    var tileY = Map.Wrap(startTileY + y);
 
-                    var index = (startTileY + y) * Map.MapSize + (startTileX + x);
-                    var tile = (int)Engine.Map.Tiles[index];
+                    var tileIndex = tileY * Map.MapSize + tileX;
+                    var tile = (int)Engine.Map.Tiles[tileIndex];
 
-                    var sourceRect = Desktop.ToSDL_Rect(new Rectangle(24 * (5 + tile), 0, 24, 24));
-                    var destRect = new SDL.SDL_Rect
-                    {
-                        x = (startTileX + x) * Map.TileSize - (int)Engine.ScrollingPixelsX,
-                        y = (startTileY + y) * Map.TileSize - (int)Engine.ScrollingPixelsY,
-                        w = Map.TileSize,
-                        h = Map.TileSize
-                    };
+                    var renderX = (startTileX + x) * Map.TileSize - (int)Engine.ScrollingPixelsX;
+                    var renderY = (startTileY + y) * Map.TileSize - (int)Engine.ScrollingPixelsY;
+
+                    var sourceRect = Desktop.ToSDL_Rect(new Rectangle((5 + tile) * 24, 0, 24, 24));
+                    var destRect = Desktop.ToSDL_Rect(new Rectangle(renderX, renderY, Map.TileSize, Map.TileSize));
                     SDL.SDL_RenderCopy(Engine.Renderer, Engine.SpritesheetTexture, ref sourceRect, ref destRect);
                 }
             }
@@ -436,26 +435,20 @@ namespace DeepSwarmClient
             fogColor.UseAsDrawColor(Engine.Renderer);
             SDL.SDL_SetRenderDrawBlendMode(Engine.Renderer, SDL.SDL_BlendMode.SDL_BLENDMODE_BLEND);
 
-            for (var y = 0; y < tilesPerColumn; y++)
+            for (var y = -1; y < tilesPerColumn; y++)
             {
-                for (var x = 0; x < tilesPerRow; x++)
+                for (var x = -1; x < tilesPerRow; x++)
                 {
-                    if (startTileX + x < 0) continue;
-                    if (startTileY + y < 0) continue;
-                    if (startTileX + x >= Map.MapSize) continue;
-                    if (startTileY + y >= Map.MapSize) continue;
+                    var tileX = Map.Wrap(startTileX + x);
+                    var tileY = Map.Wrap(startTileY + y);
 
-                    var index = (startTileY + y) * Map.MapSize + (startTileX + x);
-                    if (Engine.FogOfWar[index] != 0) continue;
+                    var tileIndex = tileY * Map.MapSize + tileX;
+                    if (Engine.FogOfWar[tileIndex] != 0) continue;
 
-                    var rect = new SDL.SDL_Rect
-                    {
-                        x = (startTileX + x) * Map.TileSize - (int)Engine.ScrollingPixelsX,
-                        y = (startTileY + y) * Map.TileSize - (int)Engine.ScrollingPixelsY,
-                        w = Map.TileSize,
-                        h = Map.TileSize
-                    };
+                    var renderX = (startTileX + x) * Map.TileSize - (int)Engine.ScrollingPixelsX;
+                    var renderY = (startTileY + y) * Map.TileSize - (int)Engine.ScrollingPixelsY;
 
+                    var rect = Desktop.ToSDL_Rect(new Rectangle(renderX, renderY, Map.TileSize, Map.TileSize));
                     SDL.SDL_RenderFillRect(Engine.Renderer, ref rect);
                 }
             }
@@ -465,17 +458,21 @@ namespace DeepSwarmClient
             // Entities
             foreach (var entity in Engine.Map.Entities)
             {
-                if (!tileViewport.Contains(entity.X, entity.Y)) continue;
+                var tileX = Map.Wrap(entity.X - startTileX) + startTileX;
+                var tileY = Map.Wrap(entity.Y - startTileY) + startTileY;
 
-                var x = entity.X * Map.TileSize - (int)Engine.ScrollingPixelsX;
-                var y = entity.Y * Map.TileSize - (int)Engine.ScrollingPixelsY;
+                var renderX = tileX * Map.TileSize - (int)Engine.ScrollingPixelsX;
+                var renderY = tileY * Map.TileSize - (int)Engine.ScrollingPixelsY;
 
                 switch (entity.Type)
                 {
                     case Entity.EntityType.Factory:
                         {
                             var sourceRect = Desktop.ToSDL_Rect(new Rectangle(0, 0, 24 * 3, 24 * 3));
-                            var destRect = Desktop.ToSDL_Rect(new Rectangle(x - 24, y - 24, 24 * 3, 24 * 3));
+                            var destRect = Desktop.ToSDL_Rect(new Rectangle(renderX - 24, renderY - 24, 24 * 3, 24 * 3));
+                            if (destRect.x + destRect.w < 0 || destRect.x > Engine.Viewport.Width) continue;
+                            if (destRect.y + destRect.h < 0 || destRect.y > Engine.Viewport.Height) continue;
+
                             SDL.SDL_RenderCopy(Engine.Renderer, Engine.SpritesheetTexture, ref sourceRect, ref destRect);
                             break;
                         }
@@ -485,7 +482,10 @@ namespace DeepSwarmClient
                             var teamOffset = Engine.PlayerList[entity.PlayerIndex].Team == Player.PlayerTeam.Blue ? 0 : 1;
 
                             var sourceRect = Desktop.ToSDL_Rect(new Rectangle(24 * (3 + teamOffset), 0, 24, 24));
-                            var destRect = Desktop.ToSDL_Rect(new Rectangle(x, y, 24, 24));
+                            var destRect = Desktop.ToSDL_Rect(new Rectangle(renderX, renderY, 24, 24));
+                            if (destRect.x + destRect.w < 0 || destRect.x > Engine.Viewport.Width) continue;
+                            if (destRect.y + destRect.h < 0 || destRect.y > Engine.Viewport.Height) continue;
+
                             SDL.SDL_RenderCopy(Engine.Renderer, Engine.SpritesheetTexture, ref sourceRect, ref destRect);
                             break;
                         }
@@ -501,26 +501,29 @@ namespace DeepSwarmClient
                             {
                                 case Entity.EntityDirection.Left:
                                     sourceRect = Desktop.ToSDL_Rect(new Rectangle(0, 24 * (3 + teamOffset * 3), 24 * 2, 24 * 3));
-                                    destRect = Desktop.ToSDL_Rect(new Rectangle(x - 24, y - 24, 24 * 2, 24 * 3));
+                                    destRect = Desktop.ToSDL_Rect(new Rectangle(renderX - 24, renderY - 24, 24 * 2, 24 * 3));
                                     break;
 
                                 case Entity.EntityDirection.Down:
                                     sourceRect = Desktop.ToSDL_Rect(new Rectangle(24 * 2, 24 * (3 + teamOffset * 3), 24, 24 * 3));
-                                    destRect = Desktop.ToSDL_Rect(new Rectangle(x, y - 24, 24, 24 * 3));
+                                    destRect = Desktop.ToSDL_Rect(new Rectangle(renderX, renderY - 24, 24, 24 * 3));
                                     break;
 
                                 case Entity.EntityDirection.Up:
                                     sourceRect = Desktop.ToSDL_Rect(new Rectangle(24 * 3, 24 * (3 + teamOffset * 3), 24, 24 * 3));
-                                    destRect = Desktop.ToSDL_Rect(new Rectangle(x, y - 24, 24, 24 * 3));
+                                    destRect = Desktop.ToSDL_Rect(new Rectangle(renderX, renderY - 24, 24, 24 * 3));
                                     break;
 
                                 case Entity.EntityDirection.Right:
                                     sourceRect = Desktop.ToSDL_Rect(new Rectangle(24 * 4, 24 * (3 + teamOffset * 3), 24 * 2, 24 * 3));
-                                    destRect = Desktop.ToSDL_Rect(new Rectangle(x, y - 24, 24 * 2, 24 * 3));
+                                    destRect = Desktop.ToSDL_Rect(new Rectangle(renderX, renderY - 24, 24 * 2, 24 * 3));
                                     break;
 
                                 default: throw new NotSupportedException();
                             }
+
+                            if (destRect.x + destRect.w < 0 || destRect.x > Engine.Viewport.Width) continue;
+                            if (destRect.y + destRect.h < 0 || destRect.y > Engine.Viewport.Height) continue;
 
                             SDL.SDL_RenderCopy(Engine.Renderer, Engine.SpritesheetTexture, ref sourceRect, ref destRect);
                             break;
@@ -534,8 +537,11 @@ namespace DeepSwarmClient
 
                             color.UseAsDrawColor(Engine.Renderer);
 
-                            var rect = Desktop.ToSDL_Rect(new Rectangle(x, y, Map.TileSize, Map.TileSize));
-                            SDL.SDL_RenderFillRect(Engine.Renderer, ref rect);
+                            var destRect = Desktop.ToSDL_Rect(new Rectangle(renderX, renderY, Map.TileSize, Map.TileSize));
+                            if (destRect.x + destRect.w < 0 || destRect.x > Engine.Viewport.Width) continue;
+                            if (destRect.y + destRect.h < 0 || destRect.y > Engine.Viewport.Height) continue;
+
+                            SDL.SDL_RenderFillRect(Engine.Renderer, ref destRect);
                             break;
                         }
                 }
@@ -557,10 +563,13 @@ namespace DeepSwarmClient
                     case Entity.EntityType.Factory: x -= 1; y -= 1; w = 3; h = 2; break;
                 }
 
-                var rect = new Rectangle(
-                    x * Map.TileSize - (int)Engine.ScrollingPixelsX,
-                    y * Map.TileSize - (int)Engine.ScrollingPixelsY,
-                    w * Map.TileSize, h * Map.TileSize);
+                var tileX = Map.Wrap(x - startTileX) + startTileX;
+                var tileY = Map.Wrap(y - startTileY) + startTileY;
+
+                var renderX = tileX * Map.TileSize - (int)Engine.ScrollingPixelsX;
+                var renderY = tileY * Map.TileSize - (int)Engine.ScrollingPixelsY;
+
+                var rect = new Rectangle(renderX, renderY, w * Map.TileSize, h * Map.TileSize);
 
                 SDL.SDL_RenderDrawLine(Engine.Renderer, rect.X, rect.Y, rect.X + rect.Width, rect.Y);
                 SDL.SDL_RenderDrawLine(Engine.Renderer, rect.X + rect.Width, rect.Y, rect.X + rect.Width, rect.Y + rect.Height);

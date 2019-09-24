@@ -17,12 +17,10 @@ You'll need .NET Core 3 and Visual Studio 2019. VS Code might work.
       (x) Scrolling
       ( ) Allow moving text cursor with mouse
       ( ) Selection / Copy / Paste
-    ( ) Fix crash with invalid coordinates / fog of war
     ( ) Display script errors somewhere
     ( ) Increase script window size?
     ( ) Replace ugly single font with some of Chevy Ray's pixel fonts probably
     ( ) Support renaming scripts
-    ( ) Make the map loop around on the client
     ( ) If a move enters a chunk that was marked as free, mark it as used to prevent spawning people in it (or we need to try entities by chunk and check for that)
     ( ) Make server generate and control enemies, support combat
     ( ) The factory has a limited amount of crystals and dies if it's not filled up
@@ -68,3 +66,5 @@ You'll need .NET Core 3 and Visual Studio 2019. VS Code might work.
     (x) Make STOP button work
     (x) Don't crash on invalid script
     (x) display version number on startup
+    (x) Fix crash with invalid coordinates / fog of war
+    (x) Make the map loop around on the client
