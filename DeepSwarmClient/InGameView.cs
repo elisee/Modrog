@@ -176,7 +176,7 @@ namespace DeepSwarmClient
             });
 
             AddButtonToStrip("STOP", () => Engine.SetupScriptPathForSelectedEntity(null));
-            AddButtonToStrip("SAVE", () => Engine.UpdateScriptForSelectedEntity(_scriptTextEditor.GetText()));
+            AddButtonToStrip("SAVE", () => Engine.UpdateScriptForSelectedEntity(_scriptTextEditor.GetText(), write: true));
 
             var scriptEditorPanel = new Panel(Desktop, _scriptEditorSidebar, new Color(0x123456ff))
             {
@@ -271,7 +271,7 @@ namespace DeepSwarmClient
 
                 if (hoveredEntities.Count > 0)
                 {
-                    if (Engine.SelectedEntity == null || hoveredEntities.Count == 1) 
+                    if (Engine.SelectedEntity == null || hoveredEntities.Count == 1)
                     {
                         Engine.SetSelectedEntity(hoveredEntities[0]);
                     }

@@ -69,6 +69,8 @@ namespace DeepSwarmClient
 
         public readonly IntPtr SpritesheetTexture;
 
+        readonly Dictionary<int, KeraLua.Lua> _luasByEntityId = new Dictionary<int, KeraLua.Lua>();
+
         public Engine()
         {
             SDL.SDL_Init(SDL.SDL_INIT_VIDEO);
@@ -385,6 +387,8 @@ namespace DeepSwarmClient
 
         public void SetupScriptPathForSelectedEntity(string scriptFilePath)
         {
+            if (scriptFilePath != null) UpdateScriptForSelectedEntity(Scripts[scriptFilePath], write: false);
+
             EntityScriptPaths[SelectedEntity.Id] = scriptFilePath;
             InGameView.OnSelectedEntityChanged();
         }
@@ -393,13 +397,33 @@ namespace DeepSwarmClient
         {
             EntityScriptPaths.Remove(SelectedEntity.Id);
             InGameView.OnSelectedEntityChanged();
+
+            if (_luasByEntityId.TryGetValue(SelectedEntity.Id, out var oldLua))
+            {
+                oldLua.Dispose();
+                _luasByEntityId.Remove(SelectedEntity.Id);
+            }
         }
 
-        internal void UpdateScriptForSelectedEntity(string scriptText)
+        internal void UpdateScriptForSelectedEntity(string scriptText, bool write)
         {
             var relativePath = EntityScriptPaths[SelectedEntity.Id];
-            Scripts[relativePath] = scriptText;
-            File.WriteAllText(Path.Combine(ScriptsPath, relativePath), scriptText);
+            if (write)
+            {
+                File.WriteAllText(Path.Combine(ScriptsPath, relativePath), scriptText);
+                Scripts[relativePath] = scriptText;
+            }
+
+            if (_luasByEntityId.TryGetValue(SelectedEntity.Id, out var oldLua)) oldLua.Dispose();
+            var lua = new KeraLua.Lua(openLibs: true);
+            _luasByEntityId.Add(SelectedEntity.Id, lua);
+            if (lua.DoString(scriptText))
+            {
+                var error = lua.ToString(-1);
+                Console.WriteLine("Error: " + error);
+            }
+
+            // TODO: If an entity is removed, we need to dispose its lua VM too
         }
 
         void ReadPlayerList()
@@ -429,6 +453,7 @@ namespace DeepSwarmClient
         {
             Unsafe.InitBlock(ref FogOfWar[0], 0, (uint)FogOfWar.Length);
             Map.Entities.Clear();
+            Map.EntitiesById.Clear();
 
             _tickIndex = _reader.ReadInt();
 
@@ -452,6 +477,7 @@ namespace DeepSwarmClient
                 if (SelectedEntity?.Id == entity.Id) newSelectedEntity = entity;
 
                 Map.Entities.Add(entity);
+                Map.EntitiesById.Add(entity.Id, entity);
 
                 if (entity.PlayerIndex == SelfPlayerIndex && entity.Type == Entity.EntityType.Factory)
                 {
@@ -476,8 +502,28 @@ namespace DeepSwarmClient
             var plannedMoves = new Dictionary<int, Entity.EntityMove>();
 
             // TODO: Scripting
-
             if (_moveDirection != null && SelectedEntity != null) plannedMoves[SelectedEntity.Id] = GetSelectedEntityMoveFromDirection();
+
+            var removedSelfEntityIds = new List<int>();
+
+            foreach (var (entityId, lua) in _luasByEntityId)
+            {
+                if (!Map.EntitiesById.TryGetValue(entityId, out var entity))
+                {
+                    lua.Dispose();
+                    removedSelfEntityIds.Add(entityId);
+                }
+                else
+                {
+                    RunScript(lua, entity);
+                }
+            }
+
+            foreach (var entityId in removedSelfEntityIds)
+            {
+                EntityScriptPaths.Remove(entityId);
+                _luasByEntityId.Remove(entityId);
+            }
 
             _writer.WriteByte((byte)Protocol.ClientPacketType.PlanMoves);
             _writer.WriteInt(_tickIndex);
@@ -488,6 +534,41 @@ namespace DeepSwarmClient
                 _writer.WriteByte((byte)move);
             }
             Send();
+
+            void RunScript(KeraLua.Lua lua, Entity entity)
+            {
+                var type = lua.GetGlobal("tick");
+                if (type != KeraLua.LuaType.Function)
+                {
+                    Trace.WriteLine("There must be a tick function.");
+                    lua.Pop(1);
+                    return;
+                }
+
+                lua.NewTable();
+
+                lua.PushString("forward");
+                lua.PushCFunction((_) =>
+                {
+                    plannedMoves[entity.Id] = Entity.EntityMove.Forward;
+                    return 0;
+                });
+                lua.RawSet(-3);
+
+                lua.PushString("rotateCW");
+                lua.PushCFunction((_) => { plannedMoves[entity.Id] = Entity.EntityMove.RotateCW; return 0; });
+                lua.RawSet(-3);
+
+                lua.PushString("rotateCCW");
+                lua.PushCFunction((_) => { plannedMoves[entity.Id] = Entity.EntityMove.RotateCCW; return 0; });
+                lua.RawSet(-3);
+
+                lua.PushString("build");
+                lua.PushCFunction((_) => { plannedMoves[entity.Id] = Entity.EntityMove.Build; return 0; });
+                lua.RawSet(-3);
+
+                lua.Call(1, 0);
+            }
         }
     }
 }
