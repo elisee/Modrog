@@ -411,6 +411,11 @@ namespace DeepSwarmClient
             {
                 for (var x = 0; x < tilesPerRow; x++)
                 {
+                    if (startTileX + x < 0) continue;
+                    if (startTileY + y < 0) continue;
+                    if (startTileX + x >= Map.MapSize) continue;
+                    if (startTileY + y >= Map.MapSize) continue;
+
                     var index = (startTileY + y) * Map.MapSize + (startTileX + x);
                     var tile = (int)Engine.Map.Tiles[index];
 
@@ -435,6 +440,11 @@ namespace DeepSwarmClient
             {
                 for (var x = 0; x < tilesPerRow; x++)
                 {
+                    if (startTileX + x < 0) continue;
+                    if (startTileY + y < 0) continue;
+                    if (startTileX + x >= Map.MapSize) continue;
+                    if (startTileY + y >= Map.MapSize) continue;
+
                     var index = (startTileY + y) * Map.MapSize + (startTileX + x);
                     if (Engine.FogOfWar[index] != 0) continue;
 
