@@ -1,7 +1,5 @@
 # DeepSwarm
 
-Public link: https://sparklinlabs.itch.io/deepswarm
-
 ## Building
 
 You'll need .NET Core 3 and Visual Studio 2019. VS Code might work.
@@ -13,20 +11,20 @@ You'll need .NET Core 3 and Visual Studio 2019. VS Code might work.
 
 ## TODO
 
-    (x) Text editor
-      (x) Scrolling
-      ( ) Allow moving text cursor with mouse
-      ( ) Selection / Copy / Paste
-    ( ) Display script errors somewhere
-    ( ) Increase script window size?
-    ( ) Replace ugly single font with some of Chevy Ray's pixel fonts probably
-    ( ) Support renaming scripts
-    ( ) If a move enters a chunk that was marked as free, mark it as used to prevent spawning people in it (or we need to try entities by chunk and check for that)
-    ( ) Make server generate and control enemies, support combat
-    ( ) The factory has a limited amount of crystals and dies if it's not filled up
-    ( ) Goal : Find people in your team and link your cores with wires or something
-    ( ) Server sends list of connected core networks by team (red vs blue)
-    ( ) Generate Rocks!
+    ( ) Need to figure out ASAP what the actual gameplay loop is. Factorio-style? Northgard? Something else?
+    ( ) UI: Allow moving TextInput / TextEditor text cursor with mouse
+    ( ) UI: Selection / Copy / Paste in TextInput / TextEditor
+    ( ) UI: Display script errors somewhere
+    ( ) UI: Increase script window size?
+    ( ) UI: Support resizable window (requires better AnchorRectangle system)
+    ( ) UI: Replace ugly single font with some of Chevy Ray's pixel fonts probably
+    ( ) Scripting: Support renaming scripts
+    ( ) Server: Mark chunk as non-free if an entity enters it to prevent spawning people in it (or we need to track entities by chunk and check for that)
+    ( ) Server: Generate and control enemies
+    ( ) Implement Attack move
+    ( ) Design & implement more unit types: one that can fire from a distance but has less health, one that digs faster, etc.
+    ( ) Design & implement more building types: turrets, refinery, etc.
+    ( ) Server sends list of connected core networks by team (red vs blue)? If we go that route
     ( ) Add UI for connecting to a server and report errors rather than just crashing
 
 ## DONE
@@ -68,3 +66,5 @@ You'll need .NET Core 3 and Visual Studio 2019. VS Code might work.
     (x) display version number on startup
     (x) Fix crash with invalid coordinates / fog of war
     (x) Make the map loop around on the client
+    (x) UI: TextEditor
+    (x) Generate Rocks!
