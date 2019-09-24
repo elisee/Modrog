@@ -6,6 +6,6 @@ function tick(self)
   elseif random == 2 then
     self:rotateCCW()
   else
-    self:move()
+    self:forward()
   end
 end
