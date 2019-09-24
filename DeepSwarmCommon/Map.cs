@@ -8,7 +8,7 @@ namespace DeepSwarmCommon
     public class Map
     {
         public const int ChunkSize = 15;
-        public const int ChunkCount = 10;
+        public const int ChunkCount = 30;
         public const int MapSize = ChunkSize * ChunkCount;
         public const int TileSize = 24;
 
@@ -130,19 +130,35 @@ namespace DeepSwarmCommon
             FreeChunkIndices.Clear();
 
             var random = new Random();
-            var chunkConnections = new ConnectionFlags[ChunkCount * ChunkCount];
+            var chunkPathConnections = new ConnectionFlags[ChunkCount * ChunkCount];
+            var chunkRockConnections = new ConnectionFlags[ChunkCount * ChunkCount];
             var chunkPathSizes = new byte[ChunkCount * ChunkCount];
             var chunkPathOffXs = new sbyte[ChunkCount * ChunkCount];
             var chunkPathOffYs = new sbyte[ChunkCount * ChunkCount];
 
-            for (var i = 0; i < chunkConnections.Length; i++)
+            for (var i = 0; i < ChunkCount * ChunkCount; i++)
             {
-                chunkPathSizes[i] = (byte)(2 + random.Next(6));
-                chunkPathOffXs[i] = (sbyte)random.Next(-6, 7);
-                chunkPathOffYs[i] = (sbyte)random.Next(-6, 7);
+                var roll = random.Next(10);
+                if (roll <= 1)
+                {
+                    chunkRockConnections[i] = ConnectionFlags.Used;
 
-                chunkConnections[i] = random.Next(5) <= 1 ? ConnectionFlags.Used : ConnectionFlags.NotUsed;
-                if (chunkConnections[i] == 0) FreeChunkIndices.Add(i);
+                    chunkPathSizes[i] = (byte)(5 + random.Next(5));
+                    chunkPathOffXs[i] = (sbyte)random.Next(-12, 13);
+                    chunkPathOffYs[i] = (sbyte)random.Next(-12, 13);
+                }
+                else if (roll <= 4)
+                {
+                    chunkPathConnections[i] = ConnectionFlags.Used;
+
+                    chunkPathSizes[i] = (byte)(2 + random.Next(6));
+                    chunkPathOffXs[i] = (sbyte)random.Next(-6, 7);
+                    chunkPathOffYs[i] = (sbyte)random.Next(-6, 7);
+                }
+                else
+                {
+                    FreeChunkIndices.Add(i);
+                }
             }
 
             // Connect
@@ -150,27 +166,8 @@ namespace DeepSwarmCommon
             {
                 for (var i = 0; i < ChunkCount; i++)
                 {
-                    var self = (ConnectionFlags)chunkConnections[j * ChunkCount + i];
-                    if (self == 0) continue;
-
-                    var iLeft = i > 0 ? i - 1 : ChunkCount - 1;
-                    var iRight = i < ChunkCount - 1 ? i + 1 : 0;
-                    var jAbove = j > 0 ? j - 1 : ChunkCount - 1;
-                    var jBelow = j < ChunkCount - 1 ? j + 1 : 0;
-
-                    var left = (ConnectionFlags)chunkConnections[j * ChunkCount + iLeft];
-                    if (left != 0) self |= ConnectionFlags.Left;
-
-                    var right = (ConnectionFlags)chunkConnections[j * ChunkCount + iRight];
-                    if (right != 0) self |= ConnectionFlags.Right;
-
-                    var above = (ConnectionFlags)chunkConnections[jAbove * ChunkCount + i];
-                    if (above != 0) self |= ConnectionFlags.Above;
-
-                    var below = (ConnectionFlags)chunkConnections[jBelow * ChunkCount + i];
-                    if (below != 0) self |= ConnectionFlags.Below;
-
-                    chunkConnections[j * ChunkCount + i] = self;
+                    SetupConnection(chunkPathConnections, i, j);
+                    SetupConnection(chunkRockConnections, i, j);
                 }
             }
 
@@ -178,32 +175,8 @@ namespace DeepSwarmCommon
             {
                 for (var i = 0; i < ChunkCount; i++)
                 {
-                    var self = (ConnectionFlags)chunkConnections[j * ChunkCount + i];
-                    if (self == 0) continue;
-
-                    if ((self & ConnectionFlags.Right) != 0)
-                    {
-                        var iRight = i < ChunkCount - 1 ? i + 1 : 0;
-
-                        DrawSupercoverLine(
-                            i * ChunkSize + ChunkSize / 2 + chunkPathOffXs[j * ChunkCount + i],
-                            j * ChunkSize + ChunkSize / 2 + chunkPathOffYs[j * ChunkCount + i],
-                            (i + 1) * ChunkSize + ChunkSize / 2 + chunkPathOffXs[j * ChunkCount + iRight],
-                            j * ChunkSize + ChunkSize / 2 + chunkPathOffYs[j * ChunkCount + iRight],
-                            chunkPathSizes[j * ChunkCount + i], chunkPathSizes[j * ChunkCount + iRight]);
-                    }
-
-                    if ((self & ConnectionFlags.Below) != 0)
-                    {
-                        var jBelow = j < ChunkCount - 1 ? j + 1 : 0;
-
-                        DrawSupercoverLine(
-                            i * ChunkSize + ChunkSize / 2 + chunkPathOffXs[j * ChunkCount + i],
-                            j * ChunkSize + ChunkSize / 2 + chunkPathOffYs[j * ChunkCount + i],
-                            i * ChunkSize + ChunkSize / 2 + chunkPathOffXs[jBelow * ChunkCount + i],
-                            (j + 1) * ChunkSize + ChunkSize / 2 + chunkPathOffYs[jBelow * ChunkCount + i],
-                            chunkPathSizes[j * ChunkCount + i], chunkPathSizes[jBelow * ChunkCount + i]);
-                    }
+                    DrawConnection(chunkPathConnections, i, j, Tile.Path);
+                    DrawConnection(chunkRockConnections, i, j, Tile.Rock);
                 }
             }
 
@@ -211,6 +184,8 @@ namespace DeepSwarmCommon
             {
                 for (var x = 0; x < MapSize; x++)
                 {
+                    if (HasNearby(x, y, Tile.Rock)) continue;
+
                     var rarity = HasNearby(x, y, Tile.Path) ? 2000 : 500;
                     if (random.Next(rarity) == 0) PokeCircle(x, y, Tile.Crystal1, random.Next(1, 4));
                 }
@@ -229,7 +204,64 @@ namespace DeepSwarmCommon
                 return false;
             }
 
-            void DrawSupercoverLine(int x1, int y1, int x2, int y2, int size1, int size2)
+            void SetupConnection(ConnectionFlags[] connections, int i, int j)
+            {
+                var self = (ConnectionFlags)connections[j * ChunkCount + i];
+                if (self == ConnectionFlags.NotUsed) return;
+
+                var iLeft = i > 0 ? i - 1 : ChunkCount - 1;
+                var iRight = i < ChunkCount - 1 ? i + 1 : 0;
+                var jAbove = j > 0 ? j - 1 : ChunkCount - 1;
+                var jBelow = j < ChunkCount - 1 ? j + 1 : 0;
+
+                var left = (ConnectionFlags)connections[j * ChunkCount + iLeft];
+                if (left != 0) self |= ConnectionFlags.Left;
+
+                var right = (ConnectionFlags)connections[j * ChunkCount + iRight];
+                if (right != 0) self |= ConnectionFlags.Right;
+
+                var above = (ConnectionFlags)connections[jAbove * ChunkCount + i];
+                if (above != 0) self |= ConnectionFlags.Above;
+
+                var below = (ConnectionFlags)connections[jBelow * ChunkCount + i];
+                if (below != 0) self |= ConnectionFlags.Below;
+
+                connections[j * ChunkCount + i] = self;
+            }
+
+            void DrawConnection(ConnectionFlags[] connections, int i, int j, Tile tile)
+            {
+                var self = (ConnectionFlags)connections[j * ChunkCount + i];
+                if (self == ConnectionFlags.NotUsed) return;
+
+                if ((self & ConnectionFlags.Right) != 0)
+                {
+                    var iRight = i < ChunkCount - 1 ? i + 1 : 0;
+
+                    DrawSupercoverLine(
+                        i * ChunkSize + ChunkSize / 2 + chunkPathOffXs[j * ChunkCount + i],
+                        j * ChunkSize + ChunkSize / 2 + chunkPathOffYs[j * ChunkCount + i],
+                        (i + 1) * ChunkSize + ChunkSize / 2 + chunkPathOffXs[j * ChunkCount + iRight],
+                        j * ChunkSize + ChunkSize / 2 + chunkPathOffYs[j * ChunkCount + iRight],
+                        chunkPathSizes[j * ChunkCount + i], chunkPathSizes[j * ChunkCount + iRight],
+                        tile);
+                }
+
+                if ((self & ConnectionFlags.Below) != 0)
+                {
+                    var jBelow = j < ChunkCount - 1 ? j + 1 : 0;
+
+                    DrawSupercoverLine(
+                        i * ChunkSize + ChunkSize / 2 + chunkPathOffXs[j * ChunkCount + i],
+                        j * ChunkSize + ChunkSize / 2 + chunkPathOffYs[j * ChunkCount + i],
+                        i * ChunkSize + ChunkSize / 2 + chunkPathOffXs[jBelow * ChunkCount + i],
+                        (j + 1) * ChunkSize + ChunkSize / 2 + chunkPathOffYs[jBelow * ChunkCount + i],
+                        chunkPathSizes[j * ChunkCount + i], chunkPathSizes[jBelow * ChunkCount + i],
+                        tile);
+                }
+            }
+
+            void DrawSupercoverLine(int x1, int y1, int x2, int y2, int size1, int size2, Tile tile)
             {
                 var distanceX = Math.Abs(x2 - x1);
                 var distanceY = Math.Abs(y2 - y1);
@@ -240,7 +272,7 @@ namespace DeepSwarmCommon
                 var x = x1;
                 var y = y1;
 
-                PokeTile(x, y, Tile.Path);
+                PokeTile(x, y, tile);
 
                 while (true)
                 {
@@ -258,7 +290,7 @@ namespace DeepSwarmCommon
                     {
                         for (var u = 0; u < size; u++)
                         {
-                            PokeTile(x - size / 2 + u, y - size / 2 + v, Tile.Path);
+                            PokeTile(x - size / 2 + u, y - size / 2 + v, tile);
                         }
                     }
                 }
