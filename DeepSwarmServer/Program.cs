@@ -349,6 +349,23 @@ namespace DeepSwarmServer
                                     case Map.Tile.Path:
                                         entity.X = newX;
                                         entity.Y = newY;
+
+                                        foreach (var otherEntity in map.Entities)
+                                        {
+                                            if (otherEntity == entity || otherEntity.Type != Entity.EntityType.Factory) continue;
+                                            if (entity.X != otherEntity.X || entity.Y != otherEntity.Y) continue;
+
+                                            var entityTeam = map.PlayersInOrder[entity.PlayerIndex].Team;
+                                            var factoryTeam = map.PlayersInOrder[otherEntity.PlayerIndex].Team;
+
+                                            if (entityTeam == factoryTeam)
+                                            {
+                                                otherEntity.Crystals += entity.Crystals;
+                                                entity.Crystals = 0;
+
+                                                break;
+                                            }
+                                        }
                                         break;
                                     case Map.Tile.Crystal1:
                                     case Map.Tile.Crystal2:
@@ -373,7 +390,12 @@ namespace DeepSwarmServer
                         case Entity.EntityMove.Build:
                             if (entity.Type == Entity.EntityType.Factory)
                             {
-                                map.MakeEntity(Entity.EntityType.Robot, entity.PlayerIndex, entity.X, entity.Y + 1, Entity.EntityDirection.Down);
+                                var buildPrice = Entity.EntityStatsByType[(int)Entity.EntityType.Robot].BuildPrice;
+                                if (entity.Crystals >= buildPrice)
+                                {
+                                    entity.Crystals -= buildPrice;
+                                    map.MakeEntity(Entity.EntityType.Robot, entity.PlayerIndex, entity.X, entity.Y + 1, Entity.EntityDirection.Down);
+                                }
                             }
                             break;
 

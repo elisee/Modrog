@@ -23,6 +23,8 @@ namespace DeepSwarmCommon
             public int InitialHealth;
             public int InitialCrystals;
 
+            public int BuildPrice;
+
             public int OmniViewRadius;
             public int DirectionalViewRadius;
             public float HalfFieldOfView;
@@ -30,9 +32,9 @@ namespace DeepSwarmCommon
 
         public static readonly EntityStats[] EntityStatsByType = new EntityStats[]
         {
-            new EntityStats { BlueColor = 0x443b3aff, RedColor = 0x443b3aff, InitialHealth = 100, InitialCrystals = 1000, OmniViewRadius = 8 },
+            new EntityStats { BlueColor = 0x443b3aff, RedColor = 0x443b3aff, InitialHealth = 100, InitialCrystals = 100, OmniViewRadius = 8 },
             new EntityStats { BlueColor = 0x1d4ddfff, RedColor = 0xcc1414ff, InitialHealth = 50, OmniViewRadius = 8 },
-            new EntityStats { BlueColor = 0x6879e4ff, RedColor = 0xd36565ff, InitialHealth = 10, NeutralColor = 0x807d7cff, OmniViewRadius = 2, DirectionalViewRadius = 8, HalfFieldOfView = MathF.PI / 3f },
+            new EntityStats { BlueColor = 0x6879e4ff, RedColor = 0xd36565ff, InitialHealth = 10, BuildPrice = 50, NeutralColor = 0x807d7cff, OmniViewRadius = 2, DirectionalViewRadius = 8, HalfFieldOfView = MathF.PI / 3f },
         };
 
         public enum EntityDirection { Right, Down, Left, Up }
