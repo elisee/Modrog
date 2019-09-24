@@ -414,7 +414,12 @@ namespace DeepSwarmClient
                 Scripts[relativePath] = scriptText;
             }
 
-            if (_luasByEntityId.TryGetValue(SelectedEntity.Id, out var oldLua)) oldLua.Dispose();
+            if (_luasByEntityId.TryGetValue(SelectedEntity.Id, out var oldLua))
+            {
+                oldLua.Dispose();
+                _luasByEntityId.Remove(SelectedEntity.Id);
+            }
+
             var lua = new KeraLua.Lua(openLibs: true);
             _luasByEntityId.Add(SelectedEntity.Id, lua);
             if (lua.DoString(scriptText))

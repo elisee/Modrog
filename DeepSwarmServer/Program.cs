@@ -347,8 +347,8 @@ namespace DeepSwarmServer
                                         map.PokeTile(newX, newY, targetTile + 1);
                                         break;
                                     case Map.Tile.Path:
-                                        entity.X = newX;
-                                        entity.Y = newY;
+                                        entity.X = Map.Wrap(newX);
+                                        entity.Y = Map.Wrap(newY);
 
                                         foreach (var otherEntity in map.Entities)
                                         {
@@ -452,6 +452,9 @@ namespace DeepSwarmServer
                                     map.HasLineOfSight(ownedEntity.X, ownedEntity.Y, targetX - Math.Sign(dx), targetY) ||
                                     map.HasLineOfSight(ownedEntity.X, ownedEntity.Y, targetX, targetY - Math.Sign(dy));
                                 if (!hasLineOfSight) continue;
+
+                                targetX = Map.Wrap(targetX);
+                                targetY = Map.Wrap(targetY);
 
                                 seenTiles.TryAdd((targetX, targetY), map.PeekTile(targetX, targetY));
                                 var targetEntity = map.PeekEntity(targetX, targetY);

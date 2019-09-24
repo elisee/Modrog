@@ -362,5 +362,12 @@ namespace DeepSwarmCommon
 
             return true;
         }
+
+        public static int Wrap(int xy)
+        {
+            while (xy < 0) xy += Map.MapSize;
+            while (xy >= Map.MapSize) xy -= Map.MapSize;
+            return xy;
+        }
     }
 }
