@@ -25,4 +25,3 @@ You'll need .NET Core 3 and Visual Studio 2019. VS Code might work.
     - Design & implement more building types: turrets, refinery, etc.
     - Server sends list of connected core networks by team (red vs blue)? If we go that route
     - Add UI for connecting to a server and report errors rather than just crashing
-    - Load the ARROW, HAND and IBEAM SDL system cursors (https://wiki.libsdl.org/SDL_CreateSystemCursor) in RendererHelper (probably) and use them in .OnHovered / .OnUnhovered for Button, TextInput, TextEditor. (They don't need to be freed ever, we just load them on startup)
