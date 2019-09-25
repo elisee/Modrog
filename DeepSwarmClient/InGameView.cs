@@ -261,7 +261,7 @@ namespace DeepSwarmClient
                 if (key == SDL.SDL_Keycode.SDLK_DOWN) _isScrollingDown = true;
             }
 
-            if (Engine.State.SelectedEntity != null)
+            if (Engine.State.SelectedEntity != null && !Engine.State.LuasByEntityId.ContainsKey(Engine.State.SelectedEntity.Id))
             {
                 if (key == SDL.SDL_Keycode.SDLK_a || key == SDL.SDL_Keycode.SDLK_q) Engine.State.SetMoveTowards(Entity.EntityDirection.Left);
                 if (key == SDL.SDL_Keycode.SDLK_d) Engine.State.SetMoveTowards(Entity.EntityDirection.Right);
