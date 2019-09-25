@@ -29,8 +29,7 @@ namespace DeepSwarmClient.UI
         public Element(Desktop desktop, Element parent)
         {
             Desktop = desktop;
-            Parent = parent;
-            if (parent != null) parent.Children.Add(this);
+            parent?.Add(this);
         }
 
         public void Clear()
