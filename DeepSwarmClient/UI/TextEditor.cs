@@ -185,10 +185,7 @@ namespace DeepSwarmClient.UI
                 int targetY = y / RendererHelper.FontRenderSize;
 
                 bool wasRightHalfClicked = x % RendererHelper.FontRenderSize > RendererHelper.FontRenderSize / 2;
-                if (wasRightHalfClicked)
-                {
-                    targetX++;
-                }
+                if (wasRightHalfClicked) targetX++;
 
                 _cursorY = Math.Clamp(targetY, 0, Lines.Count - 1);
                 _cursorX = Math.Clamp(targetX, 0, Lines[_cursorY].Length);
