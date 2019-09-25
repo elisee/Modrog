@@ -1,6 +1,7 @@
 ﻿using DeepSwarmCommon;
 using SDL2;
 using System;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -17,13 +18,47 @@ namespace DeepSwarmClient.UI
         public int MouseX { get; private set; }
         public int MouseY { get; private set; }
 
-        public static SDL.SDL_Rect ToSDL_Rect(Rectangle rect) => new SDL.SDL_Rect { x = rect.X, y = rect.Y, w = rect.Width, h = rect.Height };
+        // Animations
+        readonly List<Action<float>> _animationActions = new List<Action<float>>();
+        readonly List<Action<float>> _newAnimationActions = new List<Action<float>>();
+        readonly List<Action<float>> _removedAnimationActions = new List<Action<float>>();
 
         public Desktop(IntPtr renderer)
         {
             Renderer = renderer;
         }
 
+        #region Helpers
+        public static SDL.SDL_Rect ToSDL_Rect(Rectangle rect) => new SDL.SDL_Rect { x = rect.X, y = rect.Y, w = rect.Width, h = rect.Height };
+        #endregion
+
+        #region Configuration
+        public void SetRootElement(Element element)
+        {
+            RootElement?.Unmount();
+            RootElement = element;
+            RootElement?.Mount();
+            RootElement.Layout(new Rectangle(0, 0, 1280, 720));
+        }
+
+        public void RegisterAnimation(Action<float> action)
+        {
+            if (_removedAnimationActions.Remove(action)) return;
+            if (_animationActions.Contains(action) && !_removedAnimationActions.Contains(action)) throw new Exception("Cannot register same animation action twice");
+            if (_newAnimationActions.Contains(action)) throw new Exception("Cannot register same animation action twice");
+            _newAnimationActions.Add(action);
+        }
+
+        public void UnregisterAnimation(Action<float> action)
+        {
+            if (_newAnimationActions.Remove(action)) return;
+            if (_removedAnimationActions.Contains(action)) throw new Exception("Cannot unregister same animatin action twice");
+            if (!_animationActions.Contains(action)) throw new Exception("Cannot unregister action action that isn't registered");
+            _removedAnimationActions.Add(action);
+        }
+        #endregion
+
+        #region Lifecycle
         public void HandleSDLEvent(SDL.SDL_Event @event)
         {
             if (FocusedElement == null) return;
@@ -96,14 +131,17 @@ namespace DeepSwarmClient.UI
             }
         }
 
-        public void SetRootElement(Element element)
+        public void Animate(float deltaTime)
         {
-            RootElement?.Unmount();
-            RootElement = element;
-            RootElement?.Mount();
-            RootElement.Layout(new Rectangle(0, 0, 1280, 720));
+            foreach (var removedAction in _removedAnimationActions) _animationActions.Remove(removedAction);
+            _animationActions.AddRange(_newAnimationActions);
+            _removedAnimationActions.Clear();
+            _newAnimationActions.Clear();
+
+            foreach (var action in _animationActions) action(deltaTime);
         }
 
         public void Draw() => RootElement.Draw();
+        #endregion
     }
 }
