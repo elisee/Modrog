@@ -53,7 +53,7 @@ namespace DeepSwarmClient
             var name = NameInput.Value.Trim();
             if (name.Length == 0) return;
 
-            Engine.FromUI_SetName(name);
+            Engine.State.SetName(name);
         }
     }
 }
