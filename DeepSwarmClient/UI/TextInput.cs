@@ -100,7 +100,7 @@ namespace DeepSwarmClient.UI
         {
             if (button == 1)
             {
-                Desktop.FocusedElement = this;
+                Desktop.SetFocusedElement(this);
                 var x = Desktop.MouseX + _scrollingPixelsX - LayoutRectangle.X;
 
                 int targetX = x / RendererHelper.FontRenderSize;

@@ -68,7 +68,7 @@ namespace DeepSwarmClient
                             if (State.Stage == EngineStage.Loading)
                             {
                                 Desktop.SetRootElement(InGameView);
-                                Desktop.FocusedElement = InGameView;
+                                Desktop.SetFocusedElement(InGameView);
                                 State.Stage = EngineStage.Playing;
                             }
 

@@ -22,8 +22,8 @@ namespace DeepSwarmClient.UI
 
         public bool IsMounted { get; private set; }
         public bool IsFocused => Desktop.FocusedElement == this;
-        public bool IsHovered { get; protected set; }
-        public bool IsPressed { get; protected set; }
+        public bool IsHovered => Desktop.HoveredElement == this;
+        public bool IsPressed => Desktop.HoveredElement == this && Desktop.IsHoveredElementPressed;
 
         public Element(Desktop desktop, Element parent)
         {
@@ -97,9 +97,8 @@ namespace DeepSwarmClient.UI
             Debug.Assert(IsMounted);
             IsMounted = false;
 
-            if (IsFocused) Desktop.FocusedElement = Desktop.RootElement;
-            IsHovered = false;
-            IsPressed = false;
+            if (IsFocused) Desktop.SetFocusedElement(Desktop.RootElement);
+            if (IsHovered) Desktop.OnHoveredElementUnmounted();
 
             foreach (var child in Children) child.Unmount();
 
@@ -117,6 +116,9 @@ namespace DeepSwarmClient.UI
 
         public virtual void OnKeyUp(SDL.SDL_Keycode key) { }
         public virtual void OnTextEntered(string text) { }
+
+        public virtual void OnBlur() { }
+        public virtual void OnFocus() { }
 
         public virtual void OnMouseEnter() { }
         public virtual void OnMouseExit() { }

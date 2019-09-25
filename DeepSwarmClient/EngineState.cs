@@ -50,7 +50,7 @@ namespace DeepSwarmClient
 
             Stage = EngineStage.Loading;
             _engine.Desktop.SetRootElement(_engine.LoadingView);
-            _engine.Desktop.FocusedElement = null;
+            _engine.Desktop.SetFocusedElement(null);
 
             _engine.PacketWriter.WriteByteLengthString(Protocol.VersionString);
             _engine.PacketWriter.WriteBytes(SelfGuid.ToByteArray());

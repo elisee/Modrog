@@ -2,6 +2,7 @@
 using SDL2;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -12,8 +13,9 @@ namespace DeepSwarmClient.UI
         public IntPtr Renderer;
 
         public Element RootElement { get; private set; }
-        public Element FocusedElement;
-        public Element HoveredElement;
+        public Element FocusedElement { get; private set; }
+        public Element HoveredElement { get; private set; }
+        public bool IsHoveredElementPressed;
 
         public int MouseX { get; private set; }
         public int MouseY { get; private set; }
@@ -35,10 +37,58 @@ namespace DeepSwarmClient.UI
         #region Configuration
         public void SetRootElement(Element element)
         {
+            Debug.Assert(!element.IsMounted);
+
+            if (HoveredElement != null)
+            {
+                SetHoveredElementPressed(false);
+                HoveredElement?.OnMouseExit();
+                HoveredElement = null;
+            }
+
+            FocusedElement?.OnBlur();
+            FocusedElement = null;
+
             RootElement?.Unmount();
             RootElement = element;
             RootElement?.Mount();
             RootElement.Layout(new Rectangle(0, 0, 1280, 720));
+        }
+
+        public void SetFocusedElement(Element element)
+        {
+            Debug.Assert(element == null || element.IsMounted);
+            FocusedElement?.OnBlur();
+            FocusedElement = element;
+            FocusedElement?.OnFocus();
+        }
+
+        public void OnHoveredElementUnmounted()
+        {
+            HoveredElement = RootElement.HitTest(MouseX, MouseY);
+            IsHoveredElementPressed = false;
+        }
+
+        public void SetHoveredElementPressed(bool pressed)
+        {
+            Debug.Assert(HoveredElement != null);
+            IsHoveredElementPressed = pressed;
+
+            if (!IsHoveredElementPressed) RefreshHoveredElement();
+        }
+
+        void RefreshHoveredElement()
+        {
+            Debug.Assert(!IsHoveredElementPressed);
+
+            var hitElement = RootElement.HitTest(MouseX, MouseY);
+
+            if (hitElement != HoveredElement)
+            {
+                HoveredElement?.OnMouseExit();
+                HoveredElement = hitElement;
+                HoveredElement?.OnMouseEnter();
+            }
         }
 
         public void RegisterAnimation(Action<float> action)
@@ -73,46 +123,6 @@ namespace DeepSwarmClient.UI
                     FocusedElement.OnKeyUp(@event.key.keysym.sym);
                     break;
 
-                case SDL.SDL_EventType.SDL_MOUSEMOTION:
-                    MouseX = @event.motion.x;
-                    MouseY = @event.motion.y;
-
-                    {
-                        var hitElement = RootElement.HitTest(@event.motion.x, @event.motion.y);
-
-                        if (hitElement != HoveredElement)
-                        {
-                            HoveredElement?.OnMouseExit();
-                            hitElement?.OnMouseEnter();
-                            HoveredElement = hitElement;
-                        }
-
-                        hitElement?.OnMouseMove();
-                    }
-                    break;
-
-                case SDL.SDL_EventType.SDL_MOUSEBUTTONDOWN:
-                    {
-                        var hitElement = RootElement.HitTest(@event.button.x, @event.button.y);
-                        hitElement?.OnMouseDown(@event.button.button);
-                    }
-                    break;
-
-                case SDL.SDL_EventType.SDL_MOUSEBUTTONUP:
-                    {
-                        var hitElement = RootElement.HitTest(@event.button.x, @event.button.y);
-                        hitElement?.OnMouseUp(@event.button.button);
-                    }
-                    break;
-
-                case SDL.SDL_EventType.SDL_MOUSEWHEEL:
-                    {
-                        var hitElement = RootElement.HitTest(MouseX, MouseY);
-                        hitElement?.OnMouseWheel(@event.wheel.x, @event.wheel.y);
-                    }
-                    break;
-
-
                 case SDL.SDL_EventType.SDL_TEXTINPUT:
                     var textBytes = new byte[256];
                     string text;
@@ -128,6 +138,37 @@ namespace DeepSwarmClient.UI
 
                     FocusedElement.OnTextEntered(text);
                     break;
+
+                case SDL.SDL_EventType.SDL_MOUSEMOTION:
+                    {
+                        MouseX = @event.motion.x;
+                        MouseY = @event.motion.y;
+
+                        if (!IsHoveredElementPressed) RefreshHoveredElement();
+                        HoveredElement?.OnMouseMove();
+                        break;
+                    }
+
+                case SDL.SDL_EventType.SDL_MOUSEBUTTONDOWN:
+                    {
+                        HoveredElement = IsHoveredElementPressed ? HoveredElement : RootElement.HitTest(@event.button.x, @event.button.y);
+                        HoveredElement?.OnMouseDown(@event.button.button);
+                        break;
+                    }
+
+                case SDL.SDL_EventType.SDL_MOUSEBUTTONUP:
+                    {
+                        HoveredElement = IsHoveredElementPressed ? HoveredElement : RootElement.HitTest(@event.button.x, @event.button.y);
+                        HoveredElement?.OnMouseUp(@event.button.button);
+                        break;
+                    }
+
+                case SDL.SDL_EventType.SDL_MOUSEWHEEL:
+                    {
+                        HoveredElement = IsHoveredElementPressed ? HoveredElement : RootElement.HitTest(MouseX, MouseY);
+                        HoveredElement?.OnMouseWheel(@event.wheel.x, @event.wheel.y);
+                        break;
+                    }
             }
         }
 

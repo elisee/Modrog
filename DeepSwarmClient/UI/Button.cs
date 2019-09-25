@@ -20,12 +20,10 @@ namespace DeepSwarmClient.UI
 
         public override void OnMouseEnter()
         {
-            IsHovered = true;
             SDL2.SDL.SDL_SetCursor(RendererHelper.HandCursor);
         }
         public override void OnMouseExit()
         {
-            IsHovered = false;
             SDL2.SDL.SDL_SetCursor(RendererHelper.ArrowCursor);
         }
 
@@ -33,7 +31,8 @@ namespace DeepSwarmClient.UI
         {
             if (button == 1)
             {
-                IsPressed = true;
+                Desktop.SetFocusedElement(this);
+                Desktop.SetHoveredElementPressed(true);
             }
         }
 
@@ -41,8 +40,8 @@ namespace DeepSwarmClient.UI
         {
             if (button == 1)
             {
-                IsPressed = false;
-                OnActivate?.Invoke();
+                Desktop.SetHoveredElementPressed(false);
+                if (IsHovered) OnActivate?.Invoke();
             }
         }
 
