@@ -1,6 +1,7 @@
 ﻿using SDL2;
 using System;
 using System.Collections.Generic;
+using DeepSwarmCommon;
 
 namespace DeepSwarmClient.UI
 {
@@ -10,9 +11,9 @@ namespace DeepSwarmClient.UI
 
         public readonly List<string> Lines = new List<string> { "" };
 
-        TextCursorPosition _startCursor = new TextCursorPosition();
-        TextCursorPosition _endCursor = new TextCursorPosition();
-        
+        Point _startCursor = new Point();
+        Point _endCursor = new Point();
+
         int _scrollingPixelsX;
         int _scrollingPixelsY;
 
@@ -231,8 +232,8 @@ namespace DeepSwarmClient.UI
 
         public void EraseSelection()
         {
-            TextCursorPosition firstPosition = _startCursor;
-            TextCursorPosition lastPosition = _endCursor;
+            Point firstPosition = _startCursor;
+            Point lastPosition = _endCursor;
 
             bool bothCursorsOnSameLine = firstPosition.Y == lastPosition.Y;
 
@@ -260,11 +261,11 @@ namespace DeepSwarmClient.UI
                 Lines[firstPosition.Y] = firstLine[0..firstPosition.X] + lastLine[(lastPosition.X)..];
             }
 
-            _startCursor = new TextCursorPosition(firstPosition);
+            _startCursor = firstPosition;
             SyncEndCursorToStart();
         }
 
-        private TextCursorPosition GetCursorPositionFromMousePosition()
+        private Point GetCursorPositionFromMousePosition()
         {
             var x = Desktop.MouseX + _scrollingPixelsX - LayoutRectangle.X;
             var y = Desktop.MouseY + _scrollingPixelsY - LayoutRectangle.Y;
@@ -278,7 +279,7 @@ namespace DeepSwarmClient.UI
             targetY = Math.Clamp(targetY, 0, Lines.Count - 1);
             targetX = Math.Clamp(targetX, 0, Lines[targetY].Length);
 
-            return new TextCursorPosition(targetX, targetY);
+            return new Point(targetX, targetY);
         }
 
         public override void OnMouseWheel(int dx, int dy)
@@ -303,7 +304,7 @@ namespace DeepSwarmClient.UI
 
         private void SyncEndCursorToStart()
         {
-            _endCursor = new TextCursorPosition(_startCursor);
+            _endCursor = _startCursor;
         }
 
         private bool HasSelection()
@@ -363,55 +364,9 @@ namespace DeepSwarmClient.UI
             Lines.Clear();
             Lines.AddRange(text.Replace("\r", "").Split("\n"));
 
-            _startCursor = new TextCursorPosition();
+            _startCursor = new Point();
         }
 
         public string GetText() => string.Join('\n', Lines);
-    }
-
-    public class TextCursorPosition
-    {
-        public int X;
-        public int Y;
-
-        public TextCursorPosition()
-        {
-            X = 0;
-            Y = 0;
-        }
-
-        public TextCursorPosition(int x, int y)
-        {
-            X = x;
-            Y = y;
-        }
-
-        public TextCursorPosition(TextCursorPosition previousPosition)
-        {
-            X = previousPosition.X;
-            Y = previousPosition.Y;
-        }
-
-        public static bool operator ==(TextCursorPosition lhs, TextCursorPosition rhs)
-        {
-            return lhs.X == rhs.X && lhs.Y == rhs.Y;
-        }
-
-        public static bool operator !=(TextCursorPosition lhs, TextCursorPosition rhs)
-        {
-            return !(lhs == rhs);
-        }
-
-        public override bool Equals(object obj)
-        {
-            return obj is TextCursorPosition position &&
-                   X == position.X &&
-                   Y == position.Y;
-        }
-
-        public override int GetHashCode()
-        {
-            return HashCode.Combine(X, Y);
-        }
     }
 }
