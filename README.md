@@ -12,7 +12,6 @@ You'll need .NET Core 3 and Visual Studio 2019. VS Code might work.
 ## TODO
 
     ( ) Need to figure out ASAP what the actual gameplay loop is. Factorio-style? Northgard? Something else?
-    ( ) UI: Allow moving TextInput / TextEditor text cursor with mouse
     ( ) UI: Selection / Copy / Paste in TextInput / TextEditor
     ( ) UI: Display script errors somewhere
     ( ) UI: Increase script window size?
@@ -68,3 +67,4 @@ You'll need .NET Core 3 and Visual Studio 2019. VS Code might work.
     (x) Make the map loop around on the client
     (x) UI: TextEditor
     (x) Generate Rocks!
+    (x) UI: Allow moving TextInput / TextEditor text cursor with mouse

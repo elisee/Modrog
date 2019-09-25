@@ -92,6 +92,17 @@ namespace DeepSwarmClient.UI
             if (button == 1)
             {
                 Desktop.FocusedElement = this;
+                var x = Desktop.MouseX + _scrollingPixelsX - LayoutRectangle.X;
+
+                int targetX = x / RendererHelper.FontRenderSize;
+
+                bool wasRightHalfClicked = x % RendererHelper.FontRenderSize > RendererHelper.FontRenderSize / 2;
+                if (wasRightHalfClicked)
+                {
+                    targetX++;
+                }
+
+                _cursorX = Math.Clamp(targetX, 0, Value.Length);
             }
         }
 
