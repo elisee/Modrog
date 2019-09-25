@@ -2,7 +2,7 @@
 
 namespace DeepSwarmCommon
 {
-    public struct Point
+    public struct Point : IEquatable<Point>
     {
         public static readonly Point Zero = new Point();
 
@@ -15,26 +15,10 @@ namespace DeepSwarmCommon
             Y = y;
         }
 
-        public static bool operator ==(Point lhs, Point rhs)
-        {
-            return lhs.X == rhs.X && lhs.Y == rhs.Y;
-        }
-
-        public static bool operator !=(Point lhs, Point rhs)
-        {
-            return !(lhs == rhs);
-        }
-
-        public override bool Equals(object obj)
-        {
-            return obj is Point position &&
-                   X == position.X &&
-                   Y == position.Y;
-        }
-
-        public override int GetHashCode()
-        {
-            return HashCode.Combine(X, Y);
-        }
+        public override bool Equals(object obj) => obj is Point point && Equals(point);
+        public bool Equals(Point other) => X == other.X && Y == other.Y;
+        public override int GetHashCode() => HashCode.Combine(X, Y);
+        public static bool operator ==(Point left, Point right) => left.Equals(right);
+        public static bool operator !=(Point left, Point right) => !(left == right);
     }
 }
