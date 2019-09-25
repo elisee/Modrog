@@ -7,94 +7,98 @@ using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
-using System.Runtime.CompilerServices;
 using System.Threading;
-using static DeepSwarmCommon.Player;
 using static DeepSwarmCommon.Protocol;
 
 namespace DeepSwarmClient
 {
-    class Engine
+    partial class Engine
     {
+        // Rendering
         public readonly Rectangle Viewport = new Rectangle(0, 0, 1280, 720);
         public readonly IntPtr Window;
         public readonly IntPtr Renderer;
 
-        public readonly string AssetsPath;
+        // Settings
         public readonly string SettingsFilePath;
 
+        // Assets
+        public readonly string AssetsPath;
+        public readonly IntPtr SpritesheetTexture;
+
+        // Engine stage
         public enum EngineStage { EnterName, Loading, Playing }
         public EngineStage ActiveStage { get; private set; }
 
-        public readonly Guid SelfGuid;
-        public string SelfPlayerName;
+        // Self state
+        public struct EngineSelfState
+        {
+            public Guid Guid;
+            public string PlayerName;
+            public int PlayerIndex;
+            public int BaseChunkX;
+            public int BaseChunkY;
+        }
+
+        public EngineSelfState SelfState;
+
+        // Player list
         public readonly List<PlayerListEntry> PlayerList = new List<PlayerListEntry>();
-        public int SelfPlayerIndex = -1;
-        public int SelfBaseChunkX { get; private set; }
-        public int SelfBaseChunkY { get; private set; }
 
-        public float ScrollingPixelsX;
-        public float ScrollingPixelsY;
-
-        public int HoveredTileX { get; private set; }
-        public int HoveredTileY { get; private set; }
-        public Entity SelectedEntity { get; private set; }
-        public readonly Dictionary<int, string> EntityScriptPaths = new Dictionary<int, string>();
-
-        int _tickIndex;
-
+        // Map
+        public readonly Map Map = new Map();
         public readonly byte[] FogOfWar = new byte[Map.MapSize * Map.MapSize];
 
-        public bool IsScrollingLeft;
-        public bool IsScrollingRight;
-        public bool IsScrollingUp;
-        public bool IsScrollingDown;
+        // Selected entity
+        public Entity SelectedEntity { get; private set; }
+        Entity.EntityDirection? _selectedEntityMoveDirection;
 
-        Entity.EntityDirection? _moveDirection;
-
-        public Map Map = new Map();
-
-        public readonly string ScriptsPath;
+        // Scripting
+        public string ScriptsPath { get; private set; }
+        public readonly Dictionary<int, string> EntityScriptPaths = new Dictionary<int, string>();
         public readonly Dictionary<string, string> Scripts = new Dictionary<string, string>();
 
+        readonly Dictionary<int, KeraLua.Lua> _luasByEntityId = new Dictionary<int, KeraLua.Lua>();
+
+        // Ticking
+        int _tickIndex;
+
+        // Networking
         Socket _socket;
         PacketReceiver _receiver;
         readonly PacketWriter _writer = new PacketWriter();
         readonly PacketReader _reader = new PacketReader();
 
+        // UI
         public readonly Desktop Desktop;
         public readonly EnterNameView EnterNameView;
         public readonly LoadingView LoadingView;
         public readonly InGameView InGameView;
-
-        public readonly IntPtr SpritesheetTexture;
-
-        readonly Dictionary<int, KeraLua.Lua> _luasByEntityId = new Dictionary<int, KeraLua.Lua>();
 
         public Engine()
         {
             SDL.SDL_Init(SDL.SDL_INIT_VIDEO);
             SDL.SDL_CreateWindowAndRenderer(1280, 720, 0, out Window, out Renderer);
 
+            // Identity
             var identityPath = Path.Combine(AppContext.BaseDirectory, "Identity.dat");
 
             if (File.Exists(identityPath))
             {
-                try { SelfGuid = new Guid(File.ReadAllBytes(identityPath)); } catch { }
+                try { SelfState.Guid = new Guid(File.ReadAllBytes(identityPath)); } catch { }
             }
 
-            if (SelfGuid == Guid.Empty)
+            if (SelfState.Guid == Guid.Empty)
             {
-                SelfGuid = Guid.NewGuid();
-                File.WriteAllBytes(identityPath, SelfGuid.ToByteArray());
+                SelfState.Guid = Guid.NewGuid();
+                File.WriteAllBytes(identityPath, SelfState.Guid.ToByteArray());
             }
 
+            // Settings
             SettingsFilePath = Path.Combine(AppContext.BaseDirectory, "Settings.txt");
-            if (File.Exists(SettingsFilePath))
-            {
-                try { SelfPlayerName = File.ReadAllText(SettingsFilePath); } catch { }
-            }
+            try { SelfState.PlayerName = File.ReadAllText(SettingsFilePath); } catch { }
 
+            // Scripts
             ScriptsPath = Path.Combine(AppContext.BaseDirectory, "Scripts");
             if (!Directory.Exists(ScriptsPath)) Directory.CreateDirectory(ScriptsPath);
 
@@ -104,13 +108,13 @@ namespace DeepSwarmClient
                 Scripts.Add(relativeFilePath, File.ReadAllText(scriptFilePath));
             }
 
+            // Assets
             AssetsPath = FileHelper.FindAppFolder("Assets");
-
             if (SDL_image.IMG_Init(SDL_image.IMG_InitFlags.IMG_INIT_PNG) != (int)SDL_image.IMG_InitFlags.IMG_INIT_PNG) throw new Exception();
-
             RendererHelper.FontTexture = SDL_image.IMG_LoadTexture(Renderer, Path.Combine(AssetsPath, "Font.png"));
             SpritesheetTexture = SDL_image.IMG_LoadTexture(Renderer, Path.Combine(AssetsPath, "Spritesheet.png"));
 
+            // UI
             Desktop = new Desktop(Renderer);
 
             EnterNameView = new EnterNameView(this);
@@ -118,42 +122,14 @@ namespace DeepSwarmClient
             InGameView = new InGameView(this);
         }
 
-        public void CreateScriptForSelectedEntity()
-        {
-            string relativePath;
-            var index = 0;
-            var suffix = "";
-
-            while (true)
-            {
-                relativePath = $"Script{suffix}.lua";
-                if (!File.Exists(Path.Combine(ScriptsPath, relativePath))) break;
-                index++;
-                suffix = $"_{index}";
-            }
-
-            var defaultScriptText = "function tick(self)\n  \nend\n";
-            File.WriteAllText(Path.Combine(ScriptsPath, relativePath), defaultScriptText);
-            Scripts.Add(relativePath, defaultScriptText);
-            InGameView.OnScriptListUpdated();
-
-            SetupScriptPathForSelectedEntity(relativePath);
-        }
-
         public void Start()
         {
-            _socket = new Socket(SocketType.Stream, ProtocolType.Tcp)
-            {
-                NoDelay = true,
-                LingerState = new LingerOption(true, seconds: 1)
-            };
-
+            _socket = new Socket(SocketType.Stream, ProtocolType.Tcp) { NoDelay = true, LingerState = new LingerOption(true, seconds: 1) };
             _socket.Connect(new IPEndPoint(IPAddress.Loopback, Protocol.Port));
-
             _receiver = new PacketReceiver(_socket);
 
             Desktop.SetRootElement(EnterNameView);
-            EnterNameView.NameInput.SetValue(SelfPlayerName ?? "");
+            EnterNameView.NameInput.SetValue(SelfState.PlayerName ?? "");
             Desktop.FocusedElement = EnterNameView.NameInput;
 
             Run();
@@ -162,7 +138,6 @@ namespace DeepSwarmClient
         void Run()
         {
             var isRunning = true;
-
             var stopwatch = Stopwatch.StartNew();
 
             while (isRunning)
@@ -211,7 +186,7 @@ namespace DeepSwarmClient
                             {
                                 case ServerPacketType.SetupPlayerIndex:
                                     if (!EnsureStage(EngineStage.Loading)) break;
-                                    SelfPlayerIndex = _reader.ReadInt();
+                                    SelfState.PlayerIndex = _reader.ReadInt();
                                     break;
 
                                 case ServerPacketType.PlayerList:
@@ -226,15 +201,12 @@ namespace DeepSwarmClient
 
                                 case ServerPacketType.Tick:
                                     if (!EnsureLoadingOrPlayingStage()) break;
-                                    if (SelfPlayerIndex == -1) { Abort("Received tick before receiving self player index."); break; }
+                                    if (SelfState.PlayerIndex == -1) { Abort("Received tick before receiving self player index."); break; }
 
                                     ReadTick();
 
                                     if (ActiveStage == EngineStage.Loading)
                                     {
-                                        ScrollingPixelsX = (int)((SelfBaseChunkX + 0.5f) * Map.ChunkSize * Map.TileSize) - Viewport.Width / 2;
-                                        ScrollingPixelsY = (int)((SelfBaseChunkY + 0.5f) * Map.ChunkSize * Map.TileSize) - Viewport.Height / 2;
-
                                         Desktop.SetRootElement(InGameView);
                                         Desktop.FocusedElement = InGameView;
                                         ActiveStage = EngineStage.Playing;
@@ -286,7 +258,7 @@ namespace DeepSwarmClient
                 var deltaTime = (float)stopwatch.Elapsed.TotalSeconds;
                 stopwatch.Restart();
 
-                if (ActiveStage == EngineStage.Playing) Update(deltaTime);
+                Update(deltaTime);
 
                 // Render
                 SDL.SDL_SetRenderDrawColor(Renderer, 0, 0, 0, 255);
@@ -307,279 +279,7 @@ namespace DeepSwarmClient
 
         void Update(float deltaTime)
         {
-            const float ScrollingSpeed = 400;
-            var dx = 0;
-            var dy = 0;
-
-            if (IsScrollingLeft) dx--;
-            if (IsScrollingRight) dx++;
-            if (IsScrollingDown) dy--;
-            if (IsScrollingUp) dy++;
-
-            if (dx != 0 || dy != 0)
-            {
-                var angle = MathF.Atan2(dy, dx);
-                ScrollingPixelsX += MathF.Cos(angle) * ScrollingSpeed * deltaTime;
-                ScrollingPixelsY -= MathF.Sin(angle) * ScrollingSpeed * deltaTime;
-            }
-
-            HoveredTileX = ((int)ScrollingPixelsX + Desktop.MouseX) / Map.TileSize;
-            HoveredTileY = ((int)ScrollingPixelsY + Desktop.MouseY) / Map.TileSize;
-        }
-
-        void Send()
-        {
-            try { _socket.Send(_writer.Buffer, 0, _writer.Finish(), SocketFlags.None); } catch { }
-        }
-
-        public void SetName(string name)
-        {
-            SelfPlayerName = name;
-            File.WriteAllText(SettingsFilePath, SelfPlayerName);
-
-            ActiveStage = EngineStage.Loading;
-            Desktop.SetRootElement(LoadingView);
-            Desktop.FocusedElement = null;
-
-            _writer.WriteByteLengthString(Protocol.VersionString);
-            _writer.WriteBytes(SelfGuid.ToByteArray());
-            _writer.WriteByteLengthString(SelfPlayerName);
-            Send();
-        }
-
-        public void SetSelectedEntity(Entity entity)
-        {
-            SelectedEntity = entity;
-            InGameView.OnSelectedEntityChanged();
-        }
-
-        public void MoveTowards(Entity.EntityDirection direction)
-        {
-            _moveDirection = direction;
-            PlanMove(GetSelectedEntityMoveFromDirection());
-        }
-
-        Entity.EntityMove GetSelectedEntityMoveFromDirection()
-        {
-            if (_moveDirection.Value == SelectedEntity.Direction) return Entity.EntityMove.Forward;
-            else
-            {
-                var diff = (SelectedEntity.Direction - _moveDirection.Value + 4) % 4 - 2;
-                if (diff < 0) return Entity.EntityMove.RotateCCW;
-                else return Entity.EntityMove.RotateCW;
-            }
-        }
-
-        public void StopMovingTowards(Entity.EntityDirection direction)
-        {
-            if (_moveDirection == direction) _moveDirection = null;
-        }
-
-        public void PlanMove(Entity.EntityMove move)
-        {
-            _writer.WriteByte((byte)Protocol.ClientPacketType.PlanMoves);
-            _writer.WriteInt(_tickIndex);
-            _writer.WriteShort(1);
-            _writer.WriteInt(SelectedEntity.Id);
-            _writer.WriteByte((byte)move);
-            Send();
-        }
-
-        public void SetupScriptPathForSelectedEntity(string scriptFilePath)
-        {
-            if (scriptFilePath != null) UpdateScriptForSelectedEntity(Scripts[scriptFilePath], write: false);
-            else ClearLuaForSelectedEntity();
-
-            EntityScriptPaths[SelectedEntity.Id] = scriptFilePath;
-            InGameView.OnSelectedEntityChanged();
-        }
-
-        public void ClearScriptPathForSelectedEntity()
-        {
-            EntityScriptPaths.Remove(SelectedEntity.Id);
-            InGameView.OnSelectedEntityChanged();
-
-            ClearLuaForSelectedEntity();
-        }
-
-        void ClearLuaForSelectedEntity()
-        {
-            if (_luasByEntityId.TryGetValue(SelectedEntity.Id, out var oldLua))
-            {
-                oldLua.Dispose();
-                _luasByEntityId.Remove(SelectedEntity.Id);
-            }
-        }
-
-        internal void UpdateScriptForSelectedEntity(string scriptText, bool write)
-        {
-            var relativePath = EntityScriptPaths[SelectedEntity.Id];
-            if (write)
-            {
-                File.WriteAllText(Path.Combine(ScriptsPath, relativePath), scriptText);
-                Scripts[relativePath] = scriptText;
-            }
-
-            ClearLuaForSelectedEntity();
-
-            var lua = new KeraLua.Lua(openLibs: true);
-            _luasByEntityId.Add(SelectedEntity.Id, lua);
-            if (lua.DoString(scriptText))
-            {
-                var error = lua.ToString(-1);
-                Trace.WriteLine("Error: " + error);
-            }
-        }
-
-        void ReadPlayerList()
-        {
-            PlayerList.Clear();
-
-            var playerCount = _reader.ReadInt();
-
-            for (var i = 0; i < playerCount; i++)
-            {
-                var name = _reader.ReadByteSizeString();
-                var team = (PlayerTeam)_reader.ReadByte();
-                var isOnline = _reader.ReadByte() != 0;
-
-                PlayerList.Add(new PlayerListEntry { Name = name, Team = team, IsOnline = isOnline });
-            }
-
-            InGameView.OnPlayerListUpdated();
-        }
-
-        void ReadChat()
-        {
-            // TODO
-        }
-
-        void ReadTick()
-        {
-            Unsafe.InitBlock(ref FogOfWar[0], 0, (uint)FogOfWar.Length);
-            Map.Entities.Clear();
-            Map.EntitiesById.Clear();
-
-            _tickIndex = _reader.ReadInt();
-
-            Entity newSelectedEntity = null;
-
-            var seenEntitiesCount = _reader.ReadShort();
-            for (var i = 0; i < seenEntitiesCount; i++)
-            {
-                var entity = new Entity
-                {
-                    Id = _reader.ReadInt(),
-                    X = _reader.ReadShort(),
-                    Y = _reader.ReadShort(),
-                    PlayerIndex = _reader.ReadShort(),
-                    Type = (Entity.EntityType)_reader.ReadByte(),
-                    Direction = (Entity.EntityDirection)_reader.ReadByte(),
-                    Health = _reader.ReadByte(),
-                    Crystals = _reader.ReadInt(),
-                };
-
-                if (SelectedEntity?.Id == entity.Id) newSelectedEntity = entity;
-
-                Map.Entities.Add(entity);
-                Map.EntitiesById.Add(entity.Id, entity);
-
-                if (entity.PlayerIndex == SelfPlayerIndex && entity.Type == Entity.EntityType.Factory)
-                {
-                    SelfBaseChunkX = entity.X / Map.ChunkSize;
-                    SelfBaseChunkY = entity.Y / Map.ChunkSize;
-                }
-            }
-
-            SelectedEntity = newSelectedEntity;
-            if (SelectedEntity != null) InGameView.OnSelectedEntityUpdated();
-
-            var seenTilesCount = _reader.ReadShort();
-            for (var i = 0; i < seenTilesCount; i++)
-            {
-                var x = _reader.ReadShort();
-                var y = _reader.ReadShort();
-                FogOfWar[y * Map.MapSize + x] = 1;
-                Map.Tiles[y * Map.MapSize + x] = _reader.ReadByte();
-            }
-
-            // Planned moves
-            var plannedMoves = new Dictionary<int, Entity.EntityMove>();
-
-            // TODO: Scripting
-            if (_moveDirection != null && SelectedEntity != null) plannedMoves[SelectedEntity.Id] = GetSelectedEntityMoveFromDirection();
-
-            var removedSelfEntityIds = new List<int>();
-
-            foreach (var (entityId, lua) in _luasByEntityId)
-            {
-                if (!Map.EntitiesById.TryGetValue(entityId, out var entity))
-                {
-                    lua.Dispose();
-                    removedSelfEntityIds.Add(entityId);
-                }
-                else
-                {
-                    RunScript(lua, entity);
-                }
-            }
-
-            foreach (var entityId in removedSelfEntityIds)
-            {
-                EntityScriptPaths.Remove(entityId);
-                _luasByEntityId.Remove(entityId);
-            }
-
-            _writer.WriteByte((byte)Protocol.ClientPacketType.PlanMoves);
-            _writer.WriteInt(_tickIndex);
-            _writer.WriteShort((short)plannedMoves.Count);
-            foreach (var (entityId, move) in plannedMoves)
-            {
-                _writer.WriteInt(entityId);
-                _writer.WriteByte((byte)move);
-            }
-            Send();
-
-            void RunScript(KeraLua.Lua lua, Entity entity)
-            {
-                var type = lua.GetGlobal("tick");
-                if (type != KeraLua.LuaType.Function)
-                {
-                    Trace.WriteLine("There must be a tick function.");
-                    lua.Pop(1);
-                    return;
-                }
-
-                lua.NewTable();
-
-                lua.PushString("forward");
-                lua.PushCFunction((_) =>
-                {
-                    plannedMoves[entity.Id] = Entity.EntityMove.Forward;
-                    return 0;
-                });
-                lua.RawSet(-3);
-
-                lua.PushString("rotateCW");
-                lua.PushCFunction((_) => { plannedMoves[entity.Id] = Entity.EntityMove.RotateCW; return 0; });
-                lua.RawSet(-3);
-
-                lua.PushString("rotateCCW");
-                lua.PushCFunction((_) => { plannedMoves[entity.Id] = Entity.EntityMove.RotateCCW; return 0; });
-                lua.RawSet(-3);
-
-                lua.PushString("build");
-                lua.PushCFunction((_) => { plannedMoves[entity.Id] = Entity.EntityMove.Build; return 0; });
-                lua.RawSet(-3);
-
-                var status = lua.PCall(1, 0, 0);
-                if (status != KeraLua.LuaStatus.OK)
-                {
-                    Trace.WriteLine($"Error running script: {status}");
-                    var error = lua.ToString(-1);
-                    Trace.WriteLine(error);
-                }
-            }
+            Desktop.Animate(deltaTime);
         }
     }
 }

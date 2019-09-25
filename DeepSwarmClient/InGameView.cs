@@ -8,10 +8,7 @@ namespace DeepSwarmClient
 {
     class InGameView : EngineElement
     {
-        bool _isDragging;
-        int _dragX;
-        int _dragY;
-
+        // UI
         readonly Element _playerListPanel;
 
         const int EntityStatsContainerWidth = 300;
@@ -32,6 +29,23 @@ namespace DeepSwarmClient
         readonly Element _scriptEditorSidebar;
         readonly TextInput _scriptNameInput;
         readonly TextEditor _scriptTextEditor;
+
+        // Hovered tile
+        int _hoveredTileX;
+        int _hoveredTileY;
+
+        // Scrolling
+        float _scrollingPixelsX;
+        float _scrollingPixelsY;
+
+        bool _isScrollingLeft;
+        bool _isScrollingRight;
+        bool _isScrollingUp;
+        bool _isScrollingDown;
+
+        bool _isDraggingScroll;
+        int _dragScrollX;
+        int _dragScrollY;
 
         public InGameView(Engine engine)
             : base(engine, null)
@@ -128,11 +142,11 @@ namespace DeepSwarmClient
             };
 
             StartButtonStrip(_manualModeSidebar);
-            AddButtonToStrip("SCRIPT", () => Engine.SetupScriptPathForSelectedEntity(null));
-            AddButtonToStrip("BUILD", () => Engine.PlanMove(Entity.EntityMove.Build));
-            AddButtonToStrip("CW", () => Engine.PlanMove(Entity.EntityMove.RotateCW));
-            AddButtonToStrip("MOVE", () => Engine.PlanMove(Entity.EntityMove.Forward));
-            AddButtonToStrip("CCW", () => Engine.PlanMove(Entity.EntityMove.RotateCCW));
+            AddButtonToStrip("SCRIPT", () => Engine.FromUI_SetupScriptPathForSelectedEntity(null));
+            AddButtonToStrip("BUILD", () => Engine.FromUI_PlanMove(Entity.EntityMove.Build));
+            AddButtonToStrip("CW", () => Engine.FromUI_PlanMove(Entity.EntityMove.RotateCW));
+            AddButtonToStrip("MOVE", () => Engine.FromUI_PlanMove(Entity.EntityMove.Forward));
+            AddButtonToStrip("CCW", () => Engine.FromUI_PlanMove(Entity.EntityMove.RotateCCW));
 
             // Script selector
             _scriptSelectorSidebar = new Element(Desktop, null)
@@ -145,7 +159,7 @@ namespace DeepSwarmClient
                 AnchorRectangle = new Rectangle(0, 0, ButtonStripWidth, Engine.Viewport.Height)
             });
 
-            AddButtonToStrip("MANUAL", () => Engine.ClearScriptPathForSelectedEntity());
+            AddButtonToStrip("MANUAL", () => Engine.FromUI_ClearScriptPathForSelectedEntity());
 
             var scriptSelectorPanel = new Panel(Desktop, _scriptSelectorSidebar, new Color(0x123456ff))
             {
@@ -156,7 +170,7 @@ namespace DeepSwarmClient
             {
                 AnchorRectangle = new Rectangle(8, 8, SidebarPanelWidth - 16, 16),
                 Text = "[+] New Script",
-                OnActivate = () => Engine.CreateScriptForSelectedEntity()
+                OnActivate = () => Engine.FromUI_CreateScriptForSelectedEntity()
             };
 
             _scriptSelectorList = new Element(Desktop, scriptSelectorPanel)
@@ -175,8 +189,8 @@ namespace DeepSwarmClient
                 AnchorRectangle = new Rectangle(0, 0, ButtonStripWidth, Engine.Viewport.Height)
             });
 
-            AddButtonToStrip("STOP", () => Engine.SetupScriptPathForSelectedEntity(null));
-            AddButtonToStrip("SAVE", () => Engine.UpdateScriptForSelectedEntity(_scriptTextEditor.GetText(), write: true));
+            AddButtonToStrip("STOP", () => Engine.FromUI_SetupScriptPathForSelectedEntity(null));
+            AddButtonToStrip("SAVE", () => Engine.FromUI_UpdateSelectedEntityScript(_scriptTextEditor.GetText()));
 
             var scriptEditorPanel = new Panel(Desktop, _scriptEditorSidebar, new Color(0x123456ff))
             {
@@ -204,6 +218,19 @@ namespace DeepSwarmClient
             return base.HitTest(x, y) ?? (LayoutRectangle.Contains(x, y) ? this : null);
         }
 
+        public override void OnMounted()
+        {
+            _scrollingPixelsX = (int)((Engine.SelfState.BaseChunkX + 0.5f) * Map.ChunkSize * Map.TileSize) - Engine.Viewport.Width / 2;
+            _scrollingPixelsY = (int)((Engine.SelfState.BaseChunkY + 0.5f) * Map.ChunkSize * Map.TileSize) - Engine.Viewport.Height / 2;
+
+            Desktop.RegisterAnimation(Animate);
+        }
+
+        public override void OnUnmounted()
+        {
+            Desktop.UnregisterAnimation(Animate);
+        }
+
         public override void OnKeyDown(SDL.SDL_Keycode key, bool repeat)
         {
             if (repeat) return;
@@ -214,20 +241,20 @@ namespace DeepSwarmClient
                 _playerListPanel.Layout(LayoutRectangle);
             }
 
-            if (!_isDragging)
+            if (!_isDraggingScroll)
             {
-                if (key == SDL.SDL_Keycode.SDLK_LEFT) Engine.IsScrollingLeft = true;
-                if (key == SDL.SDL_Keycode.SDLK_RIGHT) Engine.IsScrollingRight = true;
-                if (key == SDL.SDL_Keycode.SDLK_UP) Engine.IsScrollingUp = true;
-                if (key == SDL.SDL_Keycode.SDLK_DOWN) Engine.IsScrollingDown = true;
+                if (key == SDL.SDL_Keycode.SDLK_LEFT) _isScrollingLeft = true;
+                if (key == SDL.SDL_Keycode.SDLK_RIGHT) _isScrollingRight = true;
+                if (key == SDL.SDL_Keycode.SDLK_UP) _isScrollingUp = true;
+                if (key == SDL.SDL_Keycode.SDLK_DOWN) _isScrollingDown = true;
             }
 
             if (Engine.SelectedEntity != null)
             {
-                if (key == SDL.SDL_Keycode.SDLK_a || key == SDL.SDL_Keycode.SDLK_q) Engine.MoveTowards(Entity.EntityDirection.Left);
-                if (key == SDL.SDL_Keycode.SDLK_d) Engine.MoveTowards(Entity.EntityDirection.Right);
-                if (key == SDL.SDL_Keycode.SDLK_w || key == SDL.SDL_Keycode.SDLK_z) Engine.MoveTowards(Entity.EntityDirection.Up);
-                if (key == SDL.SDL_Keycode.SDLK_s) Engine.MoveTowards(Entity.EntityDirection.Down);
+                if (key == SDL.SDL_Keycode.SDLK_a || key == SDL.SDL_Keycode.SDLK_q) Engine.FromUI_SetMoveTowards(Entity.EntityDirection.Left);
+                if (key == SDL.SDL_Keycode.SDLK_d) Engine.FromUI_SetMoveTowards(Entity.EntityDirection.Right);
+                if (key == SDL.SDL_Keycode.SDLK_w || key == SDL.SDL_Keycode.SDLK_z) Engine.FromUI_SetMoveTowards(Entity.EntityDirection.Up);
+                if (key == SDL.SDL_Keycode.SDLK_s) Engine.FromUI_SetMoveTowards(Entity.EntityDirection.Down);
             }
         }
 
@@ -238,23 +265,23 @@ namespace DeepSwarmClient
                 Remove(_playerListPanel);
             }
 
-            if (key == SDL.SDL_Keycode.SDLK_LEFT) Engine.IsScrollingLeft = false;
-            if (key == SDL.SDL_Keycode.SDLK_RIGHT) Engine.IsScrollingRight = false;
-            if (key == SDL.SDL_Keycode.SDLK_UP) Engine.IsScrollingUp = false;
-            if (key == SDL.SDL_Keycode.SDLK_DOWN) Engine.IsScrollingDown = false;
+            if (key == SDL.SDL_Keycode.SDLK_LEFT) _isScrollingLeft = false;
+            if (key == SDL.SDL_Keycode.SDLK_RIGHT) _isScrollingRight = false;
+            if (key == SDL.SDL_Keycode.SDLK_UP) _isScrollingUp = false;
+            if (key == SDL.SDL_Keycode.SDLK_DOWN) _isScrollingDown = false;
 
-            if (key == SDL.SDL_Keycode.SDLK_a || key == SDL.SDL_Keycode.SDLK_q) Engine.StopMovingTowards(Entity.EntityDirection.Left);
-            if (key == SDL.SDL_Keycode.SDLK_d) Engine.StopMovingTowards(Entity.EntityDirection.Right);
-            if (key == SDL.SDL_Keycode.SDLK_w || key == SDL.SDL_Keycode.SDLK_z) Engine.StopMovingTowards(Entity.EntityDirection.Up);
-            if (key == SDL.SDL_Keycode.SDLK_s) Engine.StopMovingTowards(Entity.EntityDirection.Down);
+            if (key == SDL.SDL_Keycode.SDLK_a || key == SDL.SDL_Keycode.SDLK_q) Engine.FromUI_StopMovingTowards(Entity.EntityDirection.Left);
+            if (key == SDL.SDL_Keycode.SDLK_d) Engine.FromUI_StopMovingTowards(Entity.EntityDirection.Right);
+            if (key == SDL.SDL_Keycode.SDLK_w || key == SDL.SDL_Keycode.SDLK_z) Engine.FromUI_StopMovingTowards(Entity.EntityDirection.Up);
+            if (key == SDL.SDL_Keycode.SDLK_s) Engine.FromUI_StopMovingTowards(Entity.EntityDirection.Down);
         }
 
         public override void OnMouseMove()
         {
-            if (_isDragging)
+            if (_isDraggingScroll)
             {
-                Engine.ScrollingPixelsX = _dragX - Desktop.MouseX;
-                Engine.ScrollingPixelsY = _dragY - Desktop.MouseY;
+                _scrollingPixelsX = _dragScrollX - Desktop.MouseX;
+                _scrollingPixelsY = _dragScrollY - Desktop.MouseY;
             }
         }
 
@@ -262,8 +289,8 @@ namespace DeepSwarmClient
         {
             if (button == 1)
             {
-                var startTileX = (int)Engine.ScrollingPixelsX / Map.TileSize;
-                var startTileY = (int)Engine.ScrollingPixelsY / Map.TileSize;
+                var startTileX = (int)_scrollingPixelsX / Map.TileSize;
+                var startTileY = (int)_scrollingPixelsY / Map.TileSize;
 
                 var hoveredEntities = new List<Entity>();
 
@@ -272,34 +299,34 @@ namespace DeepSwarmClient
                     var tileX = Map.Wrap(entity.X - startTileX) + startTileX;
                     var tileY = Map.Wrap(entity.Y - startTileY) + startTileY;
 
-                    if (tileX == Engine.HoveredTileX && tileY == Engine.HoveredTileY) hoveredEntities.Add(entity);
+                    if (tileX == _hoveredTileX && tileY == _hoveredTileY) hoveredEntities.Add(entity);
                 }
 
                 if (hoveredEntities.Count > 0)
                 {
                     if (Engine.SelectedEntity == null || hoveredEntities.Count == 1)
                     {
-                        Engine.SetSelectedEntity(hoveredEntities[0]);
+                        Engine.FromUI_SelectEntity(hoveredEntities[0]);
                     }
                     else
                     {
                         var selectedEntityIndex = hoveredEntities.IndexOf(Engine.SelectedEntity);
                         var newSelectedEntityIndex = selectedEntityIndex < hoveredEntities.Count - 1 ? selectedEntityIndex + 1 : 0;
-                        Engine.SetSelectedEntity(hoveredEntities[newSelectedEntityIndex]);
+                        Engine.FromUI_SelectEntity(hoveredEntities[newSelectedEntityIndex]);
                     }
                 }
-                else Engine.SetSelectedEntity(null);
+                else Engine.FromUI_SelectEntity(null);
             }
             else if (button == 2)
             {
-                Engine.IsScrollingLeft = false;
-                Engine.IsScrollingRight = false;
-                Engine.IsScrollingUp = false;
-                Engine.IsScrollingDown = false;
+                _isScrollingLeft = false;
+                _isScrollingRight = false;
+                _isScrollingUp = false;
+                _isScrollingDown = false;
 
-                _isDragging = true;
-                _dragX = (int)Engine.ScrollingPixelsX + Desktop.MouseX;
-                _dragY = (int)Engine.ScrollingPixelsY + Desktop.MouseY;
+                _isDraggingScroll = true;
+                _dragScrollX = (int)_scrollingPixelsX + Desktop.MouseX;
+                _dragScrollY = (int)_scrollingPixelsY + Desktop.MouseY;
             }
         }
 
@@ -307,7 +334,7 @@ namespace DeepSwarmClient
         {
             if (button == 2)
             {
-                _isDragging = false;
+                _isDraggingScroll = false;
             }
         }
 
@@ -335,7 +362,7 @@ namespace DeepSwarmClient
                 {
                     AnchorRectangle = new Rectangle(0, i * 16, _scriptSelectorList.AnchorRectangle.Width, 16),
                     Text = scriptPath,
-                    OnActivate = () => Engine.SetupScriptPathForSelectedEntity(scriptPath)
+                    OnActivate = () => Engine.FromUI_SetupScriptPathForSelectedEntity(scriptPath)
                 };
 
                 i++;
@@ -395,22 +422,39 @@ namespace DeepSwarmClient
             _entityCrystalsValue.Text = Engine.SelectedEntity.Crystals.ToString();
         }
 
+        public void Animate(float deltaTime)
+        {
+            const float ScrollingSpeed = 400;
+            var dx = 0;
+            var dy = 0;
+
+            if (_isScrollingLeft) dx--;
+            if (_isScrollingRight) dx++;
+            if (_isScrollingDown) dy--;
+            if (_isScrollingUp) dy++;
+
+            if (dx != 0 || dy != 0)
+            {
+                var angle = MathF.Atan2(dy, dx);
+                _scrollingPixelsX += MathF.Cos(angle) * ScrollingSpeed * deltaTime;
+                _scrollingPixelsY -= MathF.Sin(angle) * ScrollingSpeed * deltaTime;
+            }
+
+            _hoveredTileX = ((int)_scrollingPixelsX + Desktop.MouseX) / Map.TileSize;
+            _hoveredTileY = ((int)_scrollingPixelsY + Desktop.MouseY) / Map.TileSize;
+        }
+
         protected override void DrawSelf()
         {
             base.DrawSelf();
 
-            DrawMap();
-        }
-
-        void DrawMap()
-        {
-            var startTileX = (int)Engine.ScrollingPixelsX / Map.TileSize;
-            var startTileY = (int)Engine.ScrollingPixelsY / Map.TileSize;
+            var startTileX = (int)_scrollingPixelsX / Map.TileSize;
+            var startTileY = (int)_scrollingPixelsY / Map.TileSize;
 
             var tilesPerRow = (int)MathF.Ceiling((float)Engine.Viewport.Width / Map.TileSize + 1);
             var tilesPerColumn = (int)MathF.Ceiling((float)Engine.Viewport.Height / Map.TileSize + 1);
 
-            // Tiles
+            // Draw tiles
             for (var y = -1; y < tilesPerColumn; y++)
             {
                 for (var x = -1; x < tilesPerRow; x++)
@@ -421,8 +465,8 @@ namespace DeepSwarmClient
                     var tileIndex = tileY * Map.MapSize + tileX;
                     var tile = (int)Engine.Map.Tiles[tileIndex];
 
-                    var renderX = (startTileX + x) * Map.TileSize - (int)Engine.ScrollingPixelsX;
-                    var renderY = (startTileY + y) * Map.TileSize - (int)Engine.ScrollingPixelsY;
+                    var renderX = (startTileX + x) * Map.TileSize - (int)_scrollingPixelsX;
+                    var renderY = (startTileY + y) * Map.TileSize - (int)_scrollingPixelsY;
 
                     var sourceRect = Desktop.ToSDL_Rect(new Rectangle((5 + tile) * 24, 0, 24, 24));
                     var destRect = Desktop.ToSDL_Rect(new Rectangle(renderX, renderY, Map.TileSize, Map.TileSize));
@@ -430,7 +474,7 @@ namespace DeepSwarmClient
                 }
             }
 
-            // Fog of war
+            // Draw fog of war
             var fogColor = new Color(0x00000044);
             fogColor.UseAsDrawColor(Engine.Renderer);
             SDL.SDL_SetRenderDrawBlendMode(Engine.Renderer, SDL.SDL_BlendMode.SDL_BLENDMODE_BLEND);
@@ -445,8 +489,8 @@ namespace DeepSwarmClient
                     var tileIndex = tileY * Map.MapSize + tileX;
                     if (Engine.FogOfWar[tileIndex] != 0) continue;
 
-                    var renderX = (startTileX + x) * Map.TileSize - (int)Engine.ScrollingPixelsX;
-                    var renderY = (startTileY + y) * Map.TileSize - (int)Engine.ScrollingPixelsY;
+                    var renderX = (startTileX + x) * Map.TileSize - (int)_scrollingPixelsX;
+                    var renderY = (startTileY + y) * Map.TileSize - (int)_scrollingPixelsY;
 
                     var rect = Desktop.ToSDL_Rect(new Rectangle(renderX, renderY, Map.TileSize, Map.TileSize));
                     SDL.SDL_RenderFillRect(Engine.Renderer, ref rect);
@@ -455,14 +499,14 @@ namespace DeepSwarmClient
 
             SDL.SDL_SetRenderDrawBlendMode(Engine.Renderer, SDL.SDL_BlendMode.SDL_BLENDMODE_NONE);
 
-            // Entities
+            // Draw entities
             foreach (var entity in Engine.Map.Entities)
             {
                 var tileX = Map.Wrap(entity.X - startTileX) + startTileX;
                 var tileY = Map.Wrap(entity.Y - startTileY) + startTileY;
 
-                var renderX = tileX * Map.TileSize - (int)Engine.ScrollingPixelsX;
-                var renderY = tileY * Map.TileSize - (int)Engine.ScrollingPixelsY;
+                var renderX = tileX * Map.TileSize - (int)_scrollingPixelsX;
+                var renderY = tileY * Map.TileSize - (int)_scrollingPixelsY;
 
                 switch (entity.Type)
                 {
@@ -548,6 +592,7 @@ namespace DeepSwarmClient
 
             }
 
+            // Draw box around selected entity
             if (Engine.SelectedEntity != null)
             {
                 var color = new Color(0x00ff00ff);
@@ -566,8 +611,8 @@ namespace DeepSwarmClient
                 var tileX = Map.Wrap(x - startTileX) + startTileX;
                 var tileY = Map.Wrap(y - startTileY) + startTileY;
 
-                var renderX = tileX * Map.TileSize - (int)Engine.ScrollingPixelsX;
-                var renderY = tileY * Map.TileSize - (int)Engine.ScrollingPixelsY;
+                var renderX = tileX * Map.TileSize - (int)_scrollingPixelsX;
+                var renderY = tileY * Map.TileSize - (int)_scrollingPixelsY;
 
                 var rect = new Rectangle(renderX, renderY, w * Map.TileSize, h * Map.TileSize);
 

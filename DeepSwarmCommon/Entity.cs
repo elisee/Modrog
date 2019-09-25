@@ -59,5 +59,16 @@ namespace DeepSwarmCommon
             EntityDirection.Up => MathF.PI * 3f / 2f,
             _ => throw new NotSupportedException(),
         };
+
+        public EntityMove GetMoveForTargetDirection(EntityDirection targetDirection)
+        {
+            if (targetDirection == Direction) return Entity.EntityMove.Forward;
+            else
+            {
+                var diff = (Direction - targetDirection + 4) % 4 - 2;
+                if (diff < 0) return Entity.EntityMove.RotateCCW;
+                else return Entity.EntityMove.RotateCW;
+            }
+        }
     }
 }

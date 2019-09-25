@@ -20,8 +20,7 @@ namespace DeepSwarmClient.UI
 
         public Rectangle LayoutRectangle;
 
-        bool _isMounted;
-
+        public bool IsMounted { get; private set; }
         public bool IsFocused => Desktop.FocusedElement == this;
         public bool IsHovered { get; protected set; }
         public bool IsPressed { get; protected set; }
@@ -36,7 +35,7 @@ namespace DeepSwarmClient.UI
         {
             foreach (var child in Children)
             {
-                if (_isMounted) child.Unmount();
+                if (IsMounted) child.Unmount();
                 child.Parent = null;
             }
             Children.Clear();
@@ -48,14 +47,14 @@ namespace DeepSwarmClient.UI
 
             Children.Add(child);
             child.Parent = this;
-            if (_isMounted) child.Mount();
+            if (IsMounted) child.Mount();
         }
 
         public void Remove(Element child)
         {
             Debug.Assert(child.Parent == this);
 
-            if (_isMounted) child.Unmount();
+            if (IsMounted) child.Unmount();
             child.Parent = null;
             Children.Remove(child);
         }
@@ -85,8 +84,8 @@ namespace DeepSwarmClient.UI
 
         internal void Mount()
         {
-            Debug.Assert(!_isMounted);
-            _isMounted = true;
+            Debug.Assert(!IsMounted);
+            IsMounted = true;
 
             foreach (var child in Children) child.Mount();
 
@@ -95,8 +94,8 @@ namespace DeepSwarmClient.UI
 
         internal void Unmount()
         {
-            Debug.Assert(_isMounted);
-            _isMounted = false;
+            Debug.Assert(IsMounted);
+            IsMounted = false;
 
             if (IsFocused) Desktop.FocusedElement = Desktop.RootElement;
             IsHovered = false;
@@ -132,7 +131,7 @@ namespace DeepSwarmClient.UI
 
         public void Draw()
         {
-            Debug.Assert(_isMounted);
+            Debug.Assert(IsMounted);
 
             DrawSelf();
             foreach (var child in Children) child.Draw();
