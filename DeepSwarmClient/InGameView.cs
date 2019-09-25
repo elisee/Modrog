@@ -21,7 +21,7 @@ namespace DeepSwarmClient
         const int SidebarPanelWidth = 400;
         readonly Element _sidebarContainer;
 
-        readonly Element _manualModeSidebar;
+        readonly Dictionary<Entity.EntityType, Element> _manualModeSidebarsByEntityType;
 
         readonly Element _scriptSelectorSidebar;
         readonly Element _scriptSelectorList;
@@ -136,14 +136,26 @@ namespace DeepSwarmClient
             }
 
             // Manual mode
-            _manualModeSidebar = new Element(Desktop, null)
+            _manualModeSidebarsByEntityType = new Dictionary<Entity.EntityType, Element>();
+
+            _manualModeSidebarsByEntityType[Entity.EntityType.Heart] = new Element(Desktop, null);
+
+            _manualModeSidebarsByEntityType[Entity.EntityType.Factory] = new Element(Desktop, null)
             {
                 AnchorRectangle = new Rectangle(Engine.Viewport.Width - ButtonStripWidth, 0, ButtonStripWidth, Engine.Viewport.Height),
             };
 
-            StartButtonStrip(_manualModeSidebar);
+            StartButtonStrip(_manualModeSidebarsByEntityType[Entity.EntityType.Factory]);
             AddButtonToStrip("SCRIPT", () => Engine.State.SetupScriptPathForSelectedEntity(null));
             AddButtonToStrip("BUILD", () => Engine.State.PlanMove(Entity.EntityMove.Build));
+
+            _manualModeSidebarsByEntityType[Entity.EntityType.Robot] = new Element(Desktop, null)
+            {
+                AnchorRectangle = new Rectangle(Engine.Viewport.Width - ButtonStripWidth, 0, ButtonStripWidth, Engine.Viewport.Height),
+            };
+
+            StartButtonStrip(_manualModeSidebarsByEntityType[Entity.EntityType.Robot]);
+            AddButtonToStrip("SCRIPT", () => Engine.State.SetupScriptPathForSelectedEntity(null));
             AddButtonToStrip("CW", () => Engine.State.PlanMove(Entity.EntityMove.RotateCW));
             AddButtonToStrip("MOVE", () => Engine.State.PlanMove(Entity.EntityMove.Forward));
             AddButtonToStrip("CCW", () => Engine.State.PlanMove(Entity.EntityMove.RotateCCW));
@@ -409,7 +421,7 @@ namespace DeepSwarmClient
             {
                 _entityStatsContainer.AnchorRectangle.X = (Engine.Viewport.Width - EntityStatsContainerWidth) / 2;
 
-                _sidebarContainer.Add(_manualModeSidebar);
+                _sidebarContainer.Add(_manualModeSidebarsByEntityType[selectedEntity.Type]);
             }
 
             _entityStatsContainer.Layout(Engine.Viewport);
