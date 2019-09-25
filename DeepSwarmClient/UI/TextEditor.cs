@@ -120,6 +120,10 @@ namespace DeepSwarmClient.UI
                         Lines[_startCursor.Y] += line;
                     }
                 }
+                else
+                {
+                    EraseSelection();
+                }
 
                 ClampScrolling();
                 SyncEndCursorToStart();
@@ -141,6 +145,10 @@ namespace DeepSwarmClient.UI
                         Lines.RemoveAt(_startCursor.Y + 1);
                     }
                 }
+                else
+                {
+                    EraseSelection();
+                }
 
                 ClampScrolling();
                 SyncEndCursorToStart();
@@ -148,6 +156,7 @@ namespace DeepSwarmClient.UI
 
             void BreakLine()
             {
+                EraseSelection();
                 if (_startCursor.X == 0)
                 {
                     Lines.Insert(_startCursor.Y, "");
@@ -220,6 +229,41 @@ namespace DeepSwarmClient.UI
             }
         }
 
+        public void EraseSelection()
+        {
+            TextCursorPosition firstPosition = _startCursor;
+            TextCursorPosition lastPosition = _endCursor;
+
+            bool bothCursorsOnSameLine = firstPosition.Y == lastPosition.Y;
+
+            if (firstPosition.Y > lastPosition.Y || bothCursorsOnSameLine && firstPosition.X > lastPosition.X)
+            {
+                firstPosition = _endCursor;
+                lastPosition = _startCursor;
+            }
+
+            if (bothCursorsOnSameLine)
+            {
+                string line = Lines[firstPosition.Y];
+                Lines[firstPosition.Y] = line[0..firstPosition.X] + line[(lastPosition.X)..];
+            }
+            else
+            {
+                string firstLine = Lines[firstPosition.Y];
+                string lastLine = Lines[lastPosition.Y];
+
+                for (int i = firstPosition.Y + 1; i <= lastPosition.Y; i++)
+                {
+                    Lines.RemoveAt(firstPosition.Y + 1);
+                }
+
+                Lines[firstPosition.Y] = firstLine[0..firstPosition.X] + lastLine[(lastPosition.X)..];
+            }
+
+            _startCursor = new TextCursorPosition(firstPosition);
+            SyncEndCursorToStart();
+        }
+
         private TextCursorPosition GetCursorPositionFromMousePosition()
         {
             var x = Desktop.MouseX + _scrollingPixelsX - LayoutRectangle.X;
@@ -248,6 +292,7 @@ namespace DeepSwarmClient.UI
 
         void InsertText(string text)
         {
+            EraseSelection();
             var line = Lines[_startCursor.Y];
             Lines[_startCursor.Y] = line[0.._startCursor.X] + text + line[_startCursor.X..];
             _startCursor.X += text.Length;
@@ -263,7 +308,7 @@ namespace DeepSwarmClient.UI
 
         private bool HasSelection()
         {
-            return _startCursor == _endCursor;
+            return _startCursor != _endCursor;
         }
 
         void ClampScrolling()
