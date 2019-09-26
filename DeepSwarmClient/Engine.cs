@@ -99,7 +99,7 @@ namespace DeepSwarmClient
 
             Desktop.SetRootElement(EnterNameView);
             EnterNameView.NameInput.SetValue(State.SelfPlayerName ?? "");
-            Desktop.FocusedElement = EnterNameView.NameInput;
+            Desktop.SetFocusedElement(EnterNameView.NameInput);
 
             Run();
         }

@@ -18,14 +18,21 @@ namespace DeepSwarmClient.UI
 
         public override Element HitTest(int x, int y) => LayoutRectangle.Contains(x, y) ? this : null;
 
-        public override void OnMouseEnter() => IsHovered = true;
-        public override void OnMouseExit() => IsHovered = false;
+        public override void OnMouseEnter()
+        {
+            SDL2.SDL.SDL_SetCursor(RendererHelper.HandCursor);
+        }
+        public override void OnMouseExit()
+        {
+            SDL2.SDL.SDL_SetCursor(RendererHelper.ArrowCursor);
+        }
 
         public override void OnMouseDown(int button)
         {
             if (button == 1)
             {
-                IsPressed = true;
+                Desktop.SetFocusedElement(this);
+                Desktop.SetHoveredElementPressed(true);
             }
         }
 
@@ -33,8 +40,8 @@ namespace DeepSwarmClient.UI
         {
             if (button == 1)
             {
-                IsPressed = false;
-                OnActivate?.Invoke();
+                Desktop.SetHoveredElementPressed(false);
+                if (IsHovered) OnActivate?.Invoke();
             }
         }
 

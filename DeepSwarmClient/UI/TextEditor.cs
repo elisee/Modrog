@@ -26,6 +26,15 @@ namespace DeepSwarmClient.UI
 
         public override Element HitTest(int x, int y) => LayoutRectangle.Contains(x, y) ? this : null;
 
+        public override void OnMouseEnter()
+        {
+            SDL2.SDL.SDL_SetCursor(RendererHelper.IbeamCursor);
+        }
+        public override void OnMouseExit()
+        {
+            SDL2.SDL.SDL_SetCursor(RendererHelper.ArrowCursor);
+        }
+
         public override void OnKeyDown(SDL.SDL_Keycode key, bool repeat)
         {
             switch (key)
@@ -205,7 +214,7 @@ namespace DeepSwarmClient.UI
         {
             if (button == 1)
             {
-                Desktop.FocusedElement = this;
+                Desktop.SetFocusedElement(this);
                 _isMakingSelection = true;
                 _startCursor = GetCursorPositionFromMousePosition();
 
@@ -225,7 +234,7 @@ namespace DeepSwarmClient.UI
         {
             if (button == 1)
             {
-                Desktop.FocusedElement = this;
+                Desktop.SetFocusedElement(this);
                 _isMakingSelection = false;
             }
         }

@@ -11,6 +11,7 @@ You'll need .NET Core 3 and Visual Studio 2019. VS Code might work.
 
 ## Things to do
 
+    - InGameView: Fix not being able to select an entity when HoveredTileX/HoveredTileY is negative
     - Need to figure out ASAP what the actual gameplay loop is. Factorio-style? Northgard? Something else?
     - UI: Selection / Copy / Paste in TextInput / TextEditor
     - UI: Display script errors somewhere
@@ -25,4 +26,4 @@ You'll need .NET Core 3 and Visual Studio 2019. VS Code might work.
     - Design & implement more building types: turrets, refinery, etc.
     - Server sends list of connected core networks by team (red vs blue)? If we go that route
     - Add UI for connecting to a server and report errors rather than just crashing
-    - Load the ARROW, HAND and IBEAM SDL system cursors (https://wiki.libsdl.org/SDL_CreateSystemCursor) in RendererHelper (probably) and use them in .OnHovered / .OnUnhovered for Button, TextInput, TextEditor. (They don't need to be freed ever, we just load them on startup)
+    - Rendering: Implement auto-tiling so we can build art like Rogventure / Worlds
