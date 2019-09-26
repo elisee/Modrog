@@ -11,6 +11,8 @@ namespace DeepSwarmClient.UI
 
         public Action OnActivate;
 
+        private bool _isClickInitated;
+
         public Button(Desktop desktop, Element parent)
              : base(desktop, parent)
         {
@@ -33,6 +35,7 @@ namespace DeepSwarmClient.UI
             {
                 Desktop.SetFocusedElement(this);
                 Desktop.SetHoveredElementPressed(true);
+                _isClickInitated = true;
             }
         }
 
@@ -41,7 +44,9 @@ namespace DeepSwarmClient.UI
             if (button == 1)
             {
                 Desktop.SetHoveredElementPressed(false);
-                if (IsHovered) OnActivate?.Invoke();
+                if (IsHovered && _isClickInitated) OnActivate?.Invoke();
+
+                _isClickInitated = false;
             }
         }
 
