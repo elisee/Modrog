@@ -38,7 +38,7 @@ namespace DeepSwarmClient.UI
 
         public override void OnMouseUp(int button)
         {
-            if (button == 1)
+            if (button == 1 && IsPressed)
             {
                 Desktop.SetHoveredElementPressed(false);
                 if (IsHovered) OnActivate?.Invoke();
