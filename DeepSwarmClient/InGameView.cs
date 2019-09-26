@@ -350,6 +350,12 @@ namespace DeepSwarmClient
             }
         }
 
+        public override void OnMouseWheel(int dx, int dy)
+        {
+            _scrollingPixelsX += dx * 12;
+            _scrollingPixelsY -= dy * 12;
+        }
+
         public void OnPlayerListUpdated()
         {
             _playerListPanel.Clear();
