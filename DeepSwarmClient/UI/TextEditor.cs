@@ -264,7 +264,7 @@ namespace DeepSwarmClient.UI
             ClearSelection();
         }
 
-        private bool GetTextCursorPositionsInOrder(ref Point firstPosition, ref Point lastPosition)
+        bool GetTextCursorPositionsInOrder(ref Point firstPosition, ref Point lastPosition)
         {
             firstPosition = _cursorPosition;
             lastPosition = _selectionStartPosition;
@@ -280,7 +280,7 @@ namespace DeepSwarmClient.UI
             return bothCursorsOnSameLine;
         }
 
-        private Point GetCursorPositionFromMousePosition()
+        Point GetCursorPositionFromMousePosition()
         {
             var x = Desktop.MouseX + _scrollingPixelsX - LayoutRectangle.X;
             var y = Desktop.MouseY + _scrollingPixelsY - LayoutRectangle.Y;
@@ -317,12 +317,12 @@ namespace DeepSwarmClient.UI
             ClampScrolling();
         }
 
-        private void ClearSelection()
+        void ClearSelection()
         {
             _selectionStartPosition = _cursorPosition;
         }
 
-        private bool HasSelection()
+        bool HasSelection()
         {
             return _cursorPosition != _selectionStartPosition;
         }
