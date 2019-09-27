@@ -26,7 +26,7 @@ namespace DeepSwarmClient.UI
         {
             Lines.Clear();
             Lines.AddRange(text.Replace("\r", "").Split("\n"));
-            _scrollingPixels = new Point();
+            _scrollingPixels = Point.Zero;
 
             _cursor = _selectionAnchor = Point.Zero;
         }
@@ -315,16 +315,8 @@ namespace DeepSwarmClient.UI
                 _cursor = GetHoveredTextPosition();
 
                 var mouseY = Desktop.MouseY;
-
-                if (mouseY < LayoutRectangle.Top)
-                {
-                    Scroll(-1);
-                }
-
-                if (mouseY > LayoutRectangle.Bottom)
-                {
-                    Scroll(-1);
-                }
+                if (mouseY < LayoutRectangle.Top) Scroll(1);
+                if (mouseY > LayoutRectangle.Bottom) Scroll(-1);
 
                 ClampScrollToCursor();
             }
@@ -343,7 +335,7 @@ namespace DeepSwarmClient.UI
             Scroll(dy);
         }
 
-        private void Scroll(int dy)
+        void Scroll(int dy)
         {
             if (dy != 0)
             {
