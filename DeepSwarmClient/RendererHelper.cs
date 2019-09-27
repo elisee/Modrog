@@ -6,9 +6,9 @@ namespace DeepSwarmClient
 {
     static class RendererHelper
     {
-        public static IntPtr ArrowCursor = SDL.SDL_CreateSystemCursor(SDL.SDL_SystemCursor.SDL_SYSTEM_CURSOR_ARROW);
-        public static IntPtr HandCursor = SDL.SDL_CreateSystemCursor(SDL.SDL_SystemCursor.SDL_SYSTEM_CURSOR_HAND);
-        public static IntPtr IbeamCursor = SDL.SDL_CreateSystemCursor(SDL.SDL_SystemCursor.SDL_SYSTEM_CURSOR_IBEAM);
+        public readonly static IntPtr ArrowCursor = SDL.SDL_CreateSystemCursor(SDL.SDL_SystemCursor.SDL_SYSTEM_CURSOR_ARROW);
+        public readonly static IntPtr HandCursor = SDL.SDL_CreateSystemCursor(SDL.SDL_SystemCursor.SDL_SYSTEM_CURSOR_HAND);
+        public readonly static IntPtr IbeamCursor = SDL.SDL_CreateSystemCursor(SDL.SDL_SystemCursor.SDL_SYSTEM_CURSOR_IBEAM);
 
         public static IntPtr FontTexture;
         public const int FontSourceSize = 8;
