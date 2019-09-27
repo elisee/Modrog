@@ -1,7 +1,7 @@
-﻿using SDL2;
+﻿using DeepSwarmCommon;
+using SDL2;
 using System;
 using System.Collections.Generic;
-using DeepSwarmCommon;
 
 namespace DeepSwarmClient.UI
 {
