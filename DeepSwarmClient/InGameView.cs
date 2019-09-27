@@ -483,15 +483,12 @@ namespace DeepSwarmClient
                 {
                     var tileX = Map.Wrap(startTileX + x);
                     var tileY = Map.Wrap(startTileY + y);
-
-                    var tileIndex = tileY * Map.MapSize + tileX;
-                    var tile = (int)map.Tiles[tileIndex];
+                    var sourceRect = RendererHelper.GetTileRenderSourceRect(tileX, tileY, map);
 
                     var renderX = (startTileX + x) * Map.TileSize - (int)_scrollingPixelsX;
                     var renderY = (startTileY + y) * Map.TileSize - (int)_scrollingPixelsY;
+                    var destRect = new SDL.SDL_Rect() { x = renderX, y = renderY, w = Map.TileSize, h = Map.TileSize };
 
-                    var sourceRect = Desktop.ToSDL_Rect(new Rectangle((5 + tile) * 24, 0, 24, 24));
-                    var destRect = Desktop.ToSDL_Rect(new Rectangle(renderX, renderY, Map.TileSize, Map.TileSize));
                     SDL.SDL_RenderCopy(Engine.Renderer, Engine.SpritesheetTexture, ref sourceRect, ref destRect);
                 }
             }

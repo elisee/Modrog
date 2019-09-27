@@ -341,11 +341,7 @@ namespace DeepSwarmServer
                                     case Map.Tile.Rock:
                                         // Can't move
                                         break;
-                                    case Map.Tile.Dirt1:
-                                    case Map.Tile.Dirt2:
-                                    case Map.Tile.Dirt3:
-                                        map.PokeTile(newX, newY, targetTile + 1);
-                                        break;
+
                                     case Map.Tile.Path:
                                         entity.X = Map.Wrap(newX);
                                         entity.Y = Map.Wrap(newY);
@@ -367,6 +363,15 @@ namespace DeepSwarmServer
                                             }
                                         }
                                         break;
+
+                                    case Map.Tile.Dirt1:
+                                    case Map.Tile.Dirt2:
+                                        map.PokeTile(newX, newY, targetTile + 1);
+                                        break;
+                                    case Map.Tile.Dirt3:
+                                        map.PokeTile(newX, newY, Map.Tile.Path);
+                                        break;
+
                                     case Map.Tile.Crystal1:
                                     case Map.Tile.Crystal2:
                                     case Map.Tile.Crystal3:

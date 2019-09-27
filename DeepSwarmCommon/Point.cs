@@ -20,5 +20,7 @@ namespace DeepSwarmCommon
         public override int GetHashCode() => HashCode.Combine(X, Y);
         public static bool operator ==(Point left, Point right) => left.Equals(right);
         public static bool operator !=(Point left, Point right) => !(left == right);
+        public static Point operator +(Point left, Point right) => new Point(left.X + right.X, left.Y + right.Y);
+        public static Point operator -(Point left, Point right) => new Point(left.X - right.X, left.Y - right.Y);
     }
 }

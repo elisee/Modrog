@@ -16,8 +16,8 @@ namespace DeepSwarmCommon
         {
             Unknown,
             Rock,
-            Dirt1, Dirt2, Dirt3,
             Path,
+            Dirt1, Dirt2, Dirt3,
             Crystal1, Crystal2, Crystal3, Crystal4, Crystal5
         }
 
