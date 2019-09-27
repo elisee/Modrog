@@ -528,63 +528,17 @@ namespace DeepSwarmClient
                 var renderX = tileX * Map.TileSize - (int)_scrollingPixelsX;
                 var renderY = tileY * Map.TileSize - (int)_scrollingPixelsY;
 
+                var entityTeam = Engine.State.PlayerList[entity.PlayerIndex].Team;
+
                 switch (entity.Type)
                 {
                     case Entity.EntityType.Factory:
-                        {
-                            var sourceRect = Desktop.ToSDL_Rect(new Rectangle(0, 0, 24 * 3, 24 * 3));
-                            var destRect = Desktop.ToSDL_Rect(new Rectangle(renderX - 24, renderY - 24, 24 * 3, 24 * 3));
-                            if (destRect.x + destRect.w < 0 || destRect.x > Engine.Viewport.Width) continue;
-                            if (destRect.y + destRect.h < 0 || destRect.y > Engine.Viewport.Height) continue;
-
-                            SDL.SDL_RenderCopy(Engine.Renderer, Engine.SpritesheetTexture, ref sourceRect, ref destRect);
-                            break;
-                        }
-
                     case Entity.EntityType.Heart:
-                        {
-                            var teamOffset = Engine.State.PlayerList[entity.PlayerIndex].Team == Player.PlayerTeam.Blue ? 0 : 1;
-
-                            var sourceRect = Desktop.ToSDL_Rect(new Rectangle(24 * (3 + teamOffset), 0, 24, 24));
-                            var destRect = Desktop.ToSDL_Rect(new Rectangle(renderX, renderY, 24, 24));
-                            if (destRect.x + destRect.w < 0 || destRect.x > Engine.Viewport.Width) continue;
-                            if (destRect.y + destRect.h < 0 || destRect.y > Engine.Viewport.Height) continue;
-
-                            SDL.SDL_RenderCopy(Engine.Renderer, Engine.SpritesheetTexture, ref sourceRect, ref destRect);
-                            break;
-                        }
-
                     case Entity.EntityType.Robot:
                         {
-                            var teamOffset = Engine.State.PlayerList[entity.PlayerIndex].Team == Player.PlayerTeam.Blue ? 0 : 1;
-
-                            SDL.SDL_Rect sourceRect;
-                            SDL.SDL_Rect destRect;
-
-                            switch (entity.Direction)
-                            {
-                                case Entity.EntityDirection.Left:
-                                    sourceRect = Desktop.ToSDL_Rect(new Rectangle(0, 24 * (3 + teamOffset * 3), 24 * 2, 24 * 3));
-                                    destRect = Desktop.ToSDL_Rect(new Rectangle(renderX - 24, renderY - 24, 24 * 2, 24 * 3));
-                                    break;
-
-                                case Entity.EntityDirection.Down:
-                                    sourceRect = Desktop.ToSDL_Rect(new Rectangle(24 * 2, 24 * (3 + teamOffset * 3), 24, 24 * 3));
-                                    destRect = Desktop.ToSDL_Rect(new Rectangle(renderX, renderY - 24, 24, 24 * 3));
-                                    break;
-
-                                case Entity.EntityDirection.Up:
-                                    sourceRect = Desktop.ToSDL_Rect(new Rectangle(24 * 3, 24 * (3 + teamOffset * 3), 24, 24 * 3));
-                                    destRect = Desktop.ToSDL_Rect(new Rectangle(renderX, renderY - 24, 24, 24 * 3));
-                                    break;
-
-                                case Entity.EntityDirection.Right:
-                                    sourceRect = Desktop.ToSDL_Rect(new Rectangle(24 * 4, 24 * (3 + teamOffset * 3), 24 * 2, 24 * 3));
-                                    destRect = Desktop.ToSDL_Rect(new Rectangle(renderX, renderY - 24, 24 * 2, 24 * 3));
-                                    break;
-
-                                default: throw new NotSupportedException();
-                            }
+                            RendererHelper.GetEntityRenderRects(entity, entityTeam, out var sourceRect, out var destRect);
+                            destRect.x += renderX;
+                            destRect.y += renderY;
 
                             if (destRect.x + destRect.w < 0 || destRect.x > Engine.Viewport.Width) continue;
                             if (destRect.y + destRect.h < 0 || destRect.y > Engine.Viewport.Height) continue;
@@ -597,7 +551,7 @@ namespace DeepSwarmClient
                         {
                             var stats = Entity.EntityStatsByType[(int)entity.Type];
                             var color = new Color(stats.NeutralColor);
-                            if (entity.PlayerIndex != -1) color.RGBA = Engine.State.PlayerList[entity.PlayerIndex].Team == Player.PlayerTeam.Blue ? stats.BlueColor : stats.RedColor;
+                            if (entity.PlayerIndex != -1) color.RGBA = entityTeam == Player.PlayerTeam.Blue ? stats.BlueColor : stats.RedColor;
 
                             color.UseAsDrawColor(Engine.Renderer);
 

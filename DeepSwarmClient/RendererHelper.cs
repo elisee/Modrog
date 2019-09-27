@@ -11,6 +11,7 @@ namespace DeepSwarmClient
         public readonly static IntPtr HandCursor = SDL.SDL_CreateSystemCursor(SDL.SDL_SystemCursor.SDL_SYSTEM_CURSOR_HAND);
         public readonly static IntPtr IbeamCursor = SDL.SDL_CreateSystemCursor(SDL.SDL_SystemCursor.SDL_SYSTEM_CURSOR_IBEAM);
 
+        #region Text
         public static IntPtr FontTexture;
         public const int FontSourceSize = 8;
         public const int FontRenderSize = 16;
@@ -30,7 +31,9 @@ namespace DeepSwarmClient
                 SDL.SDL_RenderCopy(renderer, FontTexture, ref sourceRect, ref destRect);
             }
         }
+        #endregion
 
+        #region Map
         enum TileRenderType { Single, Connected }
 
         struct TileRenderDefinition
@@ -113,5 +116,66 @@ namespace DeepSwarmClient
 
             return new SDL.SDL_Rect() { x = tilePosition.X * Map.TileSize, y = tilePosition.Y * Map.TileSize, w = Map.TileSize, h = Map.TileSize };
         }
+        #endregion
+
+        #region Entities
+        public static void GetEntityRenderRects(Entity entity, Player.PlayerTeam entityTeam, out SDL.SDL_Rect sourceRect, out SDL.SDL_Rect destRect)
+        {
+            switch (entity.Type)
+            {
+                case Entity.EntityType.Factory:
+                    {
+                        sourceRect = Desktop.ToSDL_Rect(new Rectangle(0, 0, 24 * 3, 24 * 3));
+                        destRect = Desktop.ToSDL_Rect(new Rectangle(-24, -24, 24 * 3, 24 * 3));
+
+                        break;
+                    }
+
+                case Entity.EntityType.Heart:
+                    {
+                        var teamOffset = entityTeam == Player.PlayerTeam.Blue ? 0 : 1;
+
+                        sourceRect = Desktop.ToSDL_Rect(new Rectangle(24 * (3 + teamOffset), 0, 24, 24));
+                        destRect = Desktop.ToSDL_Rect(new Rectangle(0, 0, 24, 24));
+
+                        break;
+                    }
+
+                case Entity.EntityType.Robot:
+                    {
+                        var teamOffset = entityTeam == Player.PlayerTeam.Blue ? 0 : 1;
+
+                        switch (entity.Direction)
+                        {
+                            case Entity.EntityDirection.Left:
+                                sourceRect = Desktop.ToSDL_Rect(new Rectangle(0, 24 * (3 + teamOffset * 3), 24 * 2, 24 * 3));
+                                destRect = Desktop.ToSDL_Rect(new Rectangle(-24, -24, 24 * 2, 24 * 3));
+                                break;
+
+                            case Entity.EntityDirection.Down:
+                                sourceRect = Desktop.ToSDL_Rect(new Rectangle(24 * 2, 24 * (3 + teamOffset * 3), 24, 24 * 3));
+                                destRect = Desktop.ToSDL_Rect(new Rectangle(0, -24, 24, 24 * 3));
+                                break;
+
+                            case Entity.EntityDirection.Up:
+                                sourceRect = Desktop.ToSDL_Rect(new Rectangle(24 * 3, 24 * (3 + teamOffset * 3), 24, 24 * 3));
+                                destRect = Desktop.ToSDL_Rect(new Rectangle(0, -24, 24, 24 * 3));
+                                break;
+
+                            case Entity.EntityDirection.Right:
+                                sourceRect = Desktop.ToSDL_Rect(new Rectangle(24 * 4, 24 * (3 + teamOffset * 3), 24 * 2, 24 * 3));
+                                destRect = Desktop.ToSDL_Rect(new Rectangle(0, -24, 24 * 2, 24 * 3));
+                                break;
+
+                            default: throw new NotSupportedException();
+                        }
+
+                        break;
+                    }
+
+                default: throw new Exception();
+            }
+        }
+        #endregion
     }
 }
