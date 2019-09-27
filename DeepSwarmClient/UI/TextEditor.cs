@@ -11,8 +11,8 @@ namespace DeepSwarmClient.UI
 
         public readonly List<string> Lines = new List<string> { "" };
 
-        Point _cursorPosition = new Point();
-        Point _selectionStartPosition = new Point();
+        Point _cursorPosition;
+        Point _selectionStartPosition;
 
         int _scrollingPixelsX;
         int _scrollingPixelsY;
@@ -238,9 +238,7 @@ namespace DeepSwarmClient.UI
 
         public void EraseSelection()
         {
-            var firstPosition = new Point();
-            var lastPosition = new Point();
-            bool bothCursorsOnSameLine = GetTextCursorPositionsInOrder(ref firstPosition, ref lastPosition);
+            bool bothCursorsOnSameLine = GetTextCursorPositionsInOrder(out var firstPosition, out var lastPosition);
 
             if (bothCursorsOnSameLine)
             {
@@ -264,7 +262,7 @@ namespace DeepSwarmClient.UI
             ClearSelection();
         }
 
-        bool GetTextCursorPositionsInOrder(ref Point firstPosition, ref Point lastPosition)
+        bool GetTextCursorPositionsInOrder(out Point firstPosition, out Point lastPosition)
         {
             firstPosition = _cursorPosition;
             lastPosition = _selectionStartPosition;
@@ -345,9 +343,7 @@ namespace DeepSwarmClient.UI
             SDL.SDL_RenderSetClipRect(Desktop.Renderer, ref clipRect);
 
             // Draw Selection
-            var firstPosition = new Point();
-            var lastPosition = new Point();
-            bool bothCursorsOnSameLine = GetTextCursorPositionsInOrder(ref firstPosition, ref lastPosition);
+            bool bothCursorsOnSameLine = GetTextCursorPositionsInOrder(out var firstPosition, out var lastPosition);
 
             new Color(0x0000ffaa).UseAsDrawColor(Desktop.Renderer);
             if (Desktop.FocusedElement == this)
