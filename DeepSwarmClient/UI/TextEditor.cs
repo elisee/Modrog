@@ -238,9 +238,9 @@ namespace DeepSwarmClient.UI
 
         public void EraseSelection()
         {
-            bool bothCursorsOnSameLine = GetTextCursorPositionsInOrder(out var firstPosition, out var lastPosition);
+            GetTextCursorPositionsInOrder(out var firstPosition, out var lastPosition);
 
-            if (bothCursorsOnSameLine)
+            if (firstPosition.Y == lastPosition.Y)
             {
                 string line = Lines[firstPosition.Y];
                 Lines[firstPosition.Y] = line[0..firstPosition.X] + line[(lastPosition.X)..];
@@ -262,7 +262,7 @@ namespace DeepSwarmClient.UI
             ClearSelection();
         }
 
-        bool GetTextCursorPositionsInOrder(out Point firstPosition, out Point lastPosition)
+        void GetTextCursorPositionsInOrder(out Point firstPosition, out Point lastPosition)
         {
             firstPosition = _cursorPosition;
             lastPosition = _selectionStartPosition;
@@ -274,8 +274,6 @@ namespace DeepSwarmClient.UI
                 firstPosition = _selectionStartPosition;
                 lastPosition = _cursorPosition;
             }
-
-            return bothCursorsOnSameLine;
         }
 
         Point GetCursorPositionFromMousePosition()
@@ -343,14 +341,14 @@ namespace DeepSwarmClient.UI
             SDL.SDL_RenderSetClipRect(Desktop.Renderer, ref clipRect);
 
             // Draw Selection
-            bool bothCursorsOnSameLine = GetTextCursorPositionsInOrder(out var firstPosition, out var lastPosition);
+            GetTextCursorPositionsInOrder(out var firstPosition, out var lastPosition);
 
             new Color(0x0000ffaa).UseAsDrawColor(Desktop.Renderer);
             if (Desktop.FocusedElement == this)
             {
                 if (firstPosition != lastPosition)
                 {
-                    if (bothCursorsOnSameLine)
+                    if (firstPosition.Y == lastPosition.Y)
                     {
                         var selectionRect = Desktop.ToSDL_Rect(new DeepSwarmCommon.Rectangle(
                         LayoutRectangle.X + firstPosition.X * RendererHelper.FontRenderSize - _scrollingPixelsX,
