@@ -9,6 +9,11 @@ namespace DeepSwarmCommon
         public int Width;
         public int Height;
 
+        public int Bottom => Y + Height;
+        public int Top => Y;
+        public int Left => X;
+        public int Right => X + Width;
+
         public Rectangle(int x, int y, int width, int height)
         {
             X = x;
