@@ -1,11 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace DeepSwarmCommon
 {
     public struct Point
     {
+        public static readonly Point Zero = new Point();
+
         public int X;
         public int Y;
 
