@@ -62,7 +62,7 @@ namespace DeepSwarmClient.UI
                 }
 
                 ClampScrolling();
-                CancelSelection();
+                ClearSelection();
             }
 
             void GoRight()
@@ -75,7 +75,7 @@ namespace DeepSwarmClient.UI
                 }
 
                 ClampScrolling();
-                CancelSelection();
+                ClearSelection();
             }
 
             void GoUp()
@@ -91,7 +91,7 @@ namespace DeepSwarmClient.UI
                 }
 
                 ClampScrolling();
-                CancelSelection();
+                ClearSelection();
             }
 
             void GoDown()
@@ -107,7 +107,7 @@ namespace DeepSwarmClient.UI
                 }
 
                 ClampScrolling();
-                CancelSelection();
+                ClearSelection();
             }
 
             void Erase()
@@ -135,7 +135,7 @@ namespace DeepSwarmClient.UI
                 }
 
                 ClampScrolling();
-                CancelSelection();
+                ClearSelection();
             }
 
             void Delete()
@@ -160,7 +160,7 @@ namespace DeepSwarmClient.UI
                 }
 
                 ClampScrolling();
-                CancelSelection();
+                ClearSelection();
             }
 
             void BreakLine()
@@ -188,19 +188,19 @@ namespace DeepSwarmClient.UI
                 }
 
                 ClampScrolling();
-                CancelSelection();
+                ClearSelection();
             }
 
             void GoToStartOfLine()
             {
                 _cursorPosition.X = 0;
-                CancelSelection();
+                ClearSelection();
             }
 
             void GoToEndOfLine()
             {
                 _cursorPosition.X = Lines[_cursorPosition.Y].Length;
-                CancelSelection();
+                ClearSelection();
             }
         }
 
@@ -217,7 +217,7 @@ namespace DeepSwarmClient.UI
                 _isMakingSelection = true;
                 _cursorPosition = GetCursorPositionFromMousePosition();
 
-                CancelSelection();
+                ClearSelection();
             }
         }
 
@@ -263,7 +263,7 @@ namespace DeepSwarmClient.UI
             }
 
             _cursorPosition = firstPosition;
-            CancelSelection();
+            ClearSelection();
         }
 
         private bool GetTextCursorPositionsInOrder(ref Point firstPosition, ref Point lastPosition)
@@ -315,11 +315,11 @@ namespace DeepSwarmClient.UI
             Lines[_cursorPosition.Y] = line[0.._cursorPosition.X] + text + line[_cursorPosition.X..];
             _cursorPosition.X += text.Length;
 
-            CancelSelection();
+            ClearSelection();
             ClampScrolling();
         }
 
-        private void CancelSelection()
+        private void ClearSelection()
         {
             _selectionStartPosition = _cursorPosition;
         }
