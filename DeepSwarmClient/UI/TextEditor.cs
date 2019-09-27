@@ -17,8 +17,6 @@ namespace DeepSwarmClient.UI
         int _scrollingPixelsX;
         int _scrollingPixelsY;
 
-        private bool _isMakingSelection;
-
         public TextEditor(Desktop desktop, Element parent)
             : base(desktop, parent)
         {
@@ -214,7 +212,8 @@ namespace DeepSwarmClient.UI
             if (button == 1)
             {
                 Desktop.SetFocusedElement(this);
-                _isMakingSelection = true;
+                Desktop.SetHoveredElementPressed(true);
+
                 _cursorPosition = GetCursorPositionFromMousePosition();
 
                 ClearSelection();
@@ -223,7 +222,7 @@ namespace DeepSwarmClient.UI
 
         public override void OnMouseMove()
         {
-            if (_isMakingSelection)
+            if (IsPressed)
             {
                 _cursorPosition = GetCursorPositionFromMousePosition();
             }
@@ -231,10 +230,9 @@ namespace DeepSwarmClient.UI
 
         public override void OnMouseUp(int button)
         {
-            if (button == 1)
+            if (button == 1 && IsPressed)
             {
-                Desktop.SetFocusedElement(this);
-                _isMakingSelection = false;
+                Desktop.SetHoveredElementPressed(false);
             }
         }
 
