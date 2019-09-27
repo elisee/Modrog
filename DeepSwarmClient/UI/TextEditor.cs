@@ -22,6 +22,7 @@ namespace DeepSwarmClient.UI
         {
         }
 
+        #region Configuration
         public void SetText(string text)
         {
             Lines.Clear();
@@ -31,7 +32,9 @@ namespace DeepSwarmClient.UI
         }
 
         public string GetText() => string.Join('\n', Lines);
+        #endregion
 
+        #region Internals
         void InsertText(string text)
         {
             EraseSelection();
@@ -106,7 +109,9 @@ namespace DeepSwarmClient.UI
                 Math.Max(0, (_cursor.Y + 1) * RendererHelper.FontRenderSize - LayoutRectangle.Height),
                 Math.Max(0, Math.Min(_cursor.Y * RendererHelper.FontRenderSize, Lines.Count * RendererHelper.FontRenderSize - LayoutRectangle.Height)));
         }
+        #endregion
 
+        #region Events
         public override Element HitTest(int x, int y) => LayoutRectangle.Contains(x, y) ? this : null;
 
         public override void OnMouseEnter()
@@ -327,7 +332,9 @@ namespace DeepSwarmClient.UI
                 ClampScrolling();
             }
         }
+        #endregion
 
+        #region Drawing
         protected override void DrawSelf()
         {
             base.DrawSelf();
@@ -401,5 +408,6 @@ namespace DeepSwarmClient.UI
                 SDL.SDL_RenderDrawRect(Desktop.Renderer, ref cursorRect);
             }
         }
+        #endregion
     }
 }
