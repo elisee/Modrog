@@ -143,6 +143,14 @@ namespace DeepSwarmClient.UI
                 default: base.OnKeyDown(key, repeat); break;
             }
 
+            if (Desktop.IsCtrlDown())
+            {
+                switch (key)
+                {
+                    case SDL.SDL_Keycode.SDLK_a: SelectAll(); break;
+                }
+            }
+
             void GoLeft()
             {
                 if (_cursor.X > 0) _cursor.X--;
@@ -294,7 +302,21 @@ namespace DeepSwarmClient.UI
                 ClearSelectionUnlessShiftDown();
             }
 
-            void ClearSelectionUnlessShiftDown() { if (!Desktop.IsShiftDown()) { ClearSelection(); } _cursorTimer = 0f; }
+            void ClearSelectionUnlessShiftDown()
+            {
+                if (!Desktop.IsShiftDown())
+                    ClearSelection();
+
+                _cursorTimer = 0f;
+            }
+
+            void SelectAll()
+            {
+                _selectionAnchor = Point.Zero;
+                _cursor.Y = Lines.Count - 1;
+                _cursor.X = Lines[_cursor.Y].Length;
+                ClampScrolling();
+            }
         }
 
         public override void OnTextEntered(string text)
