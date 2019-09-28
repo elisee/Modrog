@@ -171,6 +171,33 @@ namespace DeepSwarmClient
             UpdateScriptText(EntityScriptPaths[SelectedEntity.Id], scriptText);
         }
 
+        public void RenameSelectedEntityScript(string newRelativePath)
+        {
+            if (Scripts.ContainsKey(newRelativePath)) throw new Exception($"There is already a script with this path: {newRelativePath}");
+            if (newRelativePath.Contains("..")) throw new Exception($"Invalid new path for script: {newRelativePath}");
+
+            var oldRelativePath = EntityScriptPaths[SelectedEntity.Id];
+            var oldPath = Path.Combine(_engine.ScriptsPath, oldRelativePath);
+            var newPath = Path.Combine(_engine.ScriptsPath, newRelativePath);
+            Directory.CreateDirectory(Path.GetDirectoryName(newPath));
+            File.Move(oldPath, newPath);
+
+            Scripts.Remove(oldRelativePath, out var scriptText);
+            Scripts.Add(newRelativePath, scriptText);
+
+            var entitiesToUpdate = new List<int>();
+
+            foreach (var (entityId, path) in EntityScriptPaths)
+            {
+                if (path == oldRelativePath) entitiesToUpdate.Add(entityId);
+            }
+
+            foreach (var entityId in entitiesToUpdate) EntityScriptPaths[entityId] = newRelativePath;
+
+            _engine.Interface.PlayingView.OnScriptListUpdated();
+            _engine.Interface.PlayingView.OnSelectedEntityChanged();
+        }
+
         internal void Update(float deltaTime)
         {
             if (_socket != null && _socket.Poll(0, SelectMode.SelectRead))

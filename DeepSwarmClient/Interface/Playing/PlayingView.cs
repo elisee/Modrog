@@ -27,7 +27,11 @@ namespace DeepSwarmClient.Interface.Playing
         readonly Element _scriptSelectorList;
 
         readonly Element _scriptEditorSidebar;
-        readonly TextInput _scriptNameInput;
+
+        readonly Label _scriptNameLabel;
+        readonly Button _renameScriptButton;
+        readonly RenameScriptPopup _renameScriptPopup;
+
         readonly TextEditor _scriptTextEditor;
 
         // Hovered tile
@@ -207,12 +211,20 @@ namespace DeepSwarmClient.Interface.Playing
                 Anchor = new Anchor(left: ButtonStripWidth, top: 0, width: SidebarPanelWidth, height: Engine.Viewport.Height),
             };
 
-            _scriptNameInput = new TextInput(Desktop, scriptEditorPanel)
+            _renameScriptButton = new Button(Desktop, scriptEditorPanel)
             {
-                Anchor = new Anchor(left: 8, top: 8, width: SidebarPanelWidth - 16, height: 16),
-                BackgroundColor = new Color(0x004400ff),
-                MaxLength = Protocol.MaxScriptNameLength
+                Anchor = new Anchor(right: 8, top: 8, width: " Rename ".Length * 16, height: 16),
+                Text = " Rename ",
+                OnActivate = () => Engine.Interface.SetPopup(_renameScriptPopup)
             };
+
+            _scriptNameLabel = new Label(Desktop, scriptEditorPanel)
+            {
+                Anchor = new Anchor(left: 8, top: 8, right: _renameScriptButton.Anchor.Width + 16, height: 16),
+                BackgroundColor = new Color(0x004400ff),
+            };
+
+            _renameScriptPopup = new RenameScriptPopup(@interface);
 
             _scriptTextEditor = new TextEditor(Desktop, scriptEditorPanel)
             {
@@ -372,8 +384,11 @@ namespace DeepSwarmClient.Interface.Playing
         {
             _scriptSelectorList.Clear();
 
+            var keys = new List<string>(Engine.State.Scripts.Keys);
+            keys.Sort((a, b) => string.Compare(a, b));
+
             var i = 0;
-            foreach (var scriptPath in Engine.State.Scripts.Keys)
+            foreach (var scriptPath in keys)
             {
                 new Button(Desktop, _scriptSelectorList)
                 {
@@ -422,7 +437,7 @@ namespace DeepSwarmClient.Interface.Playing
                 else
                 {
                     _sidebarContainer.Add(_scriptEditorSidebar);
-                    _scriptNameInput.SetValue(scriptPath);
+                    _scriptNameLabel.Text = scriptPath;
                     _scriptTextEditor.SetText(Engine.State.Scripts[scriptPath]);
                 }
             }

@@ -47,5 +47,18 @@ namespace DeepSwarmClient.Interface
 
             ViewLayer.Layout(Desktop.RootElement.LayoutRectangle);
         }
+
+        public void SetPopup(InterfaceElement popup)
+        {
+            Desktop.SetFocusedElement(null);
+            PopupLayer.Clear();
+            PopupLayer.IsVisible = popup != null;
+
+            if (popup != null)
+            {
+                PopupLayer.Add(popup);
+                PopupLayer.Layout(Desktop.RootElement.LayoutRectangle);
+            }
+        }
     }
 }
