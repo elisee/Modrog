@@ -1,4 +1,6 @@
-﻿using SDL2;
+﻿
+using DeepSwarmCommon;
+using SDL2;
 using System;
 
 namespace DeepSwarmClient.UI
@@ -10,6 +12,7 @@ namespace DeepSwarmClient.UI
         public int MaxLength = byte.MaxValue;
 
         int _cursorX;
+        int _selectionAnchorX;
         float _cursorTimer;
         public const float CursorFlashInterval = 1f;
 
@@ -24,7 +27,7 @@ namespace DeepSwarmClient.UI
         public void SetValue(string value)
         {
             Value = value;
-            _cursorX = value.Length;
+            _cursorX = _selectionAnchorX = value.Length;
         }
         #endregion
 
@@ -32,6 +35,43 @@ namespace DeepSwarmClient.UI
         void Animate(float deltaTime)
         {
             _cursorTimer += deltaTime;
+        }
+
+        int GetHoveredTextPosition()
+        {
+            var x = Desktop.MouseX + _scrollingPixelsX - LayoutRectangle.X;
+
+            var targetX = x / RendererHelper.FontRenderSize;
+
+            var wasRightHalfClicked = x % RendererHelper.FontRenderSize > RendererHelper.FontRenderSize / 2;
+            if (wasRightHalfClicked) targetX++;
+
+            targetX = Math.Clamp(targetX, 0, Value.Length);
+
+            return targetX;
+        }
+
+        void GetSelectionRange(out int start, out int end)
+        {
+            start = _selectionAnchorX;
+            end = _cursorX;
+
+            if (start > end)
+            {
+                start = _cursorX;
+                end = _selectionAnchorX;
+            }
+        }
+
+        void ClearSelection() { _selectionAnchorX = _cursorX; _cursorTimer = 0f; }
+
+        bool HasSelection() => _cursorX != _selectionAnchorX;
+
+        void EraseSelection()
+        {
+            GetSelectionRange(out var selectionStart, out var selectionEnd);
+            Value = Value[0..selectionStart] + Value[selectionEnd..];
+            _cursorX = _selectionAnchorX = selectionStart;
         }
 
         void ClampScrolling()
@@ -71,6 +111,7 @@ namespace DeepSwarmClient.UI
                 }
 
                 _cursorTimer = 0f;
+                ClearSelection();
             }
 
             void GoRight()
@@ -82,34 +123,52 @@ namespace DeepSwarmClient.UI
                 }
 
                 _cursorTimer = 0f;
+                ClearSelection();
             }
 
             void Erase()
             {
-                if (_cursorX > 0)
+                if (!HasSelection())
                 {
-                    Value = Value[0..(_cursorX - 1)] + Value[_cursorX..];
-                    _cursorX--;
-                    ClampScrolling();
+                    if (_cursorX > 0)
+                    {
+                        Value = Value[0..(_cursorX - 1)] + Value[_cursorX..];
+                        _cursorX--;
+                    }
+                }
+                else
+                {
+                    EraseSelection();
                 }
 
                 _cursorTimer = 0f;
+                ClampScrolling();
+                ClearSelection();
             }
 
             void Delete()
             {
-                if (_cursorX < Value.Length)
+                if (!HasSelection())
                 {
-                    Value = Value[0.._cursorX] + Value[(_cursorX + 1)..];
-                    ClampScrolling();
+                    if (_cursorX < Value.Length)
+                    {
+                        Value = Value[0.._cursorX] + Value[(_cursorX + 1)..];
+                    }
+                }
+                else
+                {
+                    EraseSelection();
                 }
 
                 _cursorTimer = 0f;
+                ClampScrolling();
+                ClearSelection();
             }
         }
 
         public override void OnTextEntered(string text)
         {
+            EraseSelection();
             if (Value.Length >= MaxLength) return;
             if (Value.Length + text.Length > MaxLength) text = text[0..(MaxLength - Value.Length)];
 
@@ -117,6 +176,7 @@ namespace DeepSwarmClient.UI
             _cursorX += text.Length;
             _cursorTimer = 0f;
             ClampScrolling();
+            ClearSelection();
         }
 
         public override void OnMouseDown(int button)
@@ -124,14 +184,26 @@ namespace DeepSwarmClient.UI
             if (button == 1)
             {
                 Desktop.SetFocusedElement(this);
-                var x = Desktop.MouseX + _scrollingPixelsX - LayoutRectangle.X;
+                Desktop.SetHoveredElementPressed(true);
+                _cursorX = _selectionAnchorX = GetHoveredTextPosition();
+            }
+        }
 
-                int targetX = x / RendererHelper.FontRenderSize;
+        public override void OnMouseMove()
+        {
+            if (IsPressed)
+            {
+                _cursorX = GetHoveredTextPosition();
+                ClampScrolling();
+            }
+        }
 
-                bool wasRightHalfClicked = x % RendererHelper.FontRenderSize > RendererHelper.FontRenderSize / 2;
-                if (wasRightHalfClicked) targetX++;
-
-                _cursorX = Math.Clamp(targetX, 0, Value.Length);
+        public override void OnMouseUp(int button)
+        {
+            if (button == 1 && IsPressed)
+            {
+                Desktop.SetFocusedElement(this);
+                Desktop.SetHoveredElementPressed(false);
             }
         }
         #endregion
@@ -144,10 +216,24 @@ namespace DeepSwarmClient.UI
             var clipRect = Desktop.ToSDL_Rect(LayoutRectangle);
             SDL.SDL_RenderSetClipRect(Desktop.Renderer, ref clipRect);
 
+            // Draw Selection
+            if (HasSelection())
+            {
+                new Color(0x0000ffaa).UseAsDrawColor(Desktop.Renderer);
+                GetSelectionRange(out var firstX, out var lastX);
+
+                var selectionRect = Desktop.ToSDL_Rect(new Rectangle(
+                LayoutRectangle.X + firstX * RendererHelper.FontRenderSize - _scrollingPixelsX,
+                LayoutRectangle.Y,
+                (lastX - firstX) * RendererHelper.FontRenderSize, RendererHelper.FontRenderSize));
+                SDL.SDL_RenderFillRect(Desktop.Renderer, ref selectionRect);
+            }
+
             RendererHelper.DrawText(Desktop.Renderer, LayoutRectangle.X - _scrollingPixelsX, LayoutRectangle.Y, Value, TextColor);
 
             SDL.SDL_RenderSetClipRect(Desktop.Renderer, IntPtr.Zero);
 
+            // Draw Cursor
             if (Desktop.FocusedElement == this && (_cursorTimer % CursorFlashInterval * 2) < CursorFlashInterval)
             {
                 new Color(0xffffffff).UseAsDrawColor(Desktop.Renderer);
