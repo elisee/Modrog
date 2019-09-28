@@ -22,6 +22,7 @@ namespace DeepSwarmClient.UI
         {
             SDL2.SDL.SDL_SetCursor(RendererHelper.HandCursor);
         }
+
         public override void OnMouseExit()
         {
             SDL2.SDL.SDL_SetCursor(RendererHelper.ArrowCursor);

@@ -29,7 +29,7 @@ namespace DeepSwarmClient.UI
 
         bool _isVisible = true;
 
-        public Rectangle AnchorRectangle;
+        public Anchor Anchor;
         public Color BackgroundColor;
 
         public IntPtr BackgroundTexture;
@@ -78,10 +78,45 @@ namespace DeepSwarmClient.UI
 
         public void Layout(Rectangle container)
         {
-            LayoutRectangle = new Rectangle(
-                container.X + AnchorRectangle.X,
-                container.Y + AnchorRectangle.Y,
-                AnchorRectangle.Width, AnchorRectangle.Height);
+            LayoutRectangle = container;
+
+            if (Anchor.Width != null)
+            {
+                LayoutRectangle.Width = Anchor.Width.Value;
+
+                if (Anchor.Left != null) LayoutRectangle.X += Anchor.Left.Value;
+                else if (Anchor.Right != null) LayoutRectangle.X = container.X + container.Width - Anchor.Right.Value - Anchor.Width.Value;
+                else LayoutRectangle.X = container.X + container.Width / 2 - LayoutRectangle.Width / 2;
+            }
+            else
+            {
+                if (Anchor.Left != null)
+                {
+                    LayoutRectangle.X += Anchor.Left.Value;
+                    LayoutRectangle.Width -= Anchor.Left.Value;
+                }
+
+                if (Anchor.Right != null) LayoutRectangle.Width -= Anchor.Right.Value;
+            }
+
+            if (Anchor.Height != null)
+            {
+                LayoutRectangle.Height = Anchor.Height.Value;
+
+                if (Anchor.Top != null) LayoutRectangle.Y += Anchor.Top.Value;
+                else if (Anchor.Bottom != null) LayoutRectangle.Y = container.Y + container.Height - Anchor.Bottom.Value - Anchor.Height.Value;
+                else LayoutRectangle.Y = container.Y + container.Height / 2 - LayoutRectangle.Height / 2;
+            }
+            else
+            {
+                if (Anchor.Top != null)
+                {
+                    LayoutRectangle.Y += Anchor.Top.Value;
+                    LayoutRectangle.Height -= Anchor.Top.Value;
+                }
+
+                if (Anchor.Bottom != null) LayoutRectangle.Height -= Anchor.Bottom.Value;
+            }
 
             foreach (var child in Children) if (child.IsMounted) child.Layout(LayoutRectangle);
         }
@@ -163,9 +198,11 @@ namespace DeepSwarmClient.UI
         {
             if (BackgroundColor.A != 0)
             {
+                if (BackgroundColor.A != byte.MaxValue) SDL.SDL_SetRenderDrawBlendMode(Desktop.Renderer, SDL.SDL_BlendMode.SDL_BLENDMODE_BLEND);
                 var rect = Desktop.ToSDL_Rect(LayoutRectangle);
                 BackgroundColor.UseAsDrawColor(Desktop.Renderer);
                 SDL.SDL_RenderFillRect(Desktop.Renderer, ref rect);
+                if (BackgroundColor.A != byte.MaxValue) SDL.SDL_SetRenderDrawBlendMode(Desktop.Renderer, SDL.SDL_BlendMode.SDL_BLENDMODE_NONE);
             }
 
             if (BackgroundTexture != IntPtr.Zero)

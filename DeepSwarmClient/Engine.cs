@@ -1,11 +1,8 @@
-﻿using DeepSwarmClient.UI;
-using DeepSwarmCommon;
+﻿using DeepSwarmCommon;
 using SDL2;
 using System;
 using System.Diagnostics;
 using System.IO;
-using System.Net;
-using System.Net.Sockets;
 using System.Threading;
 
 namespace DeepSwarmClient
@@ -19,7 +16,6 @@ namespace DeepSwarmClient
 
         // State
         public readonly EngineState State;
-        bool _isRunning;
 
         // Paths
         public readonly string SettingsFilePath;
@@ -29,23 +25,15 @@ namespace DeepSwarmClient
         // Assets
         public readonly IntPtr SpritesheetTexture;
 
-        // Networking
-        Socket _socket;
-        PacketReceiver _packetReceiver;
-        public readonly PacketWriter PacketWriter = new PacketWriter();
-        public readonly PacketReader PacketReader = new PacketReader();
-
-        // UI
-        public readonly Desktop Desktop;
-        public readonly EnterNameView EnterNameView;
-        public readonly LoadingView LoadingView;
-        public readonly InGameView InGameView;
+        // Interface
+        public readonly Interface.Interface Interface;
 
         public Engine()
         {
             // Rendering
             SDL.SDL_Init(SDL.SDL_INIT_VIDEO);
-            SDL.SDL_CreateWindowAndRenderer(1280, 720, 0, out Window, out Renderer);
+            SDL.SDL_CreateWindowAndRenderer(Viewport.Width, Viewport.Height, 0, out Window, out Renderer);
+            SDL.SDL_SetWindowTitle(Window, "DeepSwarm");
 
             // State
             State = new EngineState(this);
@@ -84,60 +72,35 @@ namespace DeepSwarmClient
             RendererHelper.FontTexture = SDL_image.IMG_LoadTexture(Renderer, Path.Combine(AssetsPath, "Font.png"));
             SpritesheetTexture = SDL_image.IMG_LoadTexture(Renderer, Path.Combine(AssetsPath, "Spritesheet.png"));
 
-            // UI
-            Desktop = new Desktop(Renderer);
-            EnterNameView = new EnterNameView(this);
-            LoadingView = new LoadingView(this);
-            InGameView = new InGameView(this);
+            // Interface
+            Interface = new Interface.Interface(this);
         }
 
         public void Start()
         {
-            _socket = new Socket(SocketType.Stream, ProtocolType.Tcp) { NoDelay = true, LingerState = new LingerOption(true, seconds: 1) };
-            _socket.Connect(new IPEndPoint(IPAddress.Loopback, Protocol.Port));
-            _packetReceiver = new PacketReceiver(_socket);
-
-            Desktop.SetRootElement(EnterNameView);
-            EnterNameView.NameInput.SetValue(State.SelfPlayerName ?? "");
-            Desktop.SetFocusedElement(EnterNameView.NameInput);
-
             Run();
         }
 
         void Run()
         {
-            _isRunning = true;
             var stopwatch = Stopwatch.StartNew();
 
-            while (_isRunning)
+            while (State.IsRunning)
             {
-                // Network
-                if (_socket.Poll(0, SelectMode.SelectRead))
-                {
-                    if (!_packetReceiver.Read(out var packets))
-                    {
-                        Trace.WriteLine($"Disconnected from server.");
-                        // isRunning = false;
-                        break;
-                    }
-
-                    ReadPackets(packets);
-                }
-
                 // Input
-                while (_isRunning && SDL.SDL_PollEvent(out var @event) != 0)
+                while (State.IsRunning && SDL.SDL_PollEvent(out var @event) != 0)
                 {
                     switch (@event.type)
                     {
                         case SDL.SDL_EventType.SDL_QUIT:
-                            _isRunning = false;
+                            State.Stop();
                             break;
 
                         case SDL.SDL_EventType.SDL_WINDOWEVENT:
                             switch (@event.window.windowEvent)
                             {
                                 case SDL.SDL_WindowEventID.SDL_WINDOWEVENT_CLOSE:
-                                    _isRunning = false;
+                                    State.Stop();
                                     break;
                             }
 
@@ -150,12 +113,12 @@ namespace DeepSwarmClient
                         case SDL.SDL_EventType.SDL_MOUSEBUTTONUP:
                         case SDL.SDL_EventType.SDL_MOUSEMOTION:
                         case SDL.SDL_EventType.SDL_MOUSEWHEEL:
-                            Desktop.HandleSDLEvent(@event);
+                            Interface.Desktop.HandleSDLEvent(@event);
                             break;
                     }
                 }
 
-                if (!_isRunning) break;
+                if (!State.IsRunning) break;
 
                 var deltaTime = (float)stopwatch.Elapsed.TotalSeconds;
                 stopwatch.Restart();
@@ -166,14 +129,12 @@ namespace DeepSwarmClient
                 SDL.SDL_SetRenderDrawColor(Renderer, 0, 0, 0, 255);
                 SDL.SDL_RenderClear(Renderer);
 
-                Desktop.Draw();
+                Interface.Desktop.Draw();
 
                 SDL.SDL_RenderPresent(Renderer);
 
                 Thread.Sleep(1);
             }
-
-            _socket.Close();
 
             SDL_image.IMG_Quit();
             SDL.SDL_Quit();
@@ -181,12 +142,8 @@ namespace DeepSwarmClient
 
         void Update(float deltaTime)
         {
-            Desktop.Animate(deltaTime);
-        }
-
-        public void SendPacket()
-        {
-            try { _socket.Send(PacketWriter.Buffer, 0, PacketWriter.Finish(), SocketFlags.None); } catch { }
+            State.Update(deltaTime);
+            Interface.Desktop.Animate(deltaTime);
         }
     }
 }

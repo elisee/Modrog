@@ -1,5 +1,4 @@
-﻿using DeepSwarmClient.UI;
-using DeepSwarmCommon;
+﻿using DeepSwarmCommon;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
@@ -8,45 +7,44 @@ using static DeepSwarmCommon.Protocol;
 
 namespace DeepSwarmClient
 {
-    partial class Engine
+    partial class EngineState
     {
         void ReadPackets(List<byte[]> packets)
         {
             void Abort(string reason)
             {
-                _socket.Close();
-                _isRunning = false;
                 Trace.WriteLine($"Abort: {reason}");
+                Stop();
             }
 
             foreach (var packet in packets)
             {
                 PacketReader.Open(packet);
-                if (!_isRunning) break;
+                if (!IsRunning) break;
 
                 try
                 {
                     var packetType = (Protocol.ServerPacketType)PacketReader.ReadByte();
 
-                    bool EnsureStage(EngineStage stage)
+                    bool EnsureView(EngineView view)
                     {
-                        if (State.Stage == stage) return true;
-                        Abort($"Received packet {packetType} during wrong stage (expected {stage} but in {State.Stage}.");
+                        if (View == view) return true;
+                        Abort($"Received packet {packetType} during wrong stage (expected {view} but in {View}.");
                         return false;
                     }
 
                     bool EnsureLoadingOrPlayingStage()
                     {
-                        if (State.Stage == EngineStage.Loading || State.Stage == EngineStage.Playing) return true;
-                        Abort($"Received packet {packetType} during wrong stage (expected Loading or Playing but in {State.Stage}.");
+                        if (View == EngineView.Loading || View == EngineView.Playing) return true;
+                        Abort($"Received packet {packetType} during wrong stage (expected Loading or Playing but in {View}.");
                         return false;
                     }
 
                     switch (packetType)
                     {
                         case ServerPacketType.SetupPlayerIndex:
-                            if (!EnsureStage(EngineStage.Loading)) break;
-                            State.SelfPlayerIndex = PacketReader.ReadInt();
+                            if (!EnsureView(EngineView.Loading)) break;
+                            SelfPlayerIndex = PacketReader.ReadInt();
                             break;
 
                         case ServerPacketType.PlayerList:
@@ -61,15 +59,14 @@ namespace DeepSwarmClient
 
                         case ServerPacketType.Tick:
                             if (!EnsureLoadingOrPlayingStage()) break;
-                            if (State.SelfPlayerIndex == -1) { Abort("Received tick before receiving self player index."); break; }
+                            if (SelfPlayerIndex == -1) { Abort("Received tick before receiving self player index."); break; }
 
                             ReadTick();
 
-                            if (State.Stage == EngineStage.Loading)
+                            if (View == EngineView.Loading)
                             {
-                                Desktop.SetRootElement(InGameView);
-                                Desktop.SetFocusedElement(InGameView);
-                                State.Stage = EngineStage.Playing;
+                                View = EngineView.Playing;
+                                _engine.Interface.OnViewChanged();
                             }
 
                             break;
@@ -84,7 +81,7 @@ namespace DeepSwarmClient
 
         void ReadPlayerList()
         {
-            State.PlayerList.Clear();
+            PlayerList.Clear();
 
             var playerCount = PacketReader.ReadInt();
 
@@ -94,10 +91,10 @@ namespace DeepSwarmClient
                 var team = (Player.PlayerTeam)PacketReader.ReadByte();
                 var isOnline = PacketReader.ReadByte() != 0;
 
-                State.PlayerList.Add(new PlayerListEntry { Name = name, Team = team, IsOnline = isOnline });
+                PlayerList.Add(new PlayerListEntry { Name = name, Team = team, IsOnline = isOnline });
             }
 
-            InGameView.OnPlayerListUpdated();
+            _engine.Interface.PlayingView.OnPlayerListUpdated();
         }
 
         void ReadChat()
@@ -107,11 +104,11 @@ namespace DeepSwarmClient
 
         void ReadTick()
         {
-            Unsafe.InitBlock(ref State.FogOfWar[0], 0, (uint)State.FogOfWar.Length);
-            State.Map.Entities.Clear();
-            State.Map.EntitiesById.Clear();
+            Unsafe.InitBlock(ref FogOfWar[0], 0, (uint)FogOfWar.Length);
+            Map.Entities.Clear();
+            Map.EntitiesById.Clear();
 
-            State.TickIndex = PacketReader.ReadInt();
+            TickIndex = PacketReader.ReadInt();
 
             // Read seen entities
             Entity newSelectedEntity = null;
@@ -131,20 +128,20 @@ namespace DeepSwarmClient
                     Crystals = PacketReader.ReadInt(),
                 };
 
-                if (State.SelectedEntity?.Id == entity.Id) newSelectedEntity = entity;
+                if (SelectedEntity?.Id == entity.Id) newSelectedEntity = entity;
 
-                State.Map.Entities.Add(entity);
-                State.Map.EntitiesById.Add(entity.Id, entity);
+                Map.Entities.Add(entity);
+                Map.EntitiesById.Add(entity.Id, entity);
 
-                if (entity.PlayerIndex == State.SelfPlayerIndex && entity.Type == Entity.EntityType.Factory)
+                if (entity.PlayerIndex == SelfPlayerIndex && entity.Type == Entity.EntityType.Factory)
                 {
-                    State.SelfBaseChunkX = entity.X / Map.ChunkSize;
-                    State.SelfBaseChunkY = entity.Y / Map.ChunkSize;
+                    SelfBaseChunkX = entity.X / Map.ChunkSize;
+                    SelfBaseChunkY = entity.Y / Map.ChunkSize;
                 }
             }
 
-            State.SelectedEntity = newSelectedEntity;
-            if (State.SelectedEntity != null) InGameView.OnSelectedEntityUpdated();
+            SelectedEntity = newSelectedEntity;
+            if (SelectedEntity != null) _engine.Interface.PlayingView.OnSelectedEntityUpdated();
 
             // Read seen tiles
             var seenTilesCount = PacketReader.ReadShort();
@@ -152,23 +149,23 @@ namespace DeepSwarmClient
             {
                 var x = PacketReader.ReadShort();
                 var y = PacketReader.ReadShort();
-                State.FogOfWar[y * Map.MapSize + x] = 1;
-                State.Map.Tiles[y * Map.MapSize + x] = PacketReader.ReadByte();
+                FogOfWar[y * Map.MapSize + x] = 1;
+                Map.Tiles[y * Map.MapSize + x] = PacketReader.ReadByte();
             }
 
             // Collect planned moves from keyboard and scripting
             var plannedMoves = new Dictionary<int, Entity.EntityMove>();
 
-            if (State.SelectedEntity != null && State.SelectedEntityMoveDirection != null)
+            if (SelectedEntity != null && SelectedEntityMoveDirection != null)
             {
-                plannedMoves[State.SelectedEntity.Id] = State.SelectedEntity.GetMoveForTargetDirection(State.SelectedEntityMoveDirection.Value);
+                plannedMoves[SelectedEntity.Id] = SelectedEntity.GetMoveForTargetDirection(SelectedEntityMoveDirection.Value);
             }
 
             var removedSelfEntityIds = new List<int>();
 
-            foreach (var (entityId, lua) in State.LuasByEntityId)
+            foreach (var (entityId, lua) in LuasByEntityId)
             {
-                if (!State.Map.EntitiesById.TryGetValue(entityId, out var entity))
+                if (!Map.EntitiesById.TryGetValue(entityId, out var entity))
                 {
                     lua.Dispose();
                     removedSelfEntityIds.Add(entityId);
@@ -180,8 +177,8 @@ namespace DeepSwarmClient
 
             foreach (var entityId in removedSelfEntityIds)
             {
-                State.EntityScriptPaths.Remove(entityId);
-                State.LuasByEntityId.Remove(entityId);
+                EntityScriptPaths.Remove(entityId);
+                LuasByEntityId.Remove(entityId);
             }
 
             void RunScriptOnEntity(KeraLua.Lua lua, Entity entity)
@@ -229,7 +226,7 @@ namespace DeepSwarmClient
 
             // Send planned moves
             PacketWriter.WriteByte((byte)Protocol.ClientPacketType.PlanMoves);
-            PacketWriter.WriteInt(State.TickIndex);
+            PacketWriter.WriteInt(TickIndex);
             PacketWriter.WriteShort((short)plannedMoves.Count);
             foreach (var (entityId, move) in plannedMoves)
             {

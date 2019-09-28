@@ -3,14 +3,27 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Net;
+using System.Net.Sockets;
 
 namespace DeepSwarmClient
 {
-    enum EngineStage { EnterName, Loading, Playing }
+    enum EngineView { Connect, EnterName, Loading, Playing, }
 
-    class EngineState
+    partial class EngineState
     {
-        public EngineStage Stage;
+        public bool IsRunning = true;
+
+        // View
+        public EngineView View;
+
+        // Networking
+        Socket _socket;
+        PacketReceiver _packetReceiver;
+        public readonly PacketWriter PacketWriter = new PacketWriter();
+        public readonly PacketReader PacketReader = new PacketReader();
+
+        public string SavedServerAddress = "localhost"; // TODO: Save and laod from settings
 
         // Self
         public Guid SelfGuid;
@@ -39,29 +52,61 @@ namespace DeepSwarmClient
 
         // Ticking
         public int TickIndex;
-
         readonly Engine _engine;
+
         public EngineState(Engine engine) { _engine = engine; }
+
+        public void Stop()
+        {
+            _socket?.Close();
+            _socket = null;
+
+            IsRunning = false;
+        }
+
+        public void Connect(string address)
+        {
+            _socket = new Socket(SocketType.Stream, ProtocolType.Tcp) { NoDelay = true, LingerState = new LingerOption(true, seconds: 1) };
+
+            // TODO: Do this in a background thread and have a connecting popup
+            try
+            {
+                _socket.Connect(new IPEndPoint(IPAddress.Loopback, Protocol.Port));
+            }
+            catch
+            {
+                return;
+            }
+
+            _packetReceiver = new PacketReceiver(_socket);
+
+            View = EngineView.EnterName;
+            _engine.Interface.OnViewChanged();
+        }
+
+        void SendPacket()
+        {
+            try { _socket.Send(PacketWriter.Buffer, 0, PacketWriter.Finish(), SocketFlags.None); } catch { }
+        }
 
         public void SetName(string name)
         {
             SelfPlayerName = name;
             File.WriteAllText(_engine.SettingsFilePath, SelfPlayerName);
 
-            Stage = EngineStage.Loading;
-            _engine.Desktop.SetRootElement(_engine.LoadingView);
-            _engine.Desktop.SetFocusedElement(null);
+            View = EngineView.Loading;
+            _engine.Interface.OnViewChanged();
 
-            _engine.PacketWriter.WriteByteLengthString(Protocol.VersionString);
-            _engine.PacketWriter.WriteBytes(SelfGuid.ToByteArray());
-            _engine.PacketWriter.WriteByteLengthString(SelfPlayerName);
-            _engine.SendPacket();
+            PacketWriter.WriteByteLengthString(Protocol.VersionString);
+            PacketWriter.WriteBytes(SelfGuid.ToByteArray());
+            PacketWriter.WriteByteLengthString(SelfPlayerName);
+            SendPacket();
         }
 
         public void SelectEntity(Entity entity)
         {
             SelectedEntity = entity;
-            _engine.InGameView.OnSelectedEntityChanged();
+            _engine.Interface.PlayingView.OnSelectedEntityChanged();
         }
 
         public void SetMoveTowards(Entity.EntityDirection direction)
@@ -77,13 +122,12 @@ namespace DeepSwarmClient
 
         public void PlanMove(Entity.EntityMove move)
         {
-            var writer = _engine.PacketWriter;
-            writer.WriteByte((byte)Protocol.ClientPacketType.PlanMoves);
-            writer.WriteInt(TickIndex);
-            writer.WriteShort(1);
-            writer.WriteInt(SelectedEntity.Id);
-            writer.WriteByte((byte)move);
-            _engine.SendPacket();
+            PacketWriter.WriteByte((byte)Protocol.ClientPacketType.PlanMoves);
+            PacketWriter.WriteInt(TickIndex);
+            PacketWriter.WriteShort(1);
+            PacketWriter.WriteInt(SelectedEntity.Id);
+            PacketWriter.WriteByte((byte)move);
+            SendPacket();
         }
 
         public void CreateScriptForSelectedEntity()
@@ -103,7 +147,7 @@ namespace DeepSwarmClient
             var defaultScriptText = "function tick(self)\n  \nend\n";
             File.WriteAllText(Path.Combine(_engine.ScriptsPath, relativePath), defaultScriptText);
             Scripts.Add(relativePath, defaultScriptText);
-            _engine.InGameView.OnScriptListUpdated();
+            _engine.Interface.PlayingView.OnScriptListUpdated();
 
             SetupScriptPathForSelectedEntity(relativePath);
         }
@@ -112,19 +156,34 @@ namespace DeepSwarmClient
         {
             EntityScriptPaths[SelectedEntity.Id] = scriptFilePath;
             SetupLuaForEntity(SelectedEntity.Id, scriptFilePath != null ? Scripts[scriptFilePath] : null);
-            _engine.InGameView.OnSelectedEntityChanged();
+            _engine.Interface.PlayingView.OnSelectedEntityChanged();
         }
 
         public void ClearScriptPathForSelectedEntity()
         {
             EntityScriptPaths.Remove(SelectedEntity.Id);
             SetupLuaForEntity(SelectedEntity.Id, null);
-            _engine.InGameView.OnSelectedEntityChanged();
+            _engine.Interface.PlayingView.OnSelectedEntityChanged();
         }
 
         public void UpdateSelectedEntityScript(string scriptText)
         {
             UpdateScriptText(EntityScriptPaths[SelectedEntity.Id], scriptText);
+        }
+
+        internal void Update(float deltaTime)
+        {
+            if (_socket != null && _socket.Poll(0, SelectMode.SelectRead))
+            {
+                if (!_packetReceiver.Read(out var packets))
+                {
+                    Trace.WriteLine($"Disconnected from server.");
+                    Stop();
+                    return;
+                }
+
+                ReadPackets(packets);
+            }
         }
 
         void UpdateScriptText(string relativePath, string scriptText)

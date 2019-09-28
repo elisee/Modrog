@@ -4,9 +4,9 @@ using SDL2;
 using System;
 using System.Collections.Generic;
 
-namespace DeepSwarmClient
+namespace DeepSwarmClient.Interface.Playing
 {
-    class InGameView : EngineElement
+    class PlayingView : InterfaceElement
     {
         // UI
         readonly Element _playerListPanel;
@@ -47,65 +47,63 @@ namespace DeepSwarmClient
         int _dragScrollX;
         int _dragScrollY;
 
-        public InGameView(Engine engine)
-            : base(engine, null)
+        public PlayingView(Interface @interface)
+            : base(@interface, null)
         {
-            AnchorRectangle = engine.Viewport;
-
             _playerListPanel = new Panel(Desktop, null, new Color(0x123456ff))
             {
-                AnchorRectangle = new Rectangle(0, 0, (Protocol.MaxPlayerNameLength + 2) * 16, 720),
+                Anchor = new Anchor(left: 0, top: 0, width: (Protocol.MaxPlayerNameLength + 2) * 16, height: 720),
             };
 
             // Entity stats
 
             _entityStatsContainer = new Element(Desktop, null)
             {
-                AnchorRectangle = new Rectangle((Engine.Viewport.Width - EntityStatsContainerWidth) / 2, 24, EntityStatsContainerWidth, 96),
+                Anchor = new Anchor(left: (Engine.Viewport.Width - EntityStatsContainerWidth) / 2, top: 24, width: EntityStatsContainerWidth, height: 96),
                 BackgroundColor = new Color(0x123456ff)
             };
 
             _entityNameLabel = new Label(Desktop, _entityStatsContainer)
             {
-                AnchorRectangle = new Rectangle(0, 6, EntityStatsContainerWidth, 16)
+                Anchor = new Anchor(left: 0, top: 6, width: EntityStatsContainerWidth, height: 16)
             };
 
             _entityOwnerLabel = new Label(Desktop, _entityStatsContainer)
             {
-                AnchorRectangle = new Rectangle(0, 28, EntityStatsContainerWidth, 16),
+                Anchor = new Anchor(left: 0, top: 28, width: EntityStatsContainerWidth, height: 16),
                 TextColor = new Color(0x888888ff)
             };
 
             // Health icon
             new Element(Desktop, _entityStatsContainer)
             {
-                AnchorRectangle = new Rectangle(12, 56, 24, 24),
+                Anchor = new Anchor(left: 12, top: 56, width: 24, height: 24),
                 BackgroundTexture = Engine.SpritesheetTexture,
                 BackgroundTextureArea = new Rectangle(72, 24, 24, 24)
             };
 
             _entityHealthValue = new Label(Desktop, _entityStatsContainer)
             {
-                AnchorRectangle = new Rectangle(48, 60, EntityStatsContainerWidth, 16)
+                Anchor = new Anchor(left: 48, top: 60, width: EntityStatsContainerWidth, height: 16)
             };
 
             // Crystals icon
             new Element(Desktop, _entityStatsContainer)
             {
-                AnchorRectangle = new Rectangle(EntityStatsContainerWidth / 2 + 12, 56, 24, 24),
+                Anchor = new Anchor(left: EntityStatsContainerWidth / 2 + 12, top: 56, width: 24, height: 24),
                 BackgroundTexture = Engine.SpritesheetTexture,
                 BackgroundTextureArea = new Rectangle(96, 24, 24, 24)
             };
 
             _entityCrystalsValue = new Label(Desktop, _entityStatsContainer)
             {
-                AnchorRectangle = new Rectangle(EntityStatsContainerWidth / 2 + 48, 60, EntityStatsContainerWidth, 16)
+                Anchor = new Anchor(left: EntityStatsContainerWidth / 2 + 48, top: 60, width: EntityStatsContainerWidth, height: 16)
             };
 
             // Sidebar
             _sidebarContainer = new Element(Desktop, this)
             {
-                AnchorRectangle = new Rectangle(0, 0, Engine.Viewport.Width, Engine.Viewport.Height)
+                Anchor = new Anchor(left: 0, top: 0, width: Engine.Viewport.Width, height: Engine.Viewport.Height)
             };
 
             const int ButtonStripWidth = (128 + 2 * 8);
@@ -127,7 +125,7 @@ namespace DeepSwarmClient
                 new Button(Desktop, activeStrip)
                 {
                     Text = label,
-                    AnchorRectangle = new Rectangle(8, 8 + stripButtons * (buttonHeight + 8), activeStrip.AnchorRectangle.Width - 16, buttonHeight),
+                    Anchor = new Anchor(left: 8, top: 8 + stripButtons * (buttonHeight + 8), width: activeStrip.Anchor.Width - 16, height: buttonHeight),
                     BackgroundColor = new Color(0x4444ccff),
                     OnActivate = action
                 };
@@ -142,7 +140,7 @@ namespace DeepSwarmClient
 
             _manualModeSidebarsByEntityType[Entity.EntityType.Factory] = new Element(Desktop, null)
             {
-                AnchorRectangle = new Rectangle(Engine.Viewport.Width - ButtonStripWidth, 0, ButtonStripWidth, Engine.Viewport.Height),
+                Anchor = new Anchor(left: Engine.Viewport.Width - ButtonStripWidth, top: 0, width: ButtonStripWidth, height: Engine.Viewport.Height),
             };
 
             StartButtonStrip(_manualModeSidebarsByEntityType[Entity.EntityType.Factory]);
@@ -151,7 +149,7 @@ namespace DeepSwarmClient
 
             _manualModeSidebarsByEntityType[Entity.EntityType.Robot] = new Element(Desktop, null)
             {
-                AnchorRectangle = new Rectangle(Engine.Viewport.Width - ButtonStripWidth, 0, ButtonStripWidth, Engine.Viewport.Height),
+                Anchor = new Anchor(left: Engine.Viewport.Width - ButtonStripWidth, top: 0, width: ButtonStripWidth, height: Engine.Viewport.Height),
             };
 
             StartButtonStrip(_manualModeSidebarsByEntityType[Entity.EntityType.Robot]);
@@ -163,42 +161,42 @@ namespace DeepSwarmClient
             // Script selector
             _scriptSelectorSidebar = new Element(Desktop, null)
             {
-                AnchorRectangle = new Rectangle(Engine.Viewport.Width - ButtonStripWidth - SidebarPanelWidth, 0, ButtonStripWidth + SidebarPanelWidth, Engine.Viewport.Height)
+                Anchor = new Anchor(left: Engine.Viewport.Width - ButtonStripWidth - SidebarPanelWidth, top: 0, width: ButtonStripWidth + SidebarPanelWidth, height: Engine.Viewport.Height)
             };
 
             var scriptSelectorButtonStrip = StartButtonStrip(new Element(Desktop, _scriptSelectorSidebar)
             {
-                AnchorRectangle = new Rectangle(0, 0, ButtonStripWidth, Engine.Viewport.Height)
+                Anchor = new Anchor(left: 0, top: 0, width: ButtonStripWidth, height: Engine.Viewport.Height)
             });
 
             AddButtonToStrip("MANUAL", () => Engine.State.ClearScriptPathForSelectedEntity());
 
             var scriptSelectorPanel = new Panel(Desktop, _scriptSelectorSidebar, new Color(0x123456ff))
             {
-                AnchorRectangle = new Rectangle(ButtonStripWidth, 0, SidebarPanelWidth, Engine.Viewport.Height),
+                Anchor = new Anchor(left: ButtonStripWidth, top: 0, width: SidebarPanelWidth, height: Engine.Viewport.Height),
             };
 
             new Button(Desktop, scriptSelectorPanel)
             {
-                AnchorRectangle = new Rectangle(8, 8, SidebarPanelWidth - 16, 16),
+                Anchor = new Anchor(left: 8, top: 8, width: SidebarPanelWidth - 16, height: 16),
                 Text = "[+] New Script",
                 OnActivate = () => Engine.State.CreateScriptForSelectedEntity()
             };
 
             _scriptSelectorList = new Element(Desktop, scriptSelectorPanel)
             {
-                AnchorRectangle = new Rectangle(8, 32 + 8, SidebarPanelWidth - 16, Engine.Viewport.Height - 32 - 16)
+                Anchor = new Anchor(left: 8, top: 32 + 8, width: SidebarPanelWidth - 16, height: Engine.Viewport.Height - 32 - 16)
             };
 
             // Script editor
             _scriptEditorSidebar = new Element(Desktop, null)
             {
-                AnchorRectangle = new Rectangle(Engine.Viewport.Width - ButtonStripWidth - SidebarPanelWidth, 0, ButtonStripWidth + SidebarPanelWidth, Engine.Viewport.Height),
+                Anchor = new Anchor(left: Engine.Viewport.Width - ButtonStripWidth - SidebarPanelWidth, top: 0, width: ButtonStripWidth + SidebarPanelWidth, height: Engine.Viewport.Height),
             };
 
             var scriptEditorButtonStrip = StartButtonStrip(new Element(Desktop, _scriptEditorSidebar)
             {
-                AnchorRectangle = new Rectangle(0, 0, ButtonStripWidth, Engine.Viewport.Height)
+                Anchor = new Anchor(left: 0, top: 0, width: ButtonStripWidth, height: Engine.Viewport.Height)
             });
 
             AddButtonToStrip("STOP", () => Engine.State.SetupScriptPathForSelectedEntity(null));
@@ -206,19 +204,19 @@ namespace DeepSwarmClient
 
             var scriptEditorPanel = new Panel(Desktop, _scriptEditorSidebar, new Color(0x123456ff))
             {
-                AnchorRectangle = new Rectangle(ButtonStripWidth, 0, SidebarPanelWidth, Engine.Viewport.Height),
+                Anchor = new Anchor(left: ButtonStripWidth, top: 0, width: SidebarPanelWidth, height: Engine.Viewport.Height),
             };
 
             _scriptNameInput = new TextInput(Desktop, scriptEditorPanel)
             {
-                AnchorRectangle = new Rectangle(8, 8, SidebarPanelWidth - 16, 16),
+                Anchor = new Anchor(left: 8, top: 8, width: SidebarPanelWidth - 16, height: 16),
                 BackgroundColor = new Color(0x004400ff),
                 MaxLength = Protocol.MaxScriptNameLength
             };
 
             _scriptTextEditor = new TextEditor(Desktop, scriptEditorPanel)
             {
-                AnchorRectangle = new Rectangle(8, 8 + 16 + 8, SidebarPanelWidth - 16, Engine.Viewport.Height - (8 + 16 + 8 + 8)),
+                Anchor = new Anchor(left: 8, top: 8 + 16 + 8, width: SidebarPanelWidth - 16, height: Engine.Viewport.Height - (8 + 16 + 8 + 8)),
                 BackgroundColor = new Color(0x004400ff),
             };
 
@@ -236,6 +234,7 @@ namespace DeepSwarmClient
             _scrollingPixelsY = (int)((Engine.State.SelfBaseChunkY + 0.5f) * Map.ChunkSize * Map.TileSize) - Engine.Viewport.Height / 2;
 
             Desktop.RegisterAnimation(Animate);
+            Desktop.SetFocusedElement(this);
         }
 
         public override void OnUnmounted()
@@ -363,7 +362,7 @@ namespace DeepSwarmClient
             for (var i = 0; i < Engine.State.PlayerList.Count; i++)
             {
                 var label = new Label(Desktop, _playerListPanel) { Text = PlayerListEntry.GetEntryLabel(Engine.State.PlayerList[i]) };
-                label.AnchorRectangle = new Rectangle(16, 16 + 16 * i, _playerListPanel.AnchorRectangle.Width, 16);
+                label.Anchor = new Anchor(left: 16, top: 16 + 16 * i, width: _playerListPanel.Anchor.Width, height: 16);
             }
 
             _playerListPanel.Layout(LayoutRectangle);
@@ -378,7 +377,7 @@ namespace DeepSwarmClient
             {
                 new Button(Desktop, _scriptSelectorList)
                 {
-                    AnchorRectangle = new Rectangle(0, i * 16, _scriptSelectorList.AnchorRectangle.Width, 16),
+                    Anchor = new Anchor(left: 0, top: i * 16, width: _scriptSelectorList.Anchor.Width, height: 16),
                     Text = scriptPath,
                     OnActivate = () => Engine.State.SetupScriptPathForSelectedEntity(scriptPath)
                 };
@@ -395,22 +394,26 @@ namespace DeepSwarmClient
             _sidebarContainer.Clear();
 
             var selectedEntity = Engine.State.SelectedEntity;
-            if (selectedEntity == null) return;
+            if (selectedEntity == null)
+            {
+                Desktop.SetFocusedElement(this);
+                return;
+            }
 
             _entityNameLabel.Text = selectedEntity.Type.ToString();
             var entityNameLength = _entityNameLabel.Text.Length * RendererHelper.FontRenderSize;
-            _entityNameLabel.AnchorRectangle.X = (EntityStatsContainerWidth - entityNameLength) / 2;
+            _entityNameLabel.Anchor.Left = (EntityStatsContainerWidth - entityNameLength) / 2;
 
             _entityOwnerLabel.Text = PlayerListEntry.GetEntryLabel(Engine.State.PlayerList[selectedEntity.PlayerIndex]);
             var entityOwnerLength = _entityOwnerLabel.Text.Length * RendererHelper.FontRenderSize;
-            _entityOwnerLabel.AnchorRectangle.X = (EntityStatsContainerWidth - entityOwnerLength) / 2;
+            _entityOwnerLabel.Anchor.Left = (EntityStatsContainerWidth - entityOwnerLength) / 2;
 
             Add(_entityStatsContainer);
             OnSelectedEntityUpdated();
 
             if (Engine.State.EntityScriptPaths.TryGetValue(selectedEntity.Id, out var scriptPath))
             {
-                _entityStatsContainer.AnchorRectangle.X = (Engine.Viewport.Width - EntityStatsContainerWidth - SidebarPanelWidth) / 2;
+                _entityStatsContainer.Anchor.Left = (Engine.Viewport.Width - EntityStatsContainerWidth - SidebarPanelWidth) / 2;
 
                 if (scriptPath == null)
                 {
@@ -425,7 +428,7 @@ namespace DeepSwarmClient
             }
             else
             {
-                _entityStatsContainer.AnchorRectangle.X = (Engine.Viewport.Width - EntityStatsContainerWidth) / 2;
+                _entityStatsContainer.Anchor.Left = (Engine.Viewport.Width - EntityStatsContainerWidth) / 2;
 
                 _sidebarContainer.Add(_manualModeSidebarsByEntityType[selectedEntity.Type]);
             }

@@ -1,17 +1,15 @@
 ﻿using DeepSwarmClient.UI;
 
-namespace DeepSwarmClient
+namespace DeepSwarmClient.Interface
 {
-    class LoadingView : EngineElement
+    class LoadingView : InterfaceElement
     {
-        public LoadingView(Engine engine)
-            : base(engine, null)
+        public LoadingView(Interface @interface)
+            : base(@interface, null)
         {
-            AnchorRectangle = engine.Viewport;
-
             var loadingPopup = new Element(Desktop, this)
             {
-                AnchorRectangle = MakeCenteredRectangle(320, 320),
+                Anchor = new Anchor(width: 320, height: 320),
                 BackgroundColor = new Color(0x88aa88ff)
             };
 

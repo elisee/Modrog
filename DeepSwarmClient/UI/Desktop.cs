@@ -12,7 +12,7 @@ namespace DeepSwarmClient.UI
     {
         public IntPtr Renderer;
 
-        public Element RootElement { get; private set; }
+        public readonly Element RootElement;
         public Element FocusedElement { get; private set; }
         public Element HoveredElement { get; private set; }
         public bool IsHoveredElementPressed;
@@ -28,6 +28,8 @@ namespace DeepSwarmClient.UI
         public Desktop(IntPtr renderer)
         {
             Renderer = renderer;
+            RootElement = new Element(this, null);
+            RootElement.Mount();
         }
 
         #region Helpers
@@ -35,29 +37,15 @@ namespace DeepSwarmClient.UI
         #endregion
 
         #region Configuration
-        public void SetRootElement(Element element)
-        {
-            Debug.Assert(!element.IsMounted);
-
-            if (HoveredElement != null)
-            {
-                SetHoveredElementPressed(false);
-                HoveredElement?.OnMouseExit();
-                HoveredElement = null;
-            }
-
-            FocusedElement?.OnBlur();
-            FocusedElement = null;
-
-            RootElement?.Unmount();
-            RootElement = element;
-            RootElement?.Mount();
-            RootElement.Layout(new Rectangle(0, 0, 1280, 720));
-        }
-
         public void SetFocusedElement(Element element)
         {
             Debug.Assert(element == null || element.IsMounted);
+
+            if (IsHoveredElementPressed)
+            {
+                SetHoveredElementPressed(false);
+            }
+
             FocusedElement?.OnBlur();
             FocusedElement = element;
             FocusedElement?.OnFocus();
@@ -65,6 +53,7 @@ namespace DeepSwarmClient.UI
 
         public void OnHoveredElementUnmounted()
         {
+            HoveredElement?.OnMouseExit();
             HoveredElement = RootElement.HitTest(MouseX, MouseY);
             IsHoveredElementPressed = false;
         }

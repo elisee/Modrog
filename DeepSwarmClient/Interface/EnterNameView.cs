@@ -1,56 +1,60 @@
 ﻿using DeepSwarmClient.UI;
 using DeepSwarmCommon;
 
-namespace DeepSwarmClient
+namespace DeepSwarmClient.Interface
 {
-    class EnterNameView : EngineElement
+    class EnterNameView : InterfaceElement
     {
-        public readonly TextInput NameInput;
+        readonly TextInput _nameInput;
 
-        public EnterNameView(Engine engine)
-            : base(engine, null)
+        public EnterNameView(Interface @interface)
+            : base(@interface, null)
         {
-            AnchorRectangle = engine.Viewport;
-
             const int PanelWidth = 320 + 16 * 2;
             const int PanelHeight = 160 + 16 * 2;
 
             var panel = new Panel(Desktop, this, new Color(0x88aa88ff))
             {
-                AnchorRectangle = MakeCenteredRectangle(PanelWidth, PanelHeight),
+                Anchor = new Anchor(width: PanelWidth, height: PanelHeight),
             };
 
             new Label(Desktop, panel)
             {
-                AnchorRectangle = new Rectangle(8, 8, 0, 0),
+                Anchor = new Anchor(left: 8, top: 8),
                 Text = "- DeepSwarm r1 -"
             };
 
             new Label(Desktop, panel)
             {
-                AnchorRectangle = new Rectangle(8, 24, 0, 0),
+                Anchor = new Anchor(left: 8, top: 24),
                 Text = "Enter your name:"
             };
 
-            NameInput = new TextInput(Desktop, panel)
+            _nameInput = new TextInput(Desktop, panel)
             {
-                AnchorRectangle = new Rectangle(8, 48, 320, 16),
+                Anchor = new Anchor(left: 8, top: 48, width: 320, height: 16),
                 BackgroundColor = new Color(0x004400ff),
                 MaxLength = Protocol.MaxPlayerNameLength
             };
 
             new Button(Desktop, panel)
             {
-                Text = "OK",
-                AnchorRectangle = new Rectangle(8, 80, ("OK".Length + 2) * 16, 16),
+                Text = " OK ",
+                Anchor = new Anchor(left: 8, top: 80, width: " OK ".Length * 16, height: 16),
                 BackgroundColor = new Color(0x4444ccff),
                 OnActivate = Validate
             };
         }
 
+        public override void OnMounted()
+        {
+            _nameInput.SetValue(Engine.State.SelfPlayerName ?? "");
+            Desktop.SetFocusedElement(_nameInput);
+        }
+
         public override void Validate()
         {
-            var name = NameInput.Value.Trim();
+            var name = _nameInput.Value.Trim();
             if (name.Length == 0) return;
 
             Engine.State.SetName(name);
