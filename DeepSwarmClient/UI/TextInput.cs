@@ -215,6 +215,7 @@ namespace DeepSwarmClient.UI
                 Desktop.SetFocusedElement(this);
                 Desktop.SetHoveredElementPressed(true);
                 _cursorX = _selectionAnchorX = GetHoveredTextPosition();
+                ClampScrolling();
             }
         }
 
@@ -232,6 +233,7 @@ namespace DeepSwarmClient.UI
             if (button == 1 && IsPressed)
             {
                 Desktop.SetHoveredElementPressed(false);
+                ClampScrolling();
             }
         }
         #endregion
