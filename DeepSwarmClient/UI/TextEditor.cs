@@ -153,8 +153,7 @@ namespace DeepSwarmClient.UI
                 }
 
                 ClampScrolling();
-                if (!Desktop.IsShiftDown())
-                    ClearSelection();
+                ClearSelectionUnlessShiftDown();
             }
 
             void GoRight()
@@ -167,8 +166,7 @@ namespace DeepSwarmClient.UI
                 }
 
                 ClampScrolling();
-                if (!Desktop.IsShiftDown())
-                    ClearSelection();
+                ClearSelectionUnlessShiftDown();
             }
 
             void GoUp()
@@ -184,8 +182,7 @@ namespace DeepSwarmClient.UI
                 }
 
                 ClampScrolling();
-                if (!Desktop.IsShiftDown())
-                    ClearSelection();
+                ClearSelectionUnlessShiftDown();
             }
 
             void GoDown()
@@ -201,8 +198,7 @@ namespace DeepSwarmClient.UI
                 }
 
                 ClampScrolling();
-                if (!Desktop.IsShiftDown())
-                    ClearSelection();
+                ClearSelectionUnlessShiftDown();
             }
 
             void Erase()
@@ -289,16 +285,16 @@ namespace DeepSwarmClient.UI
             void GoToStartOfLine()
             {
                 _cursor.X = 0;
-                if (!Desktop.IsShiftDown())
-                    ClearSelection();
+                ClearSelectionUnlessShiftDown();
             }
 
             void GoToEndOfLine()
             {
                 _cursor.X = Lines[_cursor.Y].Length;
-                if (!Desktop.IsShiftDown())
-                    ClearSelection();
+                ClearSelectionUnlessShiftDown();
             }
+
+            void ClearSelectionUnlessShiftDown() { if (!Desktop.IsShiftDown()) { ClearSelection(); } _cursorTimer = 0f; }
         }
 
         public override void OnTextEntered(string text)
