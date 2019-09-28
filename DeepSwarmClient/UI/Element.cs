@@ -90,8 +90,9 @@ namespace DeepSwarmClient.UI
         {
             if (!LayoutRectangle.Contains(x, y)) return null;
 
-            foreach (var child in Children)
+            for (var i = Children.Count - 1; i >= 0; i--)
             {
+                var child = Children[i];
                 if (!child.IsMounted) continue;
 
                 var hitElement = child.HitTest(x, y);
