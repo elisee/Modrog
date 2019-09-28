@@ -1,5 +1,4 @@
-﻿
-using DeepSwarmCommon;
+﻿using DeepSwarmCommon;
 using SDL2;
 using System;
 
@@ -216,7 +215,6 @@ namespace DeepSwarmClient.UI
         {
             if (button == 1 && IsPressed)
             {
-                Desktop.SetFocusedElement(this);
                 Desktop.SetHoveredElementPressed(false);
             }
         }
@@ -230,16 +228,16 @@ namespace DeepSwarmClient.UI
             var clipRect = Desktop.ToSDL_Rect(LayoutRectangle);
             SDL.SDL_RenderSetClipRect(Desktop.Renderer, ref clipRect);
 
-            // Draw Selection
+            // Draw selection
             if (HasSelection())
             {
                 new Color(0x0000ffaa).UseAsDrawColor(Desktop.Renderer);
                 GetSelectionRange(out var firstX, out var lastX);
 
                 var selectionRect = Desktop.ToSDL_Rect(new Rectangle(
-                LayoutRectangle.X + firstX * RendererHelper.FontRenderSize - _scrollingPixelsX,
-                LayoutRectangle.Y,
-                (lastX - firstX) * RendererHelper.FontRenderSize, RendererHelper.FontRenderSize));
+                    LayoutRectangle.X + firstX * RendererHelper.FontRenderSize - _scrollingPixelsX,
+                    LayoutRectangle.Y,
+                    (lastX - firstX) * RendererHelper.FontRenderSize, RendererHelper.FontRenderSize));
                 SDL.SDL_RenderFillRect(Desktop.Renderer, ref selectionRect);
             }
 
@@ -247,7 +245,7 @@ namespace DeepSwarmClient.UI
 
             SDL.SDL_RenderSetClipRect(Desktop.Renderer, IntPtr.Zero);
 
-            // Draw Cursor
+            // Draw cursor
             if (Desktop.FocusedElement == this && (_cursorTimer % CursorFlashInterval * 2) < CursorFlashInterval)
             {
                 new Color(0xffffffff).UseAsDrawColor(Desktop.Renderer);
