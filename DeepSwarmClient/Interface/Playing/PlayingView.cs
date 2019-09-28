@@ -405,15 +405,13 @@ namespace DeepSwarmClient.Interface.Playing
 
         public void OnSelectedEntityChanged()
         {
+            Desktop.SetFocusedElement(this);
+
             if (_entityStatsContainer.Parent != null) Remove(_entityStatsContainer);
             _sidebarContainer.Clear();
 
             var selectedEntity = Engine.State.SelectedEntity;
-            if (selectedEntity == null)
-            {
-                Desktop.SetFocusedElement(this);
-                return;
-            }
+            if (selectedEntity == null) return;
 
             _entityNameLabel.Text = selectedEntity.Type.ToString();
             var entityNameLength = _entityNameLabel.Text.Length * RendererHelper.FontRenderSize;
