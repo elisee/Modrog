@@ -7,7 +7,7 @@ namespace DeepSwarmClient.UI
     {
         public Color TextColor = new Color(0xffffffff);
         public string Value { get; private set; } = "";
-        public int MaxLength = 0;
+        public int MaxLength = byte.MaxValue;
 
         int _cursorX;
         int _scrollingPixelsX;
