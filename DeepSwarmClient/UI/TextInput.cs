@@ -111,8 +111,6 @@ namespace DeepSwarmClient.UI
                     ClampScrolling();
                 }
 
-                _cursorTimer = 0f;
-
                 ClearSelectionUnlessShiftDown();
             }
 
@@ -123,8 +121,6 @@ namespace DeepSwarmClient.UI
                     _cursorX++;
                     ClampScrolling();
                 }
-
-                _cursorTimer = 0f;
 
                 ClearSelectionUnlessShiftDown();
             }
@@ -144,7 +140,6 @@ namespace DeepSwarmClient.UI
                     EraseSelection();
                 }
 
-                _cursorTimer = 0f;
                 ClampScrolling();
                 ClearSelection();
             }
@@ -163,7 +158,6 @@ namespace DeepSwarmClient.UI
                     EraseSelection();
                 }
 
-                _cursorTimer = 0f;
                 ClampScrolling();
                 ClearSelection();
             }
@@ -195,7 +189,6 @@ namespace DeepSwarmClient.UI
 
             Value = Value[0.._cursorX] + text + Value[_cursorX..];
             _cursorX += text.Length;
-            _cursorTimer = 0f;
             ClampScrolling();
             ClearSelection();
         }
