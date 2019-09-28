@@ -13,6 +13,7 @@ namespace DeepSwarmClient.UI
 
         Point _cursor;
         Point _selectionAnchor;
+        float _cursorTimer;
 
         Point _scrollingPixels;
 
@@ -35,6 +36,11 @@ namespace DeepSwarmClient.UI
         #endregion
 
         #region Internals
+        void Animate(float deltaTime)
+        {
+            _cursorTimer += deltaTime;
+        }
+
         void InsertText(string text)
         {
             EraseSelection();
@@ -58,7 +64,7 @@ namespace DeepSwarmClient.UI
             }
         }
 
-        void ClearSelection() { _selectionAnchor = _cursor; }
+        void ClearSelection() { _selectionAnchor = _cursor; _cursorTimer = 0f; }
         bool HasSelection() => _cursor != _selectionAnchor;
 
         void EraseSelection()
@@ -114,14 +120,11 @@ namespace DeepSwarmClient.UI
         #region Events
         public override Element HitTest(int x, int y) => LayoutRectangle.Contains(x, y) ? this : null;
 
-        public override void OnMouseEnter()
-        {
-            SDL.SDL_SetCursor(RendererHelper.IbeamCursor);
-        }
-        public override void OnMouseExit()
-        {
-            SDL.SDL_SetCursor(RendererHelper.ArrowCursor);
-        }
+        public override void OnMouseEnter() => SDL.SDL_SetCursor(RendererHelper.IbeamCursor);
+        public override void OnMouseExit() => SDL.SDL_SetCursor(RendererHelper.ArrowCursor);
+
+        public override void OnFocus() { _cursorTimer = 0f; Desktop.RegisterAnimation(Animate); }
+        public override void OnBlur() { Desktop.UnregisterAnimation(Animate); }
 
         public override void OnKeyDown(SDL.SDL_Keycode key, bool repeat)
         {
@@ -408,7 +411,7 @@ namespace DeepSwarmClient.UI
             SDL.SDL_RenderSetClipRect(Desktop.Renderer, IntPtr.Zero);
 
             // Draw cursor
-            if (Desktop.FocusedElement == this)
+            if (Desktop.FocusedElement == this && (_cursorTimer % TextInput.CursorFlashInterval * 2) < TextInput.CursorFlashInterval)
             {
                 new Color(0xffffffff).UseAsDrawColor(Desktop.Renderer);
 

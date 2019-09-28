@@ -10,6 +10,9 @@ namespace DeepSwarmClient.UI
         public int MaxLength = byte.MaxValue;
 
         int _cursorX;
+        float _cursorTimer;
+        public const float CursorFlashInterval = 1f;
+
         int _scrollingPixelsX;
 
         public TextInput(Desktop desktop, Element parent)
@@ -17,22 +20,36 @@ namespace DeepSwarmClient.UI
         {
         }
 
+        #region Configuration
         public void SetValue(string value)
         {
             Value = value;
             _cursorX = value.Length;
         }
+        #endregion
 
+        #region Internals
+        void Animate(float deltaTime)
+        {
+            _cursorTimer += deltaTime;
+        }
+
+        void ClampScrolling()
+        {
+            _scrollingPixelsX = Math.Clamp(_scrollingPixelsX,
+                Math.Max(0, _cursorX * RendererHelper.FontRenderSize - LayoutRectangle.Width),
+                Math.Max(0, Math.Min(_cursorX * RendererHelper.FontRenderSize, Value.Length * RendererHelper.FontRenderSize - LayoutRectangle.Width)));
+        }
+        #endregion
+
+        #region Events
         public override Element HitTest(int x, int y) => LayoutRectangle.Contains(x, y) ? this : null;
 
-        public override void OnMouseEnter()
-        {
-            SDL2.SDL.SDL_SetCursor(RendererHelper.IbeamCursor);
-        }
-        public override void OnMouseExit()
-        {
-            SDL2.SDL.SDL_SetCursor(RendererHelper.ArrowCursor);
-        }
+        public override void OnMouseEnter() => SDL.SDL_SetCursor(RendererHelper.IbeamCursor);
+        public override void OnMouseExit() => SDL.SDL_SetCursor(RendererHelper.ArrowCursor);
+
+        public override void OnFocus() { _cursorTimer = 0f; Desktop.RegisterAnimation(Animate); }
+        public override void OnBlur() => Desktop.UnregisterAnimation(Animate);
 
         public override void OnKeyDown(SDL.SDL_Keycode key, bool repeat)
         {
@@ -52,6 +69,8 @@ namespace DeepSwarmClient.UI
                     _cursorX--;
                     ClampScrolling();
                 }
+
+                _cursorTimer = 0f;
             }
 
             void GoRight()
@@ -61,6 +80,8 @@ namespace DeepSwarmClient.UI
                     _cursorX++;
                     ClampScrolling();
                 }
+
+                _cursorTimer = 0f;
             }
 
             void Erase()
@@ -71,6 +92,8 @@ namespace DeepSwarmClient.UI
                     _cursorX--;
                     ClampScrolling();
                 }
+
+                _cursorTimer = 0f;
             }
 
             void Delete()
@@ -81,14 +104,8 @@ namespace DeepSwarmClient.UI
                     ClampScrolling();
                 }
 
+                _cursorTimer = 0f;
             }
-        }
-
-        void ClampScrolling()
-        {
-            _scrollingPixelsX = Math.Clamp(_scrollingPixelsX,
-                Math.Max(0, _cursorX * RendererHelper.FontRenderSize - LayoutRectangle.Width),
-                Math.Max(0, Math.Min(_cursorX * RendererHelper.FontRenderSize, Value.Length * RendererHelper.FontRenderSize - LayoutRectangle.Width)));
         }
 
         public override void OnTextEntered(string text)
@@ -98,6 +115,7 @@ namespace DeepSwarmClient.UI
 
             Value = Value[0.._cursorX] + text + Value[_cursorX..];
             _cursorX += text.Length;
+            _cursorTimer = 0f;
             ClampScrolling();
         }
 
@@ -116,7 +134,9 @@ namespace DeepSwarmClient.UI
                 _cursorX = Math.Clamp(targetX, 0, Value.Length);
             }
         }
+        #endregion
 
+        #region Drawing
         protected override void DrawSelf()
         {
             base.DrawSelf();
@@ -128,7 +148,7 @@ namespace DeepSwarmClient.UI
 
             SDL.SDL_RenderSetClipRect(Desktop.Renderer, IntPtr.Zero);
 
-            if (Desktop.FocusedElement == this)
+            if (Desktop.FocusedElement == this && (_cursorTimer % CursorFlashInterval * 2) < CursorFlashInterval)
             {
                 new Color(0xffffffff).UseAsDrawColor(Desktop.Renderer);
 
@@ -139,5 +159,6 @@ namespace DeepSwarmClient.UI
                 SDL.SDL_RenderDrawRect(Desktop.Renderer, ref cursorRect);
             }
         }
+        #endregion
     }
 }
