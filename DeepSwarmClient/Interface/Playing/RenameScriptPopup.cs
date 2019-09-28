@@ -37,12 +37,20 @@ namespace DeepSwarmClient.Interface.Playing
                 MaxLength = Protocol.MaxScriptNameLength
             };
 
-            new Button(Desktop, panel)
+            var renameButton = new Button(Desktop, panel)
             {
-                Text = "Rename",
-                Anchor = new Anchor(left: 8, top: 80, width: ("Rename".Length + 2) * 16, height: 16),
+                Text = " Rename ",
+                Anchor = new Anchor(left: 8, top: 80, width: " Rename ".Length * 16, height: 16),
                 BackgroundColor = new Color(0x4444ccff),
                 OnActivate = Validate
+            };
+
+            new Button(Desktop, panel)
+            {
+                Text = " Cancel ",
+                Anchor = new Anchor(left: 8 + renameButton.Anchor.Width + 8, top: 80, width: " Cancel ".Length * 16, height: 16),
+                BackgroundColor = new Color(0x4444ccff),
+                OnActivate = Dismiss
             };
         }
 
@@ -61,6 +69,12 @@ namespace DeepSwarmClient.Interface.Playing
             if (Engine.State.Scripts.ContainsKey(relativePath)) return;
 
             Engine.State.RenameSelectedEntityScript(relativePath);
+            Engine.Interface.SetPopup(null);
+            Desktop.SetFocusedElement(Engine.Interface.PlayingView);
+        }
+
+        public override void Dismiss()
+        {
             Engine.Interface.SetPopup(null);
             Desktop.SetFocusedElement(Engine.Interface.PlayingView);
         }
