@@ -75,6 +75,11 @@ namespace DeepSwarmClient.UI
 
             void Delete()
             {
+                if (_cursorX < Value.Length)
+                {
+                    Value = Value[0.._cursorX] + Value[(_cursorX + 1)..];
+                    ClampScrolling();
+                }
 
             }
         }
