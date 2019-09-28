@@ -99,6 +99,8 @@ namespace DeepSwarmClient.UI
                 case SDL.SDL_Keycode.SDLK_RIGHT: GoRight(); break;
                 case SDL.SDL_Keycode.SDLK_BACKSPACE: Erase(); break;
                 case SDL.SDL_Keycode.SDLK_DELETE: Delete(); break;
+                case SDL.SDL_Keycode.SDLK_HOME: GoToStartOfLine(); break;
+                case SDL.SDL_Keycode.SDLK_END: GoToEndOfLine(); break;
                 default: base.OnKeyDown(key, repeat); break;
             }
 
@@ -162,6 +164,18 @@ namespace DeepSwarmClient.UI
 
                 _cursorTimer = 0f;
                 ClampScrolling();
+                ClearSelection();
+            }
+
+            void GoToStartOfLine()
+            {
+                _cursorX = 0;
+                ClearSelection();
+            }
+
+            void GoToEndOfLine()
+            {
+                _cursorX = Value.Length;
                 ClearSelection();
             }
         }
