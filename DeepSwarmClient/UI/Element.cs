@@ -12,6 +12,23 @@ namespace DeepSwarmClient.UI
         public Element Parent;
         public readonly List<Element> Children = new List<Element>();
 
+        public bool IsVisible
+        {
+            get => _isVisible;
+            set
+            {
+                _isVisible = value;
+
+                if (_isVisible != IsMounted)
+                {
+                    if (IsMounted) Unmount();
+                    else if (Parent.IsMounted) Mount();
+                }
+            }
+        }
+
+        bool _isVisible = true;
+
         public Rectangle AnchorRectangle;
         public Color BackgroundColor;
 
@@ -35,7 +52,7 @@ namespace DeepSwarmClient.UI
         {
             foreach (var child in Children)
             {
-                if (IsMounted) child.Unmount();
+                if (child.IsMounted) child.Unmount();
                 child.Parent = null;
             }
             Children.Clear();
@@ -47,14 +64,14 @@ namespace DeepSwarmClient.UI
 
             Children.Add(child);
             child.Parent = this;
-            if (IsMounted) child.Mount();
+            if (IsMounted && child.IsVisible) child.Mount();
         }
 
         public void Remove(Element child)
         {
             Debug.Assert(child.Parent == this);
 
-            if (IsMounted) child.Unmount();
+            if (child.IsMounted) child.Unmount();
             child.Parent = null;
             Children.Remove(child);
         }
@@ -66,7 +83,7 @@ namespace DeepSwarmClient.UI
                 container.Y + AnchorRectangle.Y,
                 AnchorRectangle.Width, AnchorRectangle.Height);
 
-            foreach (var child in Children) child.Layout(LayoutRectangle);
+            foreach (var child in Children) if (child.IsMounted) child.Layout(LayoutRectangle);
         }
 
         public virtual Element HitTest(int x, int y)
@@ -75,6 +92,8 @@ namespace DeepSwarmClient.UI
 
             foreach (var child in Children)
             {
+                if (!child.IsMounted) continue;
+
                 var hitElement = child.HitTest(x, y);
                 if (hitElement != null) return hitElement;
             }
@@ -87,7 +106,7 @@ namespace DeepSwarmClient.UI
             Debug.Assert(!IsMounted);
             IsMounted = true;
 
-            foreach (var child in Children) child.Mount();
+            foreach (var child in Children) if (child.IsVisible) child.Mount();
 
             OnMounted();
         }
@@ -100,7 +119,7 @@ namespace DeepSwarmClient.UI
             if (IsFocused) Desktop.SetFocusedElement(Desktop.RootElement);
             if (IsHovered) Desktop.OnHoveredElementUnmounted();
 
-            foreach (var child in Children) child.Unmount();
+            foreach (var child in Children) if (child.IsMounted) child.Unmount();
 
             OnUnmounted();
         }
@@ -136,7 +155,7 @@ namespace DeepSwarmClient.UI
             Debug.Assert(IsMounted);
 
             DrawSelf();
-            foreach (var child in Children) child.Draw();
+            foreach (var child in Children) if (child.IsMounted) child.Draw();
         }
 
         protected virtual void DrawSelf()
