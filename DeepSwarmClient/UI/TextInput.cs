@@ -112,7 +112,9 @@ namespace DeepSwarmClient.UI
                 }
 
                 _cursorTimer = 0f;
-                ClearSelection();
+
+                if (!Desktop.IsShiftDown())
+                    ClearSelection();
             }
 
             void GoRight()
@@ -124,7 +126,9 @@ namespace DeepSwarmClient.UI
                 }
 
                 _cursorTimer = 0f;
-                ClearSelection();
+
+                if (!Desktop.IsShiftDown())
+                    ClearSelection();
             }
 
             void Erase()
@@ -169,13 +173,15 @@ namespace DeepSwarmClient.UI
             void GoToStartOfLine()
             {
                 _cursorX = 0;
-                ClearSelection();
+                if (!Desktop.IsShiftDown())
+                    ClearSelection();
             }
 
             void GoToEndOfLine()
             {
                 _cursorX = Value.Length;
-                ClearSelection();
+                if (!Desktop.IsShiftDown())
+                    ClearSelection();
             }
         }
 
