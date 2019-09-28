@@ -13,7 +13,8 @@ You'll need .NET Core 3 and Visual Studio 2019. VS Code might work.
 
     - InGameView: Fix not being able to select an entity when HoveredTileX/HoveredTileY is negative
     - Need to figure out ASAP what the actual gameplay loop is. Factorio-style? Northgard? Something else?
-    - UI: Selection / Copy / Paste in TextInput / TextEditor
+    - UI: Copy / Paste in TextInput / TextEditor
+    : UI: Keyboard fast movement (Ctrl) + selection (Shift, Ctrl+A)
     - UI: Display script errors somewhere
     - UI: Increase script window size?
     - UI: Support resizable window (requires better AnchorRectangle system)
@@ -27,3 +28,21 @@ You'll need .NET Core 3 and Visual Studio 2019. VS Code might work.
     - Server sends list of connected core networks by team (red vs blue)? If we go that route
     - Add UI for connecting to a server and report errors rather than just crashing
     - Rendering: Implement auto-tiling so we can build art like Rogventure / Worlds
+    - The Factory should be able to produce its own crystals very slowly so that you're never stuck (but it's so slow that it's not sustainable beyond building a couple workers)
+
+## Design
+
+A top-down 2D tile-based multiplayer strategy game set in a fantasy world mixing medieval and science-fiction.
+
+There are various scenarios that can be played cooperatively or competitively. The players can make teams if they want (before the game starts). Some maps make more sense as cooperative vs competitive.
+
+Examples of scenarios:
+
+  * THE PLAGUE: Evil has risen, go kill it in its lair before the world is taken over. (cooperative)
+  * THE RACE TO POWER: Build all the pieces of the ultimate weapon to win. The pieces require resources to be found in various parts of the world. (competitive)
+  * EXTINCTION: The world is ending. You need to escape by building a time travelling spaceship. The various pieces are to be found in varius dungeons. (cooperative or competitive)
+  * TREASURE HUNT: RPG-style adventure where each player controls one unit, no building.
+
+The scenarios are built with maps & scripts, so they might have some (or a lot of) randomization.
+Each scenario can have its own tech tree and even graphics, but we'll focus on one for now.
+
