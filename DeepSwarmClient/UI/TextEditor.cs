@@ -43,7 +43,7 @@ namespace DeepSwarmClient.UI
             _cursor.X += text.Length;
 
             ClearSelection();
-            ClampScrollToCursor();
+            ClampScrolling();
         }
 
         void GetSelectionRange(out Point start, out Point end)
@@ -103,7 +103,7 @@ namespace DeepSwarmClient.UI
             return new Point(targetX, targetY);
         }
 
-        void ClampScrollToCursor()
+        void ClampScrolling()
         {
             _scrollingPixels.Y = Math.Clamp(_scrollingPixels.Y,
                 Math.Max(0, (_cursor.Y + 1) * RendererHelper.FontRenderSize - LayoutRectangle.Height),
@@ -149,7 +149,7 @@ namespace DeepSwarmClient.UI
                     _cursor.X = Lines[_cursor.Y].Length;
                 }
 
-                ClampScrollToCursor();
+                ClampScrolling();
                 ClearSelection();
             }
 
@@ -162,7 +162,7 @@ namespace DeepSwarmClient.UI
                     _cursor.X = 0;
                 }
 
-                ClampScrollToCursor();
+                ClampScrolling();
                 ClearSelection();
             }
 
@@ -178,7 +178,7 @@ namespace DeepSwarmClient.UI
                     _cursor.X = 0;
                 }
 
-                ClampScrollToCursor();
+                ClampScrolling();
                 ClearSelection();
             }
 
@@ -194,7 +194,7 @@ namespace DeepSwarmClient.UI
                     _cursor.X = Lines[_cursor.Y].Length;
                 }
 
-                ClampScrollToCursor();
+                ClampScrolling();
                 ClearSelection();
             }
 
@@ -222,7 +222,7 @@ namespace DeepSwarmClient.UI
                     EraseSelection();
                 }
 
-                ClampScrollToCursor();
+                ClampScrolling();
                 ClearSelection();
             }
 
@@ -247,7 +247,7 @@ namespace DeepSwarmClient.UI
                     EraseSelection();
                 }
 
-                ClampScrollToCursor();
+                ClampScrolling();
                 ClearSelection();
             }
 
@@ -275,7 +275,7 @@ namespace DeepSwarmClient.UI
                     Lines.Insert(_cursor.Y, endOfLine);
                 }
 
-                ClampScrollToCursor();
+                ClampScrolling();
                 ClearSelection();
             }
 
@@ -318,7 +318,7 @@ namespace DeepSwarmClient.UI
                 if (mouseY < LayoutRectangle.Top) Scroll(1);
                 if (mouseY > LayoutRectangle.Bottom) Scroll(-1);
 
-                ClampScrollToCursor();
+                ClampScrolling();
             }
         }
 
@@ -340,7 +340,7 @@ namespace DeepSwarmClient.UI
             if (dy != 0)
             {
                 _scrollingPixels.Y -= dy * 16;
-                ClampScrollToCursor();
+                ClampScrolling();
             }
         }
         #endregion
