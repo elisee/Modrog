@@ -11,23 +11,25 @@ You'll need .NET Core 3 and Visual Studio 2019. VS Code might work.
 
 ## Things to do
 
+    - UI: Merge connect popup & name setup popup
+    - Server: Add a pre-game state where it's waiting for players to join and the host to start the game
+    - UI: Add pre-game popup to client where you can see other players joining
+    - UI: Add layout system so we can place elements next to one another without having to compute manually 
+    - UI: First player to join is the host and can start the game
     - InGameView: Fix not being able to select an entity when HoveredTileX/HoveredTileY is negative
-    - Need to figure out ASAP what the actual gameplay loop is. Factorio-style? Northgard? Something else?
     - UI: Copy / Paste in TextInput / TextEditor
-    : UI: Keyboard fast movement (Ctrl) + selection (Shift, Ctrl+A)
+    - UI: Keyboard fast movement (Ctrl) in TextInput / TextEditor
     - UI: Display script errors somewhere
     - UI: Increase script window size?
     - UI: Support resizable window (requires better AnchorRectangle system)
     - UI: Replace ugly single font with some of Chevy Ray's pixel fonts probably
-    - Scripting: Support renaming scripts
     - Server: Mark chunk as non-free if an entity enters it to prevent spawning people in it (or we need to track entities by chunk and check for that)
     - Server: Generate and control enemies
     - Implement Attack move
     - Design & implement more unit types: one that can fire from a distance but has less health, one that digs faster, etc.
     - Design & implement more building types: turrets, refinery, etc.
     - Server sends list of connected core networks by team (red vs blue)? If we go that route
-    - Add UI for connecting to a server and report errors rather than just crashing
-    - Rendering: Implement auto-tiling so we can build art like Rogventure / Worlds
+    - UI: Report errors when connection fails rather than failing silently
     - The Factory should be able to produce its own crystals very slowly so that you're never stuck (but it's so slow that it's not sustainable beyond building a couple workers)
 
 ## Design
