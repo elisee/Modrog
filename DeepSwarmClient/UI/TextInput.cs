@@ -103,7 +103,7 @@ namespace DeepSwarmClient.UI
                 default: base.OnKeyDown(key, repeat); break;
             }
 
-            if (Desktop.IsCtrlDown())
+            if (Desktop.IsCtrlDown)
             {
                 switch (key)
                 {
@@ -184,7 +184,7 @@ namespace DeepSwarmClient.UI
 
             void ClearSelectionUnlessShiftDown()
             {
-                if (!Desktop.IsShiftDown()) ClearSelection();
+                if (!Desktop.IsShiftDown) ClearSelection();
                 _cursorTimer = 0f;
             }
 

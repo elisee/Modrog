@@ -187,9 +187,9 @@ namespace DeepSwarmClient.UI
             foreach (var action in _animationActions) action(deltaTime);
         }
 
-        public bool IsShiftDown() => _leftShiftDown || _rightShiftDown;
+        public bool IsShiftDown => _leftShiftDown || _rightShiftDown;
 
-        public bool IsCtrlDown() => _rightCtrlDown || _leftCtrlDown;
+        public bool IsCtrlDown => _rightCtrlDown || _leftCtrlDown;
 
         public void Draw() => RootElement.Draw();
         #endregion
