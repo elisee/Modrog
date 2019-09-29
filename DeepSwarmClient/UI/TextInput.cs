@@ -103,6 +103,14 @@ namespace DeepSwarmClient.UI
                 default: base.OnKeyDown(key, repeat); break;
             }
 
+            if (Desktop.IsCtrlDown)
+            {
+                switch (key)
+                {
+                    case SDL.SDL_Keycode.SDLK_a: SelectAll(); break;
+                }
+            }
+
             void GoLeft()
             {
                 if (_cursorX > 0)
@@ -111,8 +119,7 @@ namespace DeepSwarmClient.UI
                     ClampScrolling();
                 }
 
-                _cursorTimer = 0f;
-                ClearSelection();
+                ClearSelectionUnlessShiftDown();
             }
 
             void GoRight()
@@ -123,8 +130,7 @@ namespace DeepSwarmClient.UI
                     ClampScrolling();
                 }
 
-                _cursorTimer = 0f;
-                ClearSelection();
+                ClearSelectionUnlessShiftDown();
             }
 
             void Erase()
@@ -142,7 +148,6 @@ namespace DeepSwarmClient.UI
                     EraseSelection();
                 }
 
-                _cursorTimer = 0f;
                 ClampScrolling();
                 ClearSelection();
             }
@@ -161,7 +166,6 @@ namespace DeepSwarmClient.UI
                     EraseSelection();
                 }
 
-                _cursorTimer = 0f;
                 ClampScrolling();
                 ClearSelection();
             }
@@ -169,13 +173,26 @@ namespace DeepSwarmClient.UI
             void GoToStartOfLine()
             {
                 _cursorX = 0;
-                ClearSelection();
+                ClearSelectionUnlessShiftDown();
             }
 
             void GoToEndOfLine()
             {
                 _cursorX = Value.Length;
-                ClearSelection();
+                ClearSelectionUnlessShiftDown();
+            }
+
+            void ClearSelectionUnlessShiftDown()
+            {
+                if (!Desktop.IsShiftDown) ClearSelection();
+                _cursorTimer = 0f;
+            }
+
+            void SelectAll()
+            {
+                _selectionAnchorX = 0;
+                _cursorX = Value.Length;
+                ClampScrolling();
             }
         }
 
@@ -187,7 +204,6 @@ namespace DeepSwarmClient.UI
 
             Value = Value[0.._cursorX] + text + Value[_cursorX..];
             _cursorX += text.Length;
-            _cursorTimer = 0f;
             ClampScrolling();
             ClearSelection();
         }
@@ -199,6 +215,7 @@ namespace DeepSwarmClient.UI
                 Desktop.SetFocusedElement(this);
                 Desktop.SetHoveredElementPressed(true);
                 _cursorX = _selectionAnchorX = GetHoveredTextPosition();
+                ClampScrolling();
             }
         }
 
@@ -216,6 +233,7 @@ namespace DeepSwarmClient.UI
             if (button == 1 && IsPressed)
             {
                 Desktop.SetHoveredElementPressed(false);
+                ClampScrolling();
             }
         }
         #endregion

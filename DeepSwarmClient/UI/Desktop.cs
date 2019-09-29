@@ -25,6 +25,12 @@ namespace DeepSwarmClient.UI
         readonly List<Action<float>> _newAnimationActions = new List<Action<float>>();
         readonly List<Action<float>> _removedAnimationActions = new List<Action<float>>();
 
+        bool _leftShiftDown = false;
+        bool _rightShiftDown = false;
+
+        bool _leftCtrlDown = false;
+        bool _rightCtrlDown = false;
+
         public Desktop(IntPtr renderer)
         {
             Renderer = renderer;
@@ -105,10 +111,20 @@ namespace DeepSwarmClient.UI
             switch (@event.type)
             {
                 case SDL.SDL_EventType.SDL_KEYDOWN:
+                    if (@event.key.keysym.sym == SDL.SDL_Keycode.SDLK_LSHIFT) _leftShiftDown = true;
+                    if (@event.key.keysym.sym == SDL.SDL_Keycode.SDLK_RSHIFT) _rightShiftDown = true;
+                    if (@event.key.keysym.sym == SDL.SDL_Keycode.SDLK_LCTRL) _leftCtrlDown = true;
+                    if (@event.key.keysym.sym == SDL.SDL_Keycode.SDLK_RCTRL) _rightCtrlDown = true;
+
                     FocusedElement.OnKeyDown(@event.key.keysym.sym, repeat: @event.key.repeat != 0);
                     break;
 
                 case SDL.SDL_EventType.SDL_KEYUP:
+                    if (@event.key.keysym.sym == SDL.SDL_Keycode.SDLK_LSHIFT) _leftShiftDown = false;
+                    if (@event.key.keysym.sym == SDL.SDL_Keycode.SDLK_RSHIFT) _rightShiftDown = false;
+                    if (@event.key.keysym.sym == SDL.SDL_Keycode.SDLK_LCTRL) _leftCtrlDown = false;
+                    if (@event.key.keysym.sym == SDL.SDL_Keycode.SDLK_RCTRL) _rightCtrlDown = false;
+
                     FocusedElement.OnKeyUp(@event.key.keysym.sym);
                     break;
 
@@ -170,6 +186,10 @@ namespace DeepSwarmClient.UI
 
             foreach (var action in _animationActions) action(deltaTime);
         }
+
+        public bool IsShiftDown => _leftShiftDown || _rightShiftDown;
+
+        public bool IsCtrlDown => _rightCtrlDown || _leftCtrlDown;
 
         public void Draw() => RootElement.Draw();
         #endregion
