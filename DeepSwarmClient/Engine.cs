@@ -15,7 +15,7 @@ namespace DeepSwarmClient
         public readonly IntPtr Renderer;
 
         // State
-        public readonly EngineState State;
+        public readonly ClientState State;
 
         // Paths
         public readonly string SettingsFilePath;
@@ -36,7 +36,7 @@ namespace DeepSwarmClient
             SDL.SDL_SetWindowTitle(Window, "DeepSwarm");
 
             // State
-            State = new EngineState(this);
+            State = new ClientState(this);
 
             // Identity
             var identityPath = Path.Combine(AppContext.BaseDirectory, "Identity.dat");

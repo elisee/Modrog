@@ -43,7 +43,7 @@ namespace DeepSwarmCommon
             _cursor += sizeof(int);
         }
 
-        public void WriteByteLengthString(string value)
+        public void WriteByteSizeString(string value)
         {
             var sizeInBytes = Encoding.UTF8.GetBytes(value, 0, value.Length, Buffer, _cursor + 1);
             Debug.Assert(sizeInBytes <= byte.MaxValue);

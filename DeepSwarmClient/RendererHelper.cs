@@ -119,7 +119,7 @@ namespace DeepSwarmClient
         #endregion
 
         #region Entities
-        public static void GetEntityRenderRects(Entity entity, Player.PlayerTeam entityTeam, out SDL.SDL_Rect sourceRect, out SDL.SDL_Rect destRect)
+        public static void GetEntityRenderRects(Entity entity, out SDL.SDL_Rect sourceRect, out SDL.SDL_Rect destRect)
         {
             switch (entity.Type)
             {
@@ -133,7 +133,7 @@ namespace DeepSwarmClient
 
                 case Entity.EntityType.Heart:
                     {
-                        var teamOffset = entityTeam == Player.PlayerTeam.Blue ? 0 : 1;
+                        var teamOffset = 0;
 
                         sourceRect = Desktop.ToSDL_Rect(new Rectangle(24 * (3 + teamOffset), 0, 24, 24));
                         destRect = Desktop.ToSDL_Rect(new Rectangle(0, 0, 24, 24));
@@ -143,7 +143,7 @@ namespace DeepSwarmClient
 
                 case Entity.EntityType.Robot:
                     {
-                        var teamOffset = entityTeam == Player.PlayerTeam.Blue ? 0 : 1;
+                        var teamOffset = 0;
 
                         switch (entity.Direction)
                         {

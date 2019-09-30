@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Runtime.CompilerServices;
 
 namespace DeepSwarmCommon
@@ -45,6 +44,7 @@ namespace DeepSwarmCommon
         public int BluePlayerCount = 0;
         public int RedPlayerCount = 0;
 
+        /*
         public void LoadFromFile(string path)
         {
             using var file = File.OpenRead(path);
@@ -123,6 +123,7 @@ namespace DeepSwarmCommon
                 mapWriter.Write(entity.Crystals);
             }
         }
+        */
 
         public void Generate()
         {

@@ -11,8 +11,8 @@ namespace DeepSwarmClient.Interface
         public readonly Panel PopupLayer;
 
         public readonly ConnectView ConnectView;
-        public readonly EnterNameView EnterNameView;
         public readonly LoadingView LoadingView;
+        public readonly LobbyView LobbyView;
         public readonly Playing.PlayingView PlayingView;
 
         public Interface(Engine engine)
@@ -24,8 +24,8 @@ namespace DeepSwarmClient.Interface
             PopupLayer = new Panel(Desktop, Desktop.RootElement, new Color(0x00000066)) { IsVisible = false };
 
             ConnectView = new ConnectView(this);
-            EnterNameView = new EnterNameView(this);
             LoadingView = new LoadingView(this);
+            LobbyView = new LobbyView(this);
             PlayingView = new Playing.PlayingView(this);
 
             Desktop.RootElement.Layout(Engine.Viewport);
@@ -40,8 +40,8 @@ namespace DeepSwarmClient.Interface
             switch (Engine.State.View)
             {
                 case EngineView.Connect: ViewLayer.Add(ConnectView); break;
-                case EngineView.EnterName: ViewLayer.Add(EnterNameView); break;
                 case EngineView.Loading: ViewLayer.Add(LoadingView); break;
+                case EngineView.Lobby: ViewLayer.Add(LobbyView); break;
                 case EngineView.Playing: ViewLayer.Add(PlayingView); break;
             }
 

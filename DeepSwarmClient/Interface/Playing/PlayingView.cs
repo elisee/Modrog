@@ -544,15 +544,13 @@ namespace DeepSwarmClient.Interface.Playing
                 var renderX = tileX * Map.TileSize - (int)_scrollingPixelsX;
                 var renderY = tileY * Map.TileSize - (int)_scrollingPixelsY;
 
-                var entityTeam = Engine.State.PlayerList[entity.PlayerIndex].Team;
-
                 switch (entity.Type)
                 {
                     case Entity.EntityType.Factory:
                     case Entity.EntityType.Heart:
                     case Entity.EntityType.Robot:
                         {
-                            RendererHelper.GetEntityRenderRects(entity, entityTeam, out var sourceRect, out var destRect);
+                            RendererHelper.GetEntityRenderRects(entity, out var sourceRect, out var destRect);
                             destRect.x += renderX;
                             destRect.y += renderY;
 
@@ -567,7 +565,7 @@ namespace DeepSwarmClient.Interface.Playing
                         {
                             var stats = Entity.EntityStatsByType[(int)entity.Type];
                             var color = new Color(stats.NeutralColor);
-                            if (entity.PlayerIndex != -1) color.RGBA = entityTeam == Player.PlayerTeam.Blue ? stats.BlueColor : stats.RedColor;
+                            if (entity.PlayerIndex != -1) color.RGBA = stats.BlueColor;
 
                             color.UseAsDrawColor(Engine.Renderer);
 

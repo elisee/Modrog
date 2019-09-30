@@ -7,21 +7,13 @@ namespace DeepSwarmServer
     {
         public readonly PacketReceiver Receiver;
 
-        public enum PeerStage
-        {
-            WaitingForHandshake,
-            Playing,
-        }
+        public Socket Socket;
+        public PlayerIdentity Identity;
 
         public Peer(Socket socket)
         {
             Socket = socket;
             Receiver = new PacketReceiver(Socket);
         }
-
-        public Socket Socket;
-        public PeerStage Stage;
-
-        public Player Player;
     }
 }

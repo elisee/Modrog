@@ -1,0 +1,6 @@
+{
+  "Name": "Extinction",
+  "MinPlayers": 1,
+  "MaxPlayers": 6,
+  "SupportedModes": [ "Competitive", "Cooperative" ]
+}
