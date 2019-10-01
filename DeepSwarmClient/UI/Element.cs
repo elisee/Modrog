@@ -12,6 +12,11 @@ namespace DeepSwarmClient.UI
         public Element Parent;
         public readonly List<Element> Children = new List<Element>();
 
+        public enum ChildLayoutMode { Overlay, Left, Right, Top, Bottom }
+        public ChildLayoutMode ChildLayout = ChildLayoutMode.Overlay;
+
+        public int LayoutWeight = 0;
+
         public bool IsVisible
         {
             get => _isVisible;
@@ -76,8 +81,67 @@ namespace DeepSwarmClient.UI
             Children.Remove(child);
         }
 
+        public virtual Point ComputeSize(int? maxWidth, int? maxHeight)
+        {
+            var size = new Point(
+                (Anchor.Width ?? 0) + (Anchor.Left ?? 0) + (Anchor.Right ?? 0),
+                (Anchor.Height ?? 0) + (Anchor.Top ?? 0) + (Anchor.Bottom ?? 0));
+
+            if (Anchor.Width == null || Anchor.Height == null)
+            {
+                var contentSize = Point.Zero;
+                var childMaxWidth = Anchor.Width ?? maxWidth;
+                var childMaxHeight = Anchor.Height ?? maxHeight;
+
+                switch (ChildLayout)
+                {
+                    case ChildLayoutMode.Overlay:
+                        foreach (var child in Children)
+                        {
+                            if (!child.IsMounted) continue;
+                            var childSize = child.ComputeSize(childMaxWidth, childMaxHeight);
+                            if (Anchor.Width == null) contentSize.X = Math.Max(contentSize.X, childSize.X);
+                            if (Anchor.Height == null) contentSize.Y = Math.Max(contentSize.Y, childSize.Y);
+                        }
+                        break;
+
+                    case ChildLayoutMode.Left:
+                    case ChildLayoutMode.Right:
+                        foreach (var child in Children)
+                        {
+                            if (!child.IsMounted) continue;
+                            var childSize = child.ComputeSize(childMaxWidth, childMaxHeight);
+                            if (Anchor.Width == null) contentSize.X += childSize.X;
+                            if (Anchor.Height == null) contentSize.Y = Math.Max(contentSize.Y, childSize.Y);
+                        }
+                        break;
+
+                    case ChildLayoutMode.Top:
+                    case ChildLayoutMode.Bottom:
+                        foreach (var child in Children)
+                        {
+                            if (!child.IsMounted) continue;
+                            var childSize = child.ComputeSize(childMaxWidth, childMaxHeight);
+                            if (Anchor.Width == null) contentSize.X = Math.Max(contentSize.X, childSize.X);
+                            if (Anchor.Height == null) contentSize.Y += childSize.Y;
+                        }
+                        break;
+
+                    default:
+                        throw new NotImplementedException();
+                }
+
+                if (Anchor.Width == null) size.X += contentSize.X;
+                if (Anchor.Height == null) size.Y += contentSize.Y;
+            }
+
+            return size;
+        }
+
         public void Layout(Rectangle container)
         {
+            var minSize = ComputeSize(container.Width, container.Height);
+
             LayoutRectangle = container;
 
             if (Anchor.Width != null)
@@ -86,10 +150,16 @@ namespace DeepSwarmClient.UI
 
                 if (Anchor.Left != null) LayoutRectangle.X += Anchor.Left.Value;
                 else if (Anchor.Right != null) LayoutRectangle.X = container.X + container.Width - Anchor.Right.Value - Anchor.Width.Value;
-                else LayoutRectangle.X = container.X + container.Width / 2 - LayoutRectangle.Width / 2;
+                else LayoutRectangle.X += container.Width / 2 - LayoutRectangle.Width / 2;
             }
             else
             {
+                if (Anchor.HorizontalFlow == Flow.Shrink)
+                {
+                    LayoutRectangle.X += container.Width / 2 - minSize.X / 2;
+                    LayoutRectangle.Width = minSize.X;
+                }
+
                 if (Anchor.Left != null)
                 {
                     LayoutRectangle.X += Anchor.Left.Value;
@@ -105,10 +175,16 @@ namespace DeepSwarmClient.UI
 
                 if (Anchor.Top != null) LayoutRectangle.Y += Anchor.Top.Value;
                 else if (Anchor.Bottom != null) LayoutRectangle.Y = container.Y + container.Height - Anchor.Bottom.Value - Anchor.Height.Value;
-                else LayoutRectangle.Y = container.Y + container.Height / 2 - LayoutRectangle.Height / 2;
+                else LayoutRectangle.Y += container.Height / 2 - LayoutRectangle.Height / 2;
             }
             else
             {
+                if (Anchor.VerticalFlow == Flow.Shrink)
+                {
+                    LayoutRectangle.Y += container.Height / 2 - minSize.Y / 2;
+                    LayoutRectangle.Height = minSize.Y;
+                }
+
                 if (Anchor.Top != null)
                 {
                     LayoutRectangle.Y += Anchor.Top.Value;
@@ -118,8 +194,91 @@ namespace DeepSwarmClient.UI
                 if (Anchor.Bottom != null) LayoutRectangle.Height -= Anchor.Bottom.Value;
             }
 
-            foreach (var child in Children) if (child.IsMounted) child.Layout(LayoutRectangle);
+            LayoutSelf();
+
+            var maxWidth = LayoutRectangle.Width;
+            var maxHeight = LayoutRectangle.Height;
+
+            var fixedSize = 0;
+            var fixedSizes = new int[Children.Count];
+            var flexWeights = 0;
+
+            var secondarySize = 0;
+
+            switch (ChildLayout)
+            {
+                case ChildLayoutMode.Overlay:
+                    foreach (var child in Children) if (child.IsMounted) child.Layout(LayoutRectangle);
+                    break;
+
+                case ChildLayoutMode.Left:
+                case ChildLayoutMode.Right:
+                    {
+                        for (var i = 0; i < Children.Count; i++)
+                        {
+                            var child = Children[i];
+                            if (!child.IsMounted) continue;
+
+                            var childSize = child.ComputeSize(maxWidth, maxHeight);
+                            secondarySize = Math.Max(secondarySize, childSize.Y);
+
+                            if (child.LayoutWeight == 0 || Anchor.HorizontalFlow != Flow.Expand) fixedSize += (fixedSizes[i] = childSize.X);
+                            else flexWeights += child.LayoutWeight;
+                        }
+
+                        var flexSize = LayoutRectangle.Width - fixedSize;
+                        var offset = 0;
+
+                        for (var i = 0; i < Children.Count; i++)
+                        {
+                            var child = Children[i];
+                            if (!child.IsMounted) continue;
+
+                            var size = (child.LayoutWeight == 0 || Anchor.HorizontalFlow != Flow.Expand) ? fixedSizes[i] : flexSize * child.LayoutWeight / flexWeights;
+                            child.Layout(new Rectangle(LayoutRectangle.X + offset, LayoutRectangle.Y, size, LayoutRectangle.Height));
+                            offset += size;
+                        }
+                        break;
+                    }
+
+                case ChildLayoutMode.Top:
+                case ChildLayoutMode.Bottom:
+                    {
+                        for (var i = 0; i < Children.Count; i++)
+                        {
+                            var child = Children[i];
+                            if (!child.IsMounted) continue;
+
+                            var childSize = child.ComputeSize(maxWidth, maxHeight);
+                            secondarySize = Math.Max(secondarySize, childSize.X);
+
+                            if (child.LayoutWeight == 0 || Anchor.VerticalFlow != Flow.Expand) fixedSize += (fixedSizes[i] = childSize.Y);
+                            else flexWeights += child.LayoutWeight;
+                        }
+
+                        var flexSize = LayoutRectangle.Height - fixedSize;
+                        var offset = 0;
+
+                        // TODO: Use Width to compute LayoutRectangle, shouldn't be computed before here I think
+
+                        for (var i = 0; i < Children.Count; i++)
+                        {
+                            var child = Children[i];
+                            if (!child.IsMounted) continue;
+
+                            var size = (child.LayoutWeight == 0 || Anchor.VerticalFlow != Flow.Expand) ? fixedSizes[i] : flexSize * child.LayoutWeight / flexWeights;
+                            child.Layout(new Rectangle(LayoutRectangle.X, LayoutRectangle.Y + offset, LayoutRectangle.Width, size));
+                            offset += size;
+                        }
+                        break;
+                    }
+
+                default:
+                    throw new NotSupportedException();
+            }
         }
+
+        public virtual void LayoutSelf() { }
 
         public virtual Element HitTest(int x, int y)
         {
