@@ -23,7 +23,7 @@ namespace DeepSwarmClient
         readonly PacketWriter _packetWriter = new PacketWriter();
         readonly PacketReader _packetReader = new PacketReader();
 
-        public string SavedServerAddress = "localhost"; // TODO: Save and laod from settings
+        public string SavedServerAddress = "localhost"; // TODO: Save and load from settings
 
         // Self
         public Guid SelfGuid;
