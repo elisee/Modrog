@@ -40,6 +40,7 @@ namespace DeepSwarmClient.UI
         public IntPtr BackgroundTexture;
         public Rectangle BackgroundTextureArea;
 
+        Rectangle _containerRectangle;
         public Rectangle LayoutRectangle;
 
         public bool IsMounted { get; private set; }
@@ -138,25 +139,26 @@ namespace DeepSwarmClient.UI
             return size;
         }
 
-        public void Layout(Rectangle container)
+        public void Layout(Rectangle? containerRectangle = null)
         {
-            var minSize = ComputeSize(container.Width, container.Height);
+            if (containerRectangle != null) _containerRectangle = containerRectangle.Value;
 
-            LayoutRectangle = container;
+            var minSize = ComputeSize(_containerRectangle.Width, _containerRectangle.Height);
+            LayoutRectangle = _containerRectangle;
 
             if (Anchor.Width != null)
             {
                 LayoutRectangle.Width = Anchor.Width.Value;
 
                 if (Anchor.Left != null) LayoutRectangle.X += Anchor.Left.Value;
-                else if (Anchor.Right != null) LayoutRectangle.X = container.X + container.Width - Anchor.Right.Value - Anchor.Width.Value;
-                else LayoutRectangle.X += container.Width / 2 - LayoutRectangle.Width / 2;
+                else if (Anchor.Right != null) LayoutRectangle.X = _containerRectangle.X + _containerRectangle.Width - Anchor.Right.Value - Anchor.Width.Value;
+                else LayoutRectangle.X += _containerRectangle.Width / 2 - LayoutRectangle.Width / 2;
             }
             else
             {
                 if (Anchor.HorizontalFlow == Flow.Shrink)
                 {
-                    LayoutRectangle.X += container.Width / 2 - minSize.X / 2;
+                    LayoutRectangle.X += _containerRectangle.Width / 2 - minSize.X / 2;
                     LayoutRectangle.Width = minSize.X;
                 }
 
@@ -174,14 +176,14 @@ namespace DeepSwarmClient.UI
                 LayoutRectangle.Height = Anchor.Height.Value;
 
                 if (Anchor.Top != null) LayoutRectangle.Y += Anchor.Top.Value;
-                else if (Anchor.Bottom != null) LayoutRectangle.Y = container.Y + container.Height - Anchor.Bottom.Value - Anchor.Height.Value;
-                else LayoutRectangle.Y += container.Height / 2 - LayoutRectangle.Height / 2;
+                else if (Anchor.Bottom != null) LayoutRectangle.Y = _containerRectangle.Y + _containerRectangle.Height - Anchor.Bottom.Value - Anchor.Height.Value;
+                else LayoutRectangle.Y += _containerRectangle.Height / 2 - LayoutRectangle.Height / 2;
             }
             else
             {
                 if (Anchor.VerticalFlow == Flow.Shrink)
                 {
-                    LayoutRectangle.Y += container.Height / 2 - minSize.Y / 2;
+                    LayoutRectangle.Y += _containerRectangle.Height / 2 - minSize.Y / 2;
                     LayoutRectangle.Height = minSize.Y;
                 }
 
