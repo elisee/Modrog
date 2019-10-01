@@ -1,5 +1,4 @@
 ﻿using DeepSwarmClient.UI;
-using DeepSwarmCommon;
 
 namespace DeepSwarmClient.Interface.Playing
 {
@@ -10,6 +9,8 @@ namespace DeepSwarmClient.Interface.Playing
         public RenameScriptPopup(Interface @interface)
             : base(@interface, null)
         {
+            // TODO(ui):
+            /*
             const int PanelWidth = 320 + 16 * 2;
             const int PanelHeight = 160 + 16 * 2;
 
@@ -52,6 +53,7 @@ namespace DeepSwarmClient.Interface.Playing
                 BackgroundPatch = new TexturePatch(0x4444ccff),
                 OnActivate = Dismiss
             };
+            */
         }
 
         public override void OnMounted()

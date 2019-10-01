@@ -12,7 +12,7 @@ namespace DeepSwarmClient.Interface
         {
             var panel = new Panel(Desktop, this, new TexturePatch(0x88aa88ff))
             {
-                Anchor = new Anchor { Flow = Flow.Shrink },
+                Flow = Flow.Shrink,
                 ChildLayout = ChildLayoutMode.Top,
             };
 
@@ -26,7 +26,7 @@ namespace DeepSwarmClient.Interface
                 // TODO: Display player list
                 var playerListPanel = new Panel(Desktop, horizontalSplitter, new TexturePatch(0xaa0000ff))
                 {
-                    Anchor = new Anchor { Width = 200 }
+                    Width = 200
                 };
 
                 new Label(Desktop, playerListPanel) { Text = "Player list" };
@@ -36,14 +36,14 @@ namespace DeepSwarmClient.Interface
                 _verticalSplitter = new Panel(Desktop, horizontalSplitter, new TexturePatch(0x228800ff))
                 {
                     LayoutWeight = 1,
-                    Anchor = new Anchor { Width = 500 },
+                    Width = 500,
                     ChildLayout = ChildLayoutMode.Top
                 };
 
                 new Label(Desktop, _verticalSplitter)
                 {
                     LayoutWeight = 1,
-                    Padding = new Padding { All = 8 },
+                    Padding = 8,
                     Text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Praesent vehicula velit libero, ac eleifend sapien malesuada ultricies. Sed metus orci, ultrices at mauris ut, pretium tempor arcu. Nunc eu quam sit amet nunc lobortis laoreet sit amet et risus. Nam orci ex, pretium quis commodo eu, imperdiet quis mi. Sed tristique mattis purus, fringilla elementum leo volutpat eget. Donec sollicitudin nisi libero, a pretium sapien facilisis vitae. Donec massa nisl, fermentum a feugiat non, tristique sit amet turpis. Etiam ornare pellentesque molestie. Praesent molestie ultrices nunc, nec mattis urna finibus nec.",
                     Wrap = true,
                     Ellipsize = true
@@ -76,7 +76,7 @@ namespace DeepSwarmClient.Interface
         {
             _timer += deltaTime;
 
-            _verticalSplitter.Anchor.Width = 400 + (int)(MathF.Cos(_timer) * 100);
+            _verticalSplitter.Width = 400 + (int)(MathF.Cos(_timer) * 100);
             _verticalSplitter.Layout();
         }
     }

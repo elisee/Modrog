@@ -26,10 +26,10 @@ namespace DeepSwarmClient.UI
 
             // TODO: Support line breaks
             var textWidth = _text.Length * RendererHelper.FontRenderSize;
-            if (Anchor.Width == null) size.X += textWidth;
-            if (Anchor.Height == null) size.Y += RendererHelper.FontRenderSize;
+            if (Width == null) size.X += textWidth;
+            if (Height == null) size.Y += RendererHelper.FontRenderSize;
 
-            var actualMaxWidth = Anchor.Width ?? maxWidth;
+            var actualMaxWidth = Width ?? maxWidth;
 
             if (Wrap)
             {

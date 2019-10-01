@@ -13,38 +13,40 @@ namespace DeepSwarmClient.Interface
         {
             var panel = new Panel(Desktop, this, new TexturePatch(0x88aa88ff))
             {
-                Anchor = new Anchor { Width = 320, Flow = Flow.Shrink },
-                Padding = new Padding { All = 8 },
+                Width = 320,
+                Flow = Flow.Shrink,
+                Padding = 8,
                 ChildLayout = ChildLayoutMode.Top
             };
 
-            new Label(Desktop, panel) { Text = "- DeepSwarm r1 -", Anchor = new Anchor { Flow = Flow.Shrink, Bottom = 16 } };
-            new Label(Desktop, panel) { Text = "Enter your name:", Anchor = new Anchor { Bottom = 8 } };
+            new Label(Desktop, panel) { Text = "- DeepSwarm r1 -", Flow = Flow.Shrink, Bottom = 16 };
+            new Label(Desktop, panel) { Text = "Enter your name:", Bottom = 8 };
 
             _nameInput = new TextInput(Desktop, panel)
             {
-                Padding = new Padding { All = 8 },
-                Anchor = new Anchor { Height = 32, Bottom = 8 },
+                Height = 32,
+                Bottom = 8,
+                Padding = 8,
                 BackgroundPatch = new TexturePatch(0x004400ff),
                 MaxLength = Protocol.MaxPlayerNameLength
             };
 
-            new Label(Desktop, panel) { Text = "Server address:", Anchor = new Anchor { Bottom = 8 } };
+            new Label(Desktop, panel) { Text = "Server address:", Bottom = 8 };
 
             _serverAddressInput = new TextInput(Desktop, panel)
             {
-                Padding = new Padding { All = 8 },
-                Anchor = new Anchor { Height = 32 },
+                Height = 32,
+                Padding = 8,
                 BackgroundPatch = new TexturePatch(0x004400ff)
             };
 
-            var actionsContainer = new Element(Desktop, panel) { ChildLayout = ChildLayoutMode.Left, Anchor = new Anchor { Top = 16 } };
+            var actionsContainer = new Element(Desktop, panel) { ChildLayout = ChildLayoutMode.Left, Top = 16 };
 
             new TextButton(Desktop, actionsContainer)
             {
                 Text = "Connect",
-                Padding = new Padding { All = 8 },
-                Anchor = new Anchor { Flow = Flow.Shrink },
+                Padding = 8,
+                Flow = Flow.Shrink,
                 BackgroundPatch = new TexturePatch(0x4444aaff),
                 OnActivate = Validate
             };

@@ -54,6 +54,8 @@ namespace DeepSwarmClient.Interface.Playing
         public PlayingView(Interface @interface)
             : base(@interface, null)
         {
+            // TODO(ui):
+            /*
             _playerListPanel = new Panel(Desktop, null, new TexturePatch(0x123456ff))
             {
                 Anchor = new Anchor(left: 0, top: 0, width: (Protocol.MaxPlayerNameLength + 2) * 16, height: 720),
@@ -231,6 +233,7 @@ namespace DeepSwarmClient.Interface.Playing
             };
 
             OnScriptListUpdated();
+            */
         }
 
         public override Element HitTest(int x, int y)
@@ -372,7 +375,7 @@ namespace DeepSwarmClient.Interface.Playing
             for (var i = 0; i < Engine.State.PlayerList.Count; i++)
             {
                 var label = new Label(Desktop, _playerListPanel) { Text = PlayerListEntry.GetEntryLabel(Engine.State.PlayerList[i]) };
-                label.Anchor = new Anchor(left: 16, top: 16 + 16 * i, width: _playerListPanel.Anchor.Width, height: 16);
+                // TODO(ui): label.Anchor = new Anchor(left: 16, top: 16 + 16 * i, width: _playerListPanel.Anchor.Width, height: 16);
             }
 
             _playerListPanel.Layout(LayoutRectangle);
@@ -390,7 +393,7 @@ namespace DeepSwarmClient.Interface.Playing
             {
                 new TextButton(Desktop, _scriptSelectorList)
                 {
-                    Anchor = new Anchor(left: 0, top: i * 16, width: _scriptSelectorList.Anchor.Width, height: 16),
+                    // TODO(ui): Anchor = new Anchor(left: 0, top: i * 16, width: _scriptSelectorList.Anchor.Width, height: 16),
                     Text = scriptPath,
                     OnActivate = () => Engine.State.SetupScriptPathForSelectedEntity(scriptPath)
                 };
@@ -413,18 +416,18 @@ namespace DeepSwarmClient.Interface.Playing
 
             _entityNameLabel.Text = selectedEntity.Type.ToString();
             var entityNameLength = _entityNameLabel.Text.Length * RendererHelper.FontRenderSize;
-            _entityNameLabel.Anchor.Left = (EntityStatsContainerWidth - entityNameLength) / 2;
+            // TODO(ui): _entityNameLabel.Anchor.Left = (EntityStatsContainerWidth - entityNameLength) / 2;
 
             _entityOwnerLabel.Text = PlayerListEntry.GetEntryLabel(Engine.State.PlayerList[selectedEntity.PlayerIndex]);
             var entityOwnerLength = _entityOwnerLabel.Text.Length * RendererHelper.FontRenderSize;
-            _entityOwnerLabel.Anchor.Left = (EntityStatsContainerWidth - entityOwnerLength) / 2;
+            // TODO(ui): _entityOwnerLabel.Anchor.Left = (EntityStatsContainerWidth - entityOwnerLength) / 2;
 
             Add(_entityStatsContainer);
             OnSelectedEntityUpdated();
 
             if (Engine.State.EntityScriptPaths.TryGetValue(selectedEntity.Id, out var scriptPath))
             {
-                _entityStatsContainer.Anchor.Left = (Engine.Viewport.Width - EntityStatsContainerWidth - SidebarPanelWidth) / 2;
+                // TODO(ui): _entityStatsContainer.Anchor.Left = (Engine.Viewport.Width - EntityStatsContainerWidth - SidebarPanelWidth) / 2;
 
                 if (scriptPath == null)
                 {
@@ -439,7 +442,7 @@ namespace DeepSwarmClient.Interface.Playing
             }
             else
             {
-                _entityStatsContainer.Anchor.Left = (Engine.Viewport.Width - EntityStatsContainerWidth) / 2;
+                // TODO(ui): _entityStatsContainer.Anchor.Left = (Engine.Viewport.Width - EntityStatsContainerWidth) / 2;
 
                 _sidebarContainer.Add(_manualModeSidebarsByEntityType[selectedEntity.Type]);
             }
