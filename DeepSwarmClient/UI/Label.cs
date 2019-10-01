@@ -83,6 +83,8 @@ namespace DeepSwarmClient.UI
         {
             _segments.Clear();
 
+            var ellipsisCharacterWidth = RendererHelper.FontRenderSize;
+
             if (Wrap)
             {
                 var segmentStart = 0;
@@ -103,7 +105,8 @@ namespace DeepSwarmClient.UI
                     {
                         if (Ellipsize && (_segments.Count + 1) * lineHeight >= RectangleAfterPadding.Height)
                         {
-                            _segments.Add(_text[segmentStart..(segmentEnd - 1)] + "…");
+                            if (segmentWidth + ellipsisCharacterWidth > RectangleAfterPadding.Width) segmentCursor--;
+                            _segments.Add(_text[segmentStart..segmentCursor] + "…");
                             return;
                         }
                         else _segments.Add(_text[segmentStart..segmentEnd]);
@@ -125,7 +128,6 @@ namespace DeepSwarmClient.UI
             else
             {
                 var textWidth = 0;
-                var ellipsisCharacterWidth = RendererHelper.FontRenderSize;
 
                 for (var textCursor = 0; textCursor < _text.Length; textCursor++)
                 {
