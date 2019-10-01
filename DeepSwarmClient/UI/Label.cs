@@ -5,11 +5,12 @@ using System.Diagnostics;
 
 namespace DeepSwarmClient.UI
 {
-    class Label : Element
+    public class Label : Element
     {
         public Color TextColor = new Color(0xffffffff);
-        public string Text { set { _text = value; _segments.Clear(); } get => _text; }
+        public string Text { get => _text; set { _text = value; _segments.Clear(); } }
         public bool Wrap;
+        public bool Ellipsize;
 
         string _text;
         readonly List<string> _segments = new List<string>();
@@ -84,12 +85,12 @@ namespace DeepSwarmClient.UI
 
             if (Wrap)
             {
-                var availableWidthForText = LayoutRectangle.Width; // TODO: Padding
-
                 var segmentStart = 0;
                 var segmentEnd = 0;
                 var segmentCursor = 0;
                 var segmentWidth = 0;
+
+                var lineHeight = RendererHelper.FontRenderSize;
 
                 while (segmentCursor < _text.Length)
                 {
@@ -98,9 +99,15 @@ namespace DeepSwarmClient.UI
 
                     if (segmentCursor != segmentStart && _text[segmentCursor] == ' ') segmentEnd = segmentCursor;
 
-                    if (segmentWidth + characterWidth >= availableWidthForText && segmentStart != segmentEnd)
+                    if (Wrap && segmentWidth + characterWidth >= RectangleAfterPadding.Width && segmentStart != segmentEnd)
                     {
-                        _segments.Add(_text[segmentStart..segmentEnd]);
+                        if (Ellipsize && (_segments.Count + 1) * lineHeight >= RectangleAfterPadding.Height)
+                        {
+                            _segments.Add(_text[segmentStart..(segmentEnd - 1)] + "…");
+                            return;
+                        }
+                        else _segments.Add(_text[segmentStart..segmentEnd]);
+
                         segmentWidth = 0;
 
                         while (_text[segmentEnd] == ' ') segmentEnd++;
@@ -117,6 +124,23 @@ namespace DeepSwarmClient.UI
             }
             else
             {
+                var textWidth = 0;
+                var ellipsisCharacterWidth = RendererHelper.FontRenderSize;
+
+                for (var textCursor = 0; textCursor < _text.Length; textCursor++)
+                {
+                    // TODO: Measure actual text width when we have variable-width fonts
+                    var characterWidth = RendererHelper.FontRenderSize;
+
+                    if (textWidth + characterWidth + (textCursor < _text.Length - 1 ? ellipsisCharacterWidth : 0) > RectangleAfterPadding.Width)
+                    {
+                        _segments.Add(_text[0..textCursor] + "…");
+                        return;
+                    }
+
+                    textWidth += characterWidth;
+                }
+
                 _segments.Add(_text);
             }
         }
@@ -129,7 +153,7 @@ namespace DeepSwarmClient.UI
 
             for (var i = 0; i < _segments.Count; i++)
             {
-                RendererHelper.DrawText(Desktop.Renderer, LayoutRectangle.X, LayoutRectangle.Y + i * RendererHelper.FontRenderSize, _segments[i], TextColor);
+                RendererHelper.DrawText(Desktop.Renderer, RectangleAfterPadding.X, RectangleAfterPadding.Y + i * RendererHelper.FontRenderSize, _segments[i], TextColor);
             }
         }
     }

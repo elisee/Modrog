@@ -8,7 +8,7 @@ using System.Text;
 
 namespace DeepSwarmClient.UI
 {
-    class Desktop
+    public class Desktop
     {
         public IntPtr Renderer;
 

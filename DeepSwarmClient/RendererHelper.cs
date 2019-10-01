@@ -11,6 +11,30 @@ namespace DeepSwarmClient
         public readonly static IntPtr HandCursor = SDL.SDL_CreateSystemCursor(SDL.SDL_SystemCursor.SDL_SYSTEM_CURSOR_HAND);
         public readonly static IntPtr IbeamCursor = SDL.SDL_CreateSystemCursor(SDL.SDL_SystemCursor.SDL_SYSTEM_CURSOR_IBEAM);
 
+        #region Textures
+        public static void DrawPatch(IntPtr renderer, TexturePatch patch, Rectangle rectangle)
+        {
+            if (patch.Color.A != byte.MaxValue) SDL.SDL_SetRenderDrawBlendMode(renderer, SDL.SDL_BlendMode.SDL_BLENDMODE_BLEND);
+
+            patch.Color.UseAsDrawColor(renderer);
+
+            if (patch.TextureArea == null)
+            {
+                var rect = Desktop.ToSDL_Rect(rectangle);
+                SDL.SDL_RenderFillRect(renderer, ref rect);
+            }
+            else
+            {
+                // TODO: Support patch.HorizontalBorder and patch.VerticalBorder
+                var sourceRect = Desktop.ToSDL_Rect(patch.TextureArea.Area);
+                var destRect = Desktop.ToSDL_Rect(rectangle);
+                SDL.SDL_RenderCopy(renderer, patch.TextureArea.Texture, ref sourceRect, ref destRect);
+            }
+
+            if (patch.Color.A != byte.MaxValue) SDL.SDL_SetRenderDrawBlendMode(renderer, SDL.SDL_BlendMode.SDL_BLENDMODE_NONE);
+        }
+        #endregion
+
         #region Text
         public static IntPtr FontTexture;
         public const int FontSourceSize = 8;

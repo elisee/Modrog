@@ -1,18 +1,20 @@
 ﻿using DeepSwarmClient.UI;
+using System;
 
 namespace DeepSwarmClient.Interface
 {
     class LobbyView : InterfaceElement
     {
+        readonly Panel _verticalSplitter;
+
         public LobbyView(Interface @interface)
             : base(@interface, null)
         {
-            var panel = new Panel(Desktop, this, new Color(0x88aa88ff))
+            var panel = new Panel(Desktop, this, new TexturePatch(0x88aa88ff))
             {
                 Anchor = new Anchor { Flow = Flow.Shrink },
                 ChildLayout = ChildLayoutMode.Top,
             };
-
 
             new Label(Desktop, panel) { Text = "Lobby" };
             var horizontalSplitter = new Element(Desktop, panel)
@@ -22,7 +24,7 @@ namespace DeepSwarmClient.Interface
 
             {
                 // TODO: Display player list
-                var playerListPanel = new Panel(Desktop, horizontalSplitter, new Color(0xaa0000ff))
+                var playerListPanel = new Panel(Desktop, horizontalSplitter, new TexturePatch(0xaa0000ff))
                 {
                     Anchor = new Anchor { Width = 200 }
                 };
@@ -31,29 +33,51 @@ namespace DeepSwarmClient.Interface
             }
 
             {
-                var verticalSplitter = new Panel(Desktop, horizontalSplitter, new Color(0x228800ff))
+                _verticalSplitter = new Panel(Desktop, horizontalSplitter, new TexturePatch(0x228800ff))
                 {
                     LayoutWeight = 1,
                     Anchor = new Anchor { Width = 500 },
                     ChildLayout = ChildLayoutMode.Top
                 };
 
-                new Label(Desktop, verticalSplitter)
+                new Label(Desktop, _verticalSplitter)
                 {
                     LayoutWeight = 1,
+                    Padding = new Padding { All = 8 },
                     Text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Praesent vehicula velit libero, ac eleifend sapien malesuada ultricies. Sed metus orci, ultrices at mauris ut, pretium tempor arcu. Nunc eu quam sit amet nunc lobortis laoreet sit amet et risus. Nam orci ex, pretium quis commodo eu, imperdiet quis mi. Sed tristique mattis purus, fringilla elementum leo volutpat eget. Donec sollicitudin nisi libero, a pretium sapien facilisis vitae. Donec massa nisl, fermentum a feugiat non, tristique sit amet turpis. Etiam ornare pellentesque molestie. Praesent molestie ultrices nunc, nec mattis urna finibus nec.",
-                    Wrap = true
+                    Wrap = true,
+                    Ellipsize = true
                 };
 
-                new Label(Desktop, verticalSplitter)
+                new Label(Desktop, _verticalSplitter)
                 {
-                    BackgroundColor = new Color(0x123456ff),
+                    BackgroundPatch = new TexturePatch(0x123456ff),
                     Text = "Text",
                 };
             }
 
             // TODO: Display saved games & scenarios to choose from
             // TODO: Add buttons for readying up and starting the game
+        }
+
+        public override void OnMounted()
+        {
+            Desktop.RegisterAnimation(Animate);
+        }
+
+        public override void OnUnmounted()
+        {
+            Desktop.UnregisterAnimation(Animate);
+        }
+
+        float _timer;
+
+        void Animate(float deltaTime)
+        {
+            _timer += deltaTime;
+
+            _verticalSplitter.Anchor.Width = 400 + (int)(MathF.Cos(_timer) * 100);
+            _verticalSplitter.Layout();
         }
     }
 }

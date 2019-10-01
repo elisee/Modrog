@@ -20,8 +20,8 @@ namespace DeepSwarmClient.Interface
             Engine = engine;
 
             Desktop = new Desktop(engine.Renderer);
-            ViewLayer = new Panel(Desktop, Desktop.RootElement, new Color(0x000000ff));
-            PopupLayer = new Panel(Desktop, Desktop.RootElement, new Color(0x00000066)) { IsVisible = false };
+            ViewLayer = new Panel(Desktop, Desktop.RootElement, new TexturePatch(0x000000ff));
+            PopupLayer = new Panel(Desktop, Desktop.RootElement, new TexturePatch(0x00000066)) { IsVisible = false };
 
             ConnectView = new ConnectView(this);
             LoadingView = new LoadingView(this);

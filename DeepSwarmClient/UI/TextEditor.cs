@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 namespace DeepSwarmClient.UI
 {
-    class TextEditor : Element
+    public class TextEditor : Element
     {
         public Color TextColor = new Color(0xffffffff);
 

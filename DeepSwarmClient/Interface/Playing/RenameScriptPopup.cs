@@ -13,7 +13,7 @@ namespace DeepSwarmClient.Interface.Playing
             const int PanelWidth = 320 + 16 * 2;
             const int PanelHeight = 160 + 16 * 2;
 
-            var panel = new Panel(Desktop, this, new Color(0x88aa88ff))
+            var panel = new Panel(Desktop, this, new TexturePatch(0x88aa88ff))
             {
                 Anchor = new Anchor(width: PanelWidth, height: PanelHeight),
             };
@@ -33,23 +33,23 @@ namespace DeepSwarmClient.Interface.Playing
             _scriptPathInput = new TextInput(Desktop, panel)
             {
                 Anchor = new Anchor(left: 8, top: 48, width: 320, height: 16),
-                BackgroundColor = new Color(0x004400ff),
+                BackgroundPatch = new TexturePatch(0x004400ff),
                 MaxLength = Protocol.MaxScriptNameLength
             };
 
-            var renameButton = new Button(Desktop, panel)
+            var renameButton = new TextButton(Desktop, panel)
             {
                 Text = " Rename ",
                 Anchor = new Anchor(left: 8, top: 80, width: " Rename ".Length * 16, height: 16),
-                BackgroundColor = new Color(0x4444ccff),
+                BackgroundPatch = new TexturePatch(0x4444ccff),
                 OnActivate = Validate
             };
 
-            new Button(Desktop, panel)
+            new TextButton(Desktop, panel)
             {
                 Text = " Cancel ",
                 Anchor = new Anchor(left: 8 + renameButton.Anchor.Width + 8, top: 80, width: " Cancel ".Length * 16, height: 16),
-                BackgroundColor = new Color(0x4444ccff),
+                BackgroundPatch = new TexturePatch(0x4444ccff),
                 OnActivate = Dismiss
             };
         }

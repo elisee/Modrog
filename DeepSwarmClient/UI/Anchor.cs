@@ -2,6 +2,8 @@
 {
     public enum Flow { Expand, Shrink, Scroll }
 
+    // TODO: Merge all the fields directly into Element, I see no point in having them encapsulated
+    // Same for Padding
     public struct Anchor
     {
         public int? Left;
@@ -12,7 +14,7 @@
         public int? Width;
         public int? Height;
 
-        public Flow Flow { set { HorizontalFlow = VerticalFlow = value; } }
+        public Flow Flow { set => HorizontalFlow = VerticalFlow = value; }
         public Flow HorizontalFlow;
         public Flow VerticalFlow;
 

@@ -1,13 +1,12 @@
-﻿using System;
+﻿using DeepSwarmCommon;
+using System;
 
 namespace DeepSwarmClient.UI
 {
-    class Button : Element
+    public class Button : Element
     {
-        public Color TextColor = new Color(0xffffffff);
-        public Color HoveredTextColor = new Color(0xaaff66ff);
-        public Color PressedTextColor = new Color(0xff0000ff);
-        public string Text = "";
+        public TexturePatch HoveredPatch;
+        public TexturePatch PressedPatch;
 
         public Action OnActivate;
 
@@ -46,11 +45,17 @@ namespace DeepSwarmClient.UI
             }
         }
 
+        public override Point ComputeSize(int? maxWidth, int? maxHeight)
+        {
+            return base.ComputeSize(maxWidth, maxHeight);
+        }
+
         protected override void DrawSelf()
         {
             base.DrawSelf();
 
-            RendererHelper.DrawText(Desktop.Renderer, LayoutRectangle.X, LayoutRectangle.Y, Text, IsPressed ? PressedTextColor : (IsHovered ? HoveredTextColor : TextColor));
+            if (IsHovered) { if (HoveredPatch != null) RendererHelper.DrawPatch(Desktop.Renderer, HoveredPatch, LayoutRectangle); }
+            else if (IsPressed) { if (PressedPatch != null) RendererHelper.DrawPatch(Desktop.Renderer, PressedPatch, LayoutRectangle); }
         }
     }
 }

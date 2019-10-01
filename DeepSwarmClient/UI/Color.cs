@@ -3,8 +3,10 @@ using System;
 
 namespace DeepSwarmClient.UI
 {
-    struct Color
+    public struct Color
     {
+        public static readonly Color White = new Color(0xffffffff);
+
         public uint RGBA;
 
         public Color(uint rgba)

@@ -4,7 +4,7 @@ using System;
 
 namespace DeepSwarmClient.UI
 {
-    class TextInput : Element
+    public class TextInput : Element
     {
         public Color TextColor = new Color(0xffffffff);
         public string Value { get; private set; } = "";
@@ -243,7 +243,7 @@ namespace DeepSwarmClient.UI
         {
             base.DrawSelf();
 
-            var clipRect = Desktop.ToSDL_Rect(LayoutRectangle);
+            var clipRect = Desktop.ToSDL_Rect(RectangleAfterPadding);
             SDL.SDL_RenderSetClipRect(Desktop.Renderer, ref clipRect);
 
             // Draw selection
@@ -253,13 +253,13 @@ namespace DeepSwarmClient.UI
                 GetSelectionRange(out var firstX, out var lastX);
 
                 var selectionRect = Desktop.ToSDL_Rect(new Rectangle(
-                    LayoutRectangle.X + firstX * RendererHelper.FontRenderSize - _scrollingPixelsX,
-                    LayoutRectangle.Y,
+                    RectangleAfterPadding.X + firstX * RendererHelper.FontRenderSize - _scrollingPixelsX,
+                    RectangleAfterPadding.Y,
                     (lastX - firstX) * RendererHelper.FontRenderSize, RendererHelper.FontRenderSize));
                 SDL.SDL_RenderFillRect(Desktop.Renderer, ref selectionRect);
             }
 
-            RendererHelper.DrawText(Desktop.Renderer, LayoutRectangle.X - _scrollingPixelsX, LayoutRectangle.Y, Value, TextColor);
+            RendererHelper.DrawText(Desktop.Renderer, RectangleAfterPadding.X - _scrollingPixelsX, RectangleAfterPadding.Y, Value, TextColor);
 
             SDL.SDL_RenderSetClipRect(Desktop.Renderer, IntPtr.Zero);
 
@@ -269,9 +269,9 @@ namespace DeepSwarmClient.UI
                 new Color(0xffffffff).UseAsDrawColor(Desktop.Renderer);
 
                 var cursorRect = Desktop.ToSDL_Rect(new DeepSwarmCommon.Rectangle(
-                    LayoutRectangle.X + _cursorX * RendererHelper.FontRenderSize - _scrollingPixelsX,
-                    LayoutRectangle.Y,
-                    2, LayoutRectangle.Height));
+                    RectangleAfterPadding.X + _cursorX * RendererHelper.FontRenderSize - _scrollingPixelsX,
+                    RectangleAfterPadding.Y,
+                    2, RectangleAfterPadding.Height));
                 SDL.SDL_RenderDrawRect(Desktop.Renderer, ref cursorRect);
             }
         }

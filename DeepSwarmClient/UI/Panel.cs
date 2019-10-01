@@ -1,11 +1,11 @@
 ﻿namespace DeepSwarmClient.UI
 {
-    class Panel : Element
+    public class Panel : Element
     {
-        public Panel(Desktop desktop, Element parent, Color backgroundColor)
+        public Panel(Desktop desktop, Element parent, TexturePatch backgroundPatch)
             : base(desktop, parent)
         {
-            BackgroundColor = backgroundColor;
+            BackgroundPatch = backgroundPatch;
         }
 
         public override Element HitTest(int x, int y) => base.HitTest(x, y) ?? (LayoutRectangle.Contains(x, y) ? this : null);

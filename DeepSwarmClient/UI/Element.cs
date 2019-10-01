@@ -6,16 +6,11 @@ using System.Diagnostics;
 
 namespace DeepSwarmClient.UI
 {
-    class Element
+    public class Element
     {
         public readonly Desktop Desktop;
         public Element Parent;
         public readonly List<Element> Children = new List<Element>();
-
-        public enum ChildLayoutMode { Overlay, Left, Right, Top, Bottom }
-        public ChildLayoutMode ChildLayout = ChildLayoutMode.Overlay;
-
-        public int LayoutWeight = 0;
 
         public bool IsVisible
         {
@@ -34,14 +29,19 @@ namespace DeepSwarmClient.UI
 
         bool _isVisible = true;
 
-        public Anchor Anchor;
-        public Color BackgroundColor;
+        public int LayoutWeight = 0;
 
-        public IntPtr BackgroundTexture;
-        public Rectangle BackgroundTextureArea;
+        public Anchor Anchor;
+        public Padding Padding;
+
+        public enum ChildLayoutMode { Overlay, Left, Right, Top, Bottom }
+        public ChildLayoutMode ChildLayout = ChildLayoutMode.Overlay;
+
+        public TexturePatch BackgroundPatch;
 
         Rectangle _containerRectangle;
-        public Rectangle LayoutRectangle;
+        public Rectangle LayoutRectangle { get; private set; }
+        public Rectangle RectangleAfterPadding { get; private set; }
 
         public bool IsMounted { get; private set; }
         public bool IsFocused => Desktop.FocusedElement == this;
@@ -132,8 +132,8 @@ namespace DeepSwarmClient.UI
                         throw new NotImplementedException();
                 }
 
-                if (Anchor.Width == null) size.X += contentSize.X;
-                if (Anchor.Height == null) size.Y += contentSize.Y;
+                if (Anchor.Width == null) size.X += contentSize.X + Padding.Horizontal;
+                if (Anchor.Height == null) size.Y += contentSize.Y + Padding.Vertical;
             }
 
             return size;
@@ -144,57 +144,61 @@ namespace DeepSwarmClient.UI
             if (containerRectangle != null) _containerRectangle = containerRectangle.Value;
 
             var minSize = ComputeSize(_containerRectangle.Width, _containerRectangle.Height);
-            LayoutRectangle = _containerRectangle;
+
+            var layoutRectangle = _containerRectangle;
 
             if (Anchor.Width != null)
             {
-                LayoutRectangle.Width = Anchor.Width.Value;
+                layoutRectangle.Width = Anchor.Width.Value;
 
-                if (Anchor.Left != null) LayoutRectangle.X += Anchor.Left.Value;
-                else if (Anchor.Right != null) LayoutRectangle.X = _containerRectangle.X + _containerRectangle.Width - Anchor.Right.Value - Anchor.Width.Value;
-                else LayoutRectangle.X += _containerRectangle.Width / 2 - LayoutRectangle.Width / 2;
+                if (Anchor.Left != null) layoutRectangle.X += Anchor.Left.Value;
+                else if (Anchor.Right != null) layoutRectangle.X = _containerRectangle.Right - Anchor.Width.Value - Anchor.Right.Value;
+                else layoutRectangle.X += _containerRectangle.Width / 2 - layoutRectangle.Width / 2;
             }
             else
             {
                 if (Anchor.HorizontalFlow == Flow.Shrink)
                 {
-                    LayoutRectangle.X += _containerRectangle.Width / 2 - minSize.X / 2;
-                    LayoutRectangle.Width = minSize.X;
+                    layoutRectangle.X += _containerRectangle.Width / 2 - minSize.X / 2;
+                    layoutRectangle.Width = minSize.X;
                 }
 
                 if (Anchor.Left != null)
                 {
-                    LayoutRectangle.X += Anchor.Left.Value;
-                    LayoutRectangle.Width -= Anchor.Left.Value;
+                    layoutRectangle.X += Anchor.Left.Value;
+                    layoutRectangle.Width -= Anchor.Left.Value;
                 }
 
-                if (Anchor.Right != null) LayoutRectangle.Width -= Anchor.Right.Value;
+                if (Anchor.Right != null) layoutRectangle.Width -= Anchor.Right.Value;
             }
 
             if (Anchor.Height != null)
             {
-                LayoutRectangle.Height = Anchor.Height.Value;
+                layoutRectangle.Height = Anchor.Height.Value;
 
-                if (Anchor.Top != null) LayoutRectangle.Y += Anchor.Top.Value;
-                else if (Anchor.Bottom != null) LayoutRectangle.Y = _containerRectangle.Y + _containerRectangle.Height - Anchor.Bottom.Value - Anchor.Height.Value;
-                else LayoutRectangle.Y += _containerRectangle.Height / 2 - LayoutRectangle.Height / 2;
+                if (Anchor.Top != null) layoutRectangle.Y += Anchor.Top.Value;
+                else if (Anchor.Bottom != null) layoutRectangle.Y = _containerRectangle.Bottom - Anchor.Height.Value - Anchor.Bottom.Value;
+                else layoutRectangle.Y += _containerRectangle.Height / 2 - layoutRectangle.Height / 2;
             }
             else
             {
                 if (Anchor.VerticalFlow == Flow.Shrink)
                 {
-                    LayoutRectangle.Y += _containerRectangle.Height / 2 - minSize.Y / 2;
-                    LayoutRectangle.Height = minSize.Y;
+                    layoutRectangle.Y += _containerRectangle.Height / 2 - minSize.Y / 2;
+                    layoutRectangle.Height = minSize.Y;
                 }
 
                 if (Anchor.Top != null)
                 {
-                    LayoutRectangle.Y += Anchor.Top.Value;
-                    LayoutRectangle.Height -= Anchor.Top.Value;
+                    layoutRectangle.Y += Anchor.Top.Value;
+                    layoutRectangle.Height -= Anchor.Top.Value;
                 }
 
-                if (Anchor.Bottom != null) LayoutRectangle.Height -= Anchor.Bottom.Value;
+                if (Anchor.Bottom != null) layoutRectangle.Height -= Anchor.Bottom.Value;
             }
+
+            LayoutRectangle = layoutRectangle;
+            RectangleAfterPadding = new Rectangle(LayoutRectangle.X + Padding.Left, LayoutRectangle.Y + Padding.Top, LayoutRectangle.Width - Padding.Horizontal, LayoutRectangle.Height - Padding.Vertical);
 
             LayoutSelf();
 
@@ -210,7 +214,7 @@ namespace DeepSwarmClient.UI
             switch (ChildLayout)
             {
                 case ChildLayoutMode.Overlay:
-                    foreach (var child in Children) if (child.IsMounted) child.Layout(LayoutRectangle);
+                    foreach (var child in Children) if (child.IsMounted) child.Layout(RectangleAfterPadding);
                     break;
 
                 case ChildLayoutMode.Left:
@@ -228,7 +232,7 @@ namespace DeepSwarmClient.UI
                             else flexWeights += child.LayoutWeight;
                         }
 
-                        var flexSize = LayoutRectangle.Width - fixedSize;
+                        var flexSize = RectangleAfterPadding.Width - fixedSize;
                         var offset = 0;
 
                         for (var i = 0; i < Children.Count; i++)
@@ -237,7 +241,7 @@ namespace DeepSwarmClient.UI
                             if (!child.IsMounted) continue;
 
                             var size = (child.LayoutWeight == 0 || Anchor.HorizontalFlow != Flow.Expand) ? fixedSizes[i] : flexSize * child.LayoutWeight / flexWeights;
-                            child.Layout(new Rectangle(LayoutRectangle.X + offset, LayoutRectangle.Y, size, LayoutRectangle.Height));
+                            child.Layout(new Rectangle(RectangleAfterPadding.X + offset, RectangleAfterPadding.Y, size, RectangleAfterPadding.Height));
                             offset += size;
                         }
                         break;
@@ -258,10 +262,8 @@ namespace DeepSwarmClient.UI
                             else flexWeights += child.LayoutWeight;
                         }
 
-                        var flexSize = LayoutRectangle.Height - fixedSize;
+                        var flexSize = RectangleAfterPadding.Height - fixedSize;
                         var offset = 0;
-
-                        // TODO: Use Width to compute LayoutRectangle, shouldn't be computed before here I think
 
                         for (var i = 0; i < Children.Count; i++)
                         {
@@ -269,7 +271,7 @@ namespace DeepSwarmClient.UI
                             if (!child.IsMounted) continue;
 
                             var size = (child.LayoutWeight == 0 || Anchor.VerticalFlow != Flow.Expand) ? fixedSizes[i] : flexSize * child.LayoutWeight / flexWeights;
-                            child.Layout(new Rectangle(LayoutRectangle.X, LayoutRectangle.Y + offset, LayoutRectangle.Width, size));
+                            child.Layout(new Rectangle(RectangleAfterPadding.X, RectangleAfterPadding.Y + offset, RectangleAfterPadding.Width, size));
                             offset += size;
                         }
                         break;
@@ -357,21 +359,7 @@ namespace DeepSwarmClient.UI
 
         protected virtual void DrawSelf()
         {
-            if (BackgroundColor.A != 0)
-            {
-                if (BackgroundColor.A != byte.MaxValue) SDL.SDL_SetRenderDrawBlendMode(Desktop.Renderer, SDL.SDL_BlendMode.SDL_BLENDMODE_BLEND);
-                var rect = Desktop.ToSDL_Rect(LayoutRectangle);
-                BackgroundColor.UseAsDrawColor(Desktop.Renderer);
-                SDL.SDL_RenderFillRect(Desktop.Renderer, ref rect);
-                if (BackgroundColor.A != byte.MaxValue) SDL.SDL_SetRenderDrawBlendMode(Desktop.Renderer, SDL.SDL_BlendMode.SDL_BLENDMODE_NONE);
-            }
-
-            if (BackgroundTexture != IntPtr.Zero)
-            {
-                var sourceRect = Desktop.ToSDL_Rect(BackgroundTextureArea);
-                var destRect = Desktop.ToSDL_Rect(LayoutRectangle);
-                SDL.SDL_RenderCopy(Desktop.Renderer, BackgroundTexture, ref sourceRect, ref destRect);
-            }
+            if (BackgroundPatch != null) RendererHelper.DrawPatch(Desktop.Renderer, BackgroundPatch, LayoutRectangle);
         }
     }
 }

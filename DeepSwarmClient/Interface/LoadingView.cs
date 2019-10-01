@@ -10,7 +10,7 @@ namespace DeepSwarmClient.Interface
             var loadingPopup = new Element(Desktop, this)
             {
                 Anchor = new Anchor(width: 320, height: 320),
-                BackgroundColor = new Color(0x88aa88ff)
+                BackgroundPatch = new TexturePatch(0x88aa88ff)
             };
 
             new Label(Desktop, loadingPopup) { Text = "Loading" };

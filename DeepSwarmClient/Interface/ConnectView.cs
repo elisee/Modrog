@@ -11,67 +11,43 @@ namespace DeepSwarmClient.Interface
         public ConnectView(Interface @interface)
             : base(@interface, null)
         {
-            const int PanelWidth = 320 + 16 * 2;
-
-            var panel = new Panel(Desktop, this, new Color(0x88aa88ff))
+            var panel = new Panel(Desktop, this, new TexturePatch(0x88aa88ff))
             {
-                Anchor = new Anchor(width: PanelWidth),
+                Anchor = new Anchor { Width = 320, Flow = Flow.Shrink },
+                Padding = new Padding { All = 8 },
+                ChildLayout = ChildLayoutMode.Top
             };
 
-            var y = 8;
-
-            new Label(Desktop, panel)
-            {
-                Anchor = new Anchor(left: 8, top: y),
-                Text = "- DeepSwarm r1 -"
-            };
-
-            y += 16 + 16;
-
-            new Label(Desktop, panel)
-            {
-                Anchor = new Anchor(left: 8, top: y),
-                Text = "Enter your name:"
-            };
-
-            y += 16 + 8;
+            new Label(Desktop, panel) { Text = "- DeepSwarm r1 -", Anchor = new Anchor { Flow = Flow.Shrink, Bottom = 16 } };
+            new Label(Desktop, panel) { Text = "Enter your name:", Anchor = new Anchor { Bottom = 8 } };
 
             _nameInput = new TextInput(Desktop, panel)
             {
-                Anchor = new Anchor(left: 8, top: y, width: 320, height: 16),
-                BackgroundColor = new Color(0x004400ff),
+                Padding = new Padding { All = 8 },
+                Anchor = new Anchor { Height = 32, Bottom = 8 },
+                BackgroundPatch = new TexturePatch(0x004400ff),
                 MaxLength = Protocol.MaxPlayerNameLength
             };
 
-            y += 16 + 16;
-
-            new Label(Desktop, panel)
-            {
-                Anchor = new Anchor(left: 8, top: y),
-                Text = "Server address:"
-            };
-
-            y += 16 + 8;
+            new Label(Desktop, panel) { Text = "Server address:", Anchor = new Anchor { Bottom = 8 } };
 
             _serverAddressInput = new TextInput(Desktop, panel)
             {
-                Anchor = new Anchor(left: 8, top: y, width: 320, height: 16),
-                BackgroundColor = new Color(0x004400ff)
+                Padding = new Padding { All = 8 },
+                Anchor = new Anchor { Height = 32 },
+                BackgroundPatch = new TexturePatch(0x004400ff)
             };
 
-            y += 16 + 16;
+            var actionsContainer = new Element(Desktop, panel) { ChildLayout = ChildLayoutMode.Left, Anchor = new Anchor { Top = 16 } };
 
-            new Button(Desktop, panel)
+            new TextButton(Desktop, actionsContainer)
             {
-                Text = " Connect ",
-                Anchor = new Anchor(left: 8, top: y, width: " Connect ".Length * 16, height: 16),
-                BackgroundColor = new Color(0x4444ccff),
+                Text = "Connect",
+                Padding = new Padding { All = 8 },
+                Anchor = new Anchor { Flow = Flow.Shrink },
+                BackgroundPatch = new TexturePatch(0x4444aaff),
                 OnActivate = Validate
             };
-
-            y += 16 + 8;
-
-            panel.Anchor.Height = y;
         }
 
         public override void OnMounted()
