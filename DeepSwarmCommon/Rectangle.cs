@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Diagnostics;
 
 namespace DeepSwarmCommon
 {
+    [DebuggerDisplay("{DebugDisplayString,nq}")]
     public struct Rectangle : IEquatable<Rectangle>
     {
         public int X;
@@ -30,5 +32,7 @@ namespace DeepSwarmCommon
         public override int GetHashCode() => HashCode.Combine(X, Y, Width, Height);
         public static bool operator ==(Rectangle left, Rectangle right) => left.Equals(right);
         public static bool operator !=(Rectangle left, Rectangle right) => !(left == right);
+
+        internal string DebugDisplayString => $"{X} {Y} {Width} {Height}";
     }
 }

@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Diagnostics;
 
 namespace DeepSwarmCommon
 {
+    [DebuggerDisplay("{DebugDisplayString,nq}")]
     public struct Point : IEquatable<Point>
     {
         public static readonly Point Zero = new Point();
@@ -22,5 +24,7 @@ namespace DeepSwarmCommon
         public static bool operator !=(Point left, Point right) => !(left == right);
         public static Point operator +(Point left, Point right) => new Point(left.X + right.X, left.Y + right.Y);
         public static Point operator -(Point left, Point right) => new Point(left.X - right.X, left.Y - right.Y);
+
+        internal string DebugDisplayString => $"{X} {Y}";
     }
 }
