@@ -28,7 +28,7 @@ namespace DeepSwarmClient
         // Interface
         public readonly Interface.Interface Interface;
 
-        public Engine()
+        public Engine(bool newIdentity)
         {
             // Rendering
             SDL.SDL_Init(SDL.SDL_INIT_VIDEO);
@@ -41,7 +41,7 @@ namespace DeepSwarmClient
             // Identity
             var identityPath = Path.Combine(AppContext.BaseDirectory, "Identity.dat");
 
-            if (File.Exists(identityPath))
+            if (!newIdentity && File.Exists(identityPath))
             {
                 try { State.SelfGuid = new Guid(File.ReadAllBytes(identityPath)); } catch { }
             }

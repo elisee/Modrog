@@ -2,9 +2,11 @@
 {
     class Program
     {
-        static void Main()
+        static void Main(string[] args)
         {
-            var engine = new Engine();
+            var newIdentity = args.Length != 0 && args[0] == "new";
+
+            var engine = new Engine(newIdentity);
             engine.Start();
         }
     }
