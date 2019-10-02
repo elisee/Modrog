@@ -17,10 +17,8 @@ namespace DeepSwarmClient.UI
 
         Point _scrollingPixels;
 
-        public TextEditor(Desktop desktop, Element parent)
-            : base(desktop, parent)
-        {
-        }
+        public TextEditor(Element parent) : this(parent.Desktop, parent) { }
+        public TextEditor(Desktop desktop, Element parent) : base(desktop, parent) { }
 
         #region Configuration
         public void SetText(string text)

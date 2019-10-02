@@ -10,8 +10,7 @@ namespace DeepSwarmClient.UI
 
         public Action OnActivate;
 
-        public Button(Desktop desktop, Element parent)
-             : base(desktop, parent)
+        public Button(Desktop desktop, Element parent) : base(desktop, parent)
         {
         }
 

@@ -6,8 +6,8 @@
 
         readonly Label _label;
 
-        public TextButton(Desktop desktop, Element parent)
-            : base(desktop, parent)
+        public TextButton(Element parent) : this(parent.Desktop, parent) { }
+        public TextButton(Desktop desktop, Element parent) : base(desktop, parent)
         {
             _label = new Label(desktop, this);
         }

@@ -70,7 +70,8 @@ namespace DeepSwarmClient.UI
         public bool IsHovered => Desktop.HoveredElement == this;
         public bool IsPressed => Desktop.HoveredElement == this && Desktop.IsHoveredElementPressed;
 
-        public Element(Desktop desktop, Element parent)
+        public Element(Element parent) : this(parent.Desktop, parent) { }
+        public Element(Desktop desktop, Element parent = null)
         {
             Desktop = desktop;
             parent?.Add(this);

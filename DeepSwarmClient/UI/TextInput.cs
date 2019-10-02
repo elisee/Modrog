@@ -17,10 +17,8 @@ namespace DeepSwarmClient.UI
 
         int _scrollingPixelsX;
 
-        public TextInput(Desktop desktop, Element parent)
-            : base(desktop, parent)
-        {
-        }
+        public TextInput(Element parent) : this(parent.Desktop, parent) { }
+        public TextInput(Desktop desktop, Element parent) : base(desktop, parent) { }
 
         #region Configuration
         public void SetValue(string value)

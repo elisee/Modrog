@@ -15,10 +15,8 @@ namespace DeepSwarmClient.UI
         string _text;
         readonly List<string> _segments = new List<string>();
 
-        public Label(Desktop desktop, Element parent)
-             : base(desktop, parent)
-        {
-        }
+        public Label(Element parent) : this(parent.Desktop, parent) { }
+        public Label(Desktop desktop, Element parent = null) : base(desktop, parent) { }
 
         public override Point ComputeSize(int? maxWidth, int? maxHeight)
         {
