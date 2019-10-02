@@ -36,6 +36,8 @@ namespace DeepSwarmClient
         public readonly List<PlayerListEntry> PlayerList = new List<PlayerListEntry>();
 
         // Lobby
+        bool _isSelfReady;
+
         public readonly List<ScenarioEntry> ScenarioEntries = new List<ScenarioEntry>();
         // public readonly List<SavedGameEntry> SavedGameEntries = new List<SavedGameEntry>();
         public ScenarioEntry ActiveScenario;
@@ -71,6 +73,8 @@ namespace DeepSwarmClient
 
         public void Connect(string address)
         {
+            _isSelfReady = false;
+
             _socket = new Socket(SocketType.Stream, ProtocolType.Tcp) { NoDelay = true, LingerState = new LingerOption(true, seconds: 1) };
 
             // TODO: Do this in a background thread and have a connecting popup
@@ -123,6 +127,21 @@ namespace DeepSwarmClient
             _packetWriter.WriteByte((byte)Protocol.ClientPacketType.ChooseGame);
             // TODO: Add a byte to say whether scenario or saved game
             _packetWriter.WriteByteSizeString(scenarioName);
+            SendPacket();
+        }
+
+        public void ToggleReady()
+        {
+            _isSelfReady = !_isSelfReady;
+
+            _packetWriter.WriteByte((byte)Protocol.ClientPacketType.Ready);
+            _packetWriter.WriteByte((byte)(_isSelfReady ? 1 : 0));
+            SendPacket();
+        }
+
+        public void StartGame()
+        {
+            _packetWriter.WriteByte((byte)Protocol.ClientPacketType.StartGame);
             SendPacket();
         }
         #endregion

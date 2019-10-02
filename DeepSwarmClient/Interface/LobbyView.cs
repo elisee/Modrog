@@ -124,7 +124,7 @@ namespace DeepSwarmClient.Interface
                     Right = 8,
                     Flow = Flow.Shrink,
                     BackgroundPatch = new TexturePatch(0x4444aaff),
-                    OnActivate = Validate
+                    OnActivate = () => Engine.State.ToggleReady()
                 };
 
                 new TextButton(actionsContainer)
@@ -134,6 +134,7 @@ namespace DeepSwarmClient.Interface
                     Right = 8,
                     Flow = Flow.Shrink,
                     BackgroundPatch = new TexturePatch(0x4444aaff),
+                    OnActivate = () => Engine.State.StartGame()
                 };
 
                 new TextButton(actionsContainer)
