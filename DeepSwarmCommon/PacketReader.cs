@@ -38,7 +38,7 @@ namespace DeepSwarmCommon
         public short ReadShort()
         {
             EnsureBytesAvailable(sizeof(short));
-            var value = (short)((_buffer[_cursor] << 8) + _buffer[_cursor + 1]);
+            var value = (short)((_buffer[_cursor + 0] << 8) + _buffer[_cursor + 1]);
             _cursor += sizeof(short);
             return value;
         }
@@ -54,6 +54,15 @@ namespace DeepSwarmCommon
         public string ReadByteSizeString()
         {
             var sizeInBytes = ReadByte();
+            EnsureBytesAvailable(sizeInBytes);
+            var value = Encoding.UTF8.GetString(_buffer, _cursor, sizeInBytes);
+            _cursor += sizeInBytes;
+            return value;
+        }
+
+        public string ReadShortSizeString()
+        {
+            var sizeInBytes = ReadShort();
             EnsureBytesAvailable(sizeInBytes);
             var value = Encoding.UTF8.GetString(_buffer, _cursor, sizeInBytes);
             _cursor += sizeInBytes;

@@ -51,6 +51,14 @@ namespace DeepSwarmCommon
             _cursor += sizeInBytes;
         }
 
+        public void WriteShortSizeString(string value)
+        {
+            var sizeInBytes = Encoding.UTF8.GetBytes(value, 0, value.Length, Buffer, _cursor + 1);
+            Debug.Assert(sizeInBytes <= short.MaxValue);
+            WriteShort((short)sizeInBytes);
+            _cursor += sizeInBytes;
+        }
+
         public void WriteBytes(byte[] value)
         {
             System.Buffer.BlockCopy(value, 0, Buffer, _cursor, value.Length);
