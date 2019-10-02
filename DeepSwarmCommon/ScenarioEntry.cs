@@ -3,6 +3,8 @@
     public class ScenarioEntry
     {
         public string Name;
+
+        public string Title;
         public string Description;
         public int MinPlayers;
         public int MaxPlayers;

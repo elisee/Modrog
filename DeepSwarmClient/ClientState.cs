@@ -37,7 +37,8 @@ namespace DeepSwarmClient
 
         // Lobby
         public readonly List<ScenarioEntry> ScenarioEntries = new List<ScenarioEntry>();
-        public readonly List<SavedGameEntry> SavedGameEntries = new List<SavedGameEntry>();
+        // public readonly List<SavedGameEntry> SavedGameEntries = new List<SavedGameEntry>();
+        public ScenarioEntry ActiveScenario;
 
         // Map
         public readonly Map Map = new Map();
@@ -108,12 +109,25 @@ namespace DeepSwarmClient
             try { _socket.Send(_packetWriter.Buffer, 0, _packetWriter.Finish(), SocketFlags.None); } catch { }
         }
 
+        #region Connect View
         public void SetName(string name)
         {
             SelfPlayerName = name;
             File.WriteAllText(_engine.SettingsFilePath, SelfPlayerName);
         }
+        #endregion
 
+        #region Lobby View
+        public void ChooseScenario(string scenarioName)
+        {
+            _packetWriter.WriteByte((byte)Protocol.ClientPacketType.ChooseGame);
+            // TODO: Add a byte to say whether scenario or saved game
+            _packetWriter.WriteByteSizeString(scenarioName);
+            SendPacket();
+        }
+        #endregion
+
+        #region Playing View
         public void SelectEntity(Entity entity)
         {
             SelectedEntity = entity;
@@ -208,6 +222,7 @@ namespace DeepSwarmClient
             _engine.Interface.PlayingView.OnScriptListUpdated();
             _engine.Interface.PlayingView.OnSelectedEntityChanged();
         }
+        #endregion
 
         internal void Update(float deltaTime)
         {

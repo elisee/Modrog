@@ -21,6 +21,9 @@ namespace DeepSwarmCommon
             Chat,
             PlayerList,
 
+            // Lobby,
+            SetupGame,
+
             // Playing
             Tick,
         }
@@ -34,7 +37,7 @@ namespace DeepSwarmCommon
             Chat,
 
             // Lobby
-            SetupGame,
+            ChooseGame,
             StartGame,
             Ready,
 

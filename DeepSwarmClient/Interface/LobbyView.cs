@@ -8,57 +8,63 @@ namespace DeepSwarmClient.Interface
         readonly Panel _scenarioListPanel;
         readonly Panel _savedGamesListPanel;
 
+        readonly Label _noGameSelectedLabel;
+        readonly Panel _gameInfoContainer;
+        readonly Label _gameTitleLabel;
+        readonly Label _gameMinMaxPlayersLabel;
+        readonly Label _gameDescriptionLabel;
+
         public LobbyView(Interface @interface)
             : base(@interface, null)
         {
-            var panel = new Panel(Desktop, this, new TexturePatch(0x88aa88ff))
+            var panel = new Panel(this, new TexturePatch(0x88aa88ff))
             {
                 ChildLayout = ChildLayoutMode.Top,
             };
 
-            new Label(Desktop, panel) { Text = "Lobby", Padding = 8 };
-            var playerListAndMainPanelContainer = new Panel(Desktop, panel, null)
+            new Label(panel) { Text = "Lobby", Padding = 8 };
+            var playerListAndMainPanelContainer = new Panel(panel)
             {
                 LayoutWeight = 1,
                 ChildLayout = ChildLayoutMode.Left
             };
 
             {
-                var mainPanel = new Panel(Desktop, playerListAndMainPanelContainer, new TexturePatch(0x228800ff))
+                var mainPanel = new Panel(playerListAndMainPanelContainer, new TexturePatch(0x228800ff))
                 {
                     LayoutWeight = 1,
                     ChildLayout = ChildLayoutMode.Left
                 };
 
                 {
-                    var gameSelectionPanel = new Panel(Desktop, mainPanel, null)
+                    var gameSelectionPanel = new Panel(mainPanel)
                     {
                         Width = 260,
                         ChildLayout = ChildLayoutMode.Top,
                     };
 
-                    new Label(Desktop, gameSelectionPanel)
+                    new Label(gameSelectionPanel)
                     {
                         Padding = 8,
                         Text = "Scenarios",
                         BackgroundPatch = new TexturePatch(0x112345ff),
                     };
 
-                    _scenarioListPanel = new Panel(Desktop, gameSelectionPanel, null)
+                    _scenarioListPanel = new Panel(gameSelectionPanel)
                     {
                         LayoutWeight = 1,
                         ChildLayout = ChildLayoutMode.Top,
                         VerticalFlow = Flow.Scroll
                     };
 
-                    new Label(Desktop, gameSelectionPanel)
+                    new Label(gameSelectionPanel)
                     {
                         Padding = 8,
                         Text = "Saved Games",
                         BackgroundPatch = new TexturePatch(0x112345ff),
                     };
 
-                    _savedGamesListPanel = new Panel(Desktop, gameSelectionPanel, null)
+                    _savedGamesListPanel = new Panel(gameSelectionPanel)
                     {
                         LayoutWeight = 1,
                         ChildLayout = ChildLayoutMode.Top,
@@ -67,28 +73,37 @@ namespace DeepSwarmClient.Interface
                 }
 
                 {
-                    var gameInfoPanel = new Panel(Desktop, mainPanel, new TexturePatch(0x456721ff))
-                    {
-                        LayoutWeight = 1,
-                        ChildLayout = ChildLayoutMode.Top,
-                    };
+                    var gameInfoPanel = new Panel(mainPanel, new TexturePatch(0x456721ff)) { LayoutWeight = 1, ChildLayout = ChildLayoutMode.Top };
 
-                    // TODO: Min / Max players, Description, and populate the list of existing players
+                    _noGameSelectedLabel = new Label(gameInfoPanel) { Text = "No game selected.", IsVisible = true };
+
+                    _gameInfoContainer = new Panel(gameInfoPanel) { ChildLayout = ChildLayoutMode.Top, IsVisible = false };
+                    _gameTitleLabel = new Label(_gameInfoContainer);
+
+                    var minMaxPlayersPanel = new Panel(_gameInfoContainer) { ChildLayout = ChildLayoutMode.Left };
+                    new Label(minMaxPlayersPanel) { Text = "Min / Max players: " };
+                    _gameMinMaxPlayersLabel = new Label(minMaxPlayersPanel);
+
+                    var descriptionPanel = new Panel(_gameInfoContainer) { ChildLayout = ChildLayoutMode.Top };
+                    new Label(descriptionPanel) { Text = "Description:" };
+                    _gameDescriptionLabel = new Label(descriptionPanel) { Wrap = true };
+
+                    // TODO: the list of existing players
                 }
             }
 
             {
                 // TODO: Move this in the lower part of the game info panel and separate players between known identities & unknown if loading a saved game
                 // TODO: Add chat box
-                var playerListArea = new Panel(Desktop, playerListAndMainPanelContainer, new TexturePatch(0xaa0000ff))
+                var playerListArea = new Panel(playerListAndMainPanelContainer, new TexturePatch(0xaa0000ff))
                 {
                     Width = 200,
                     ChildLayout = ChildLayoutMode.Top,
                 };
 
-                new Label(Desktop, playerListArea) { Text = "Player list", Padding = 8, BackgroundPatch = new TexturePatch(0x112345ff) };
+                new Label(playerListArea) { Text = "Player list", Padding = 8, BackgroundPatch = new TexturePatch(0x112345ff) };
 
-                _playerListPanel = new Panel(Desktop, playerListArea, null)
+                _playerListPanel = new Panel(playerListArea)
                 {
                     LayoutWeight = 1,
                     ChildLayout = ChildLayoutMode.Top
@@ -96,13 +111,13 @@ namespace DeepSwarmClient.Interface
             }
 
             {
-                var actionsContainer = new Panel(Desktop, panel, null)
+                var actionsContainer = new Panel(panel)
                 {
                     Padding = 8,
                     ChildLayout = ChildLayoutMode.Left
                 };
 
-                new TextButton(Desktop, actionsContainer)
+                new TextButton(actionsContainer)
                 {
                     Text = "Ready",
                     Padding = 8,
@@ -112,7 +127,7 @@ namespace DeepSwarmClient.Interface
                     OnActivate = Validate
                 };
 
-                new TextButton(Desktop, actionsContainer)
+                new TextButton(actionsContainer)
                 {
                     Text = "Start Game",
                     Padding = 8,
@@ -121,7 +136,7 @@ namespace DeepSwarmClient.Interface
                     BackgroundPatch = new TexturePatch(0x4444aaff),
                 };
 
-                new TextButton(Desktop, actionsContainer)
+                new TextButton(actionsContainer)
                 {
                     Text = "Leave",
                     Padding = 8,
@@ -145,26 +160,28 @@ namespace DeepSwarmClient.Interface
             _scenarioListPanel.Clear();
             foreach (var entry in Engine.State.ScenarioEntries)
             {
-                new TextButton(Desktop, _scenarioListPanel)
+                new TextButton(_scenarioListPanel)
                 {
                     Padding = 8,
                     Text = entry.Name,
-                    OnActivate = () => { /* TODO */ }
+                    OnActivate = () => { Engine.State.ChooseScenario(entry.Name); }
                 };
             }
             _scenarioListPanel.Layout();
 
+            /*
             _savedGamesListPanel.Clear();
             foreach (var entry in Engine.State.SavedGameEntries)
             {
                 // TODO: Add date last played and stuff like that
-                new TextButton(Desktop, _scenarioListPanel)
+                new TextButton(_scenarioListPanel)
                 {
                     Padding = 8,
                     Text = entry.ScenarioName,
-                    OnActivate = () => { /* TODO */ }
+                    OnActivate = () => { TODO }
                 };
             }
+            */
         }
 
         public void OnPlayerListUpdated()
@@ -173,11 +190,32 @@ namespace DeepSwarmClient.Interface
 
             foreach (var playerEntry in Engine.State.PlayerList)
             {
-                var playerPanel = new Panel(Desktop, _playerListPanel, null) { Padding = 8 };
-                var label = new Label(Desktop, playerPanel) { Text = $"[{(playerEntry.IsReady ? "x" : " ")}] {playerEntry.Name}" };
+                var playerPanel = new Panel(_playerListPanel) { Padding = 8 };
+                var label = new Label(playerPanel) { Text = $"[{(playerEntry.IsReady ? "x" : " ")}] {playerEntry.Name}" };
             }
 
             _playerListPanel.Layout();
+        }
+
+        public void OnActiveScenarioChanged()
+        {
+            if (Engine.State.ActiveScenario != null)
+            {
+                _noGameSelectedLabel.IsVisible = false;
+                _gameInfoContainer.IsVisible = true;
+
+                _gameTitleLabel.Text = Engine.State.ActiveScenario.Name; // TODO: Title
+                _gameDescriptionLabel.Text = Engine.State.ActiveScenario.Description;
+
+                _gameInfoContainer.Parent.Layout();
+            }
+            else
+            {
+                _noGameSelectedLabel.IsVisible = true;
+                _gameInfoContainer.IsVisible = false;
+
+                _noGameSelectedLabel.Parent.Layout();
+            }
         }
     }
 }

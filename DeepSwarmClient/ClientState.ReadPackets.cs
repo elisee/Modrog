@@ -1,5 +1,4 @@
 ﻿using DeepSwarmCommon;
-using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
@@ -49,26 +48,18 @@ namespace DeepSwarmClient
                             ReadWelcome();
                             break;
 
-                        case ServerPacketType.PlayerList:
-                            ReadPlayerList();
-                            break;
+                        case ServerPacketType.PlayerList: ReadPlayerList(); break;
+                        case ServerPacketType.Chat: ReadChat(); break;
 
-                        case ServerPacketType.Chat:
-                            if (!EnsureLobbyOrPlayingView()) break;
-                            ReadChat();
+                        case ServerPacketType.SetupGame:
+                            if (!EnsureView(EngineView.Lobby)) break;
+                            ReadSetupGame();
                             break;
 
                         case ServerPacketType.Tick:
                             if (!EnsureLobbyOrPlayingView()) break;
 
                             ReadTick();
-
-                            if (View == EngineView.Lobby)
-                            {
-                                View = EngineView.Playing;
-                                _engine.Interface.OnViewChanged();
-                            }
-
                             break;
                     }
                 }
@@ -79,6 +70,7 @@ namespace DeepSwarmClient
             }
         }
 
+        #region Loading View
         void ReadWelcome()
         {
             var isPlaying = _packetReader.ReadByte() != 0;
@@ -100,12 +92,16 @@ namespace DeepSwarmClient
                     });
                 }
 
+                /*
                 var savedGamesCount = _packetReader.ReadByte();
                 SavedGameEntries.Clear();
                 for (var i = 0; i < savedGamesCount; i++)
                 {
                     throw new NotImplementedException();
                 }
+                */
+
+                ReadSetupGame();
             }
             else
             {
@@ -114,7 +110,9 @@ namespace DeepSwarmClient
 
             _engine.Interface.OnViewChanged();
         }
+        #endregion
 
+        #region Lobby or Playing View
         void ReadPlayerList()
         {
             PlayerList.Clear();
@@ -143,7 +141,18 @@ namespace DeepSwarmClient
         {
             // TODO
         }
+        #endregion
 
+        #region Lobby View
+        void ReadSetupGame()
+        {
+            var scenarioName = _packetReader.ReadByteSizeString();
+            ActiveScenario = ScenarioEntries.Find(x => x.Name == scenarioName);
+            _engine.Interface.LobbyView.OnActiveScenarioChanged();
+        }
+        #endregion
+
+        #region Playing View
         void ReadTick()
         {
             Unsafe.InitBlock(ref FogOfWar[0], 0, (uint)FogOfWar.Length);
@@ -276,6 +285,13 @@ namespace DeepSwarmClient
                 _packetWriter.WriteByte((byte)move);
             }
             SendPacket();
+
+            if (View == EngineView.Lobby)
+            {
+                View = EngineView.Playing;
+                _engine.Interface.OnViewChanged();
+            }
         }
+        #endregion
     }
 }

@@ -14,7 +14,7 @@ namespace DeepSwarmClient.Interface
                 BackgroundPatch = new TexturePatch(0x88aa88ff)
             };
 
-            new Label(Desktop, loadingPopup) { Text = "Loading" };
+            new Label(loadingPopup) { Text = "Loading" };
         }
     }
 }

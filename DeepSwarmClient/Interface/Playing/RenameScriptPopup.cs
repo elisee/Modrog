@@ -14,18 +14,18 @@ namespace DeepSwarmClient.Interface.Playing
             const int PanelWidth = 320 + 16 * 2;
             const int PanelHeight = 160 + 16 * 2;
 
-            var panel = new Panel(Desktop, this, new TexturePatch(0x88aa88ff))
+            var panel = new Panel(this, new TexturePatch(0x88aa88ff))
             {
                 Anchor = new Anchor(width: PanelWidth, height: PanelHeight),
             };
 
-            new Label(Desktop, panel)
+            new Label(panel)
             {
                 Anchor = new Anchor(left: 8, top: 8),
                 Text = "- Rename script -"
             };
 
-            new Label(Desktop, panel)
+            new Label(panel)
             {
                 Anchor = new Anchor(left: 8, top: 24),
                 Text = "Script name:"
