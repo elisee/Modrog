@@ -163,6 +163,8 @@ namespace DeepSwarmClient.UI
 
         public void Layout(Rectangle? containerRectangle = null)
         {
+            if (!IsMounted) return;
+
             if (containerRectangle != null) _containerRectangle = containerRectangle.Value;
 
             var minSize = ComputeSize(_containerRectangle.Width, _containerRectangle.Height);
