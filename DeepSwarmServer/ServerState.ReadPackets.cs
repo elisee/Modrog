@@ -81,7 +81,7 @@ namespace DeepSwarmServer
                 _playerIdentities.Add(peer.Identity);
             }
 
-            if (_hostGuid == Guid.Empty)
+            if (_hostGuid == Guid.Empty || _hostGuid == peer.Identity.Guid)
             {
                 // This is the first player to successfully connect, make them host
                 _hostGuid = peer.Identity.Guid;
