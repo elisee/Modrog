@@ -38,7 +38,7 @@ namespace DeepSwarmClient.UI
 
         int GetHoveredTextPosition()
         {
-            var x = Desktop.MouseX + _scrollingPixelsX - LayoutRectangle.X;
+            var x = Desktop.MouseX + _scrollingPixelsX - RectangleAfterPadding.X;
 
             var targetX = x / RendererHelper.FontRenderSize;
 
@@ -76,8 +76,8 @@ namespace DeepSwarmClient.UI
         void ClampScrolling()
         {
             _scrollingPixelsX = Math.Clamp(_scrollingPixelsX,
-                Math.Max(0, _cursorX * RendererHelper.FontRenderSize - LayoutRectangle.Width),
-                Math.Max(0, Math.Min(_cursorX * RendererHelper.FontRenderSize, Value.Length * RendererHelper.FontRenderSize - LayoutRectangle.Width)));
+                Math.Max(0, _cursorX * RendererHelper.FontRenderSize - RectangleAfterPadding.Width),
+                Math.Max(0, Math.Min(_cursorX * RendererHelper.FontRenderSize, Value.Length * RendererHelper.FontRenderSize - RectangleAfterPadding.Width)));
         }
         #endregion
 
