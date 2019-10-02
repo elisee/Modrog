@@ -1,6 +1,6 @@
-﻿namespace DeepSwarmServer
+﻿namespace DeepSwarmCommon
 {
-    class ScenarioEntry
+    public class ScenarioEntry
     {
         public string Name;
         public string Description;

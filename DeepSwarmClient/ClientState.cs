@@ -35,6 +35,10 @@ namespace DeepSwarmClient
         // Player list
         public readonly List<PlayerListEntry> PlayerList = new List<PlayerListEntry>();
 
+        // Lobby
+        public readonly List<ScenarioEntry> ScenarioEntries = new List<ScenarioEntry>();
+        public readonly List<SavedGameEntry> SavedGameEntries = new List<SavedGameEntry>();
+
         // Map
         public readonly Map Map = new Map();
         public readonly byte[] FogOfWar = new byte[Map.MapSize * Map.MapSize];
@@ -87,6 +91,15 @@ namespace DeepSwarmClient
             SendPacket();
 
             View = EngineView.Loading;
+            _engine.Interface.OnViewChanged();
+        }
+
+        public void Disconnect()
+        {
+            _socket?.Close();
+            _socket = null;
+
+            View = EngineView.Connect;
             _engine.Interface.OnViewChanged();
         }
 

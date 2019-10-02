@@ -381,6 +381,18 @@ namespace DeepSwarmClient.UI
             foreach (var child in Children) if (child.IsMounted) child.Draw();
         }
 
+        public void DrawOutline()
+        {
+            Debug.Assert(IsMounted);
+
+            SDL.SDL_RenderDrawLine(Desktop.Renderer, LayoutRectangle.Left, LayoutRectangle.Top, LayoutRectangle.Right, LayoutRectangle.Top);
+            SDL.SDL_RenderDrawLine(Desktop.Renderer, LayoutRectangle.Right, LayoutRectangle.Top, LayoutRectangle.Right, LayoutRectangle.Bottom);
+            SDL.SDL_RenderDrawLine(Desktop.Renderer, LayoutRectangle.Right, LayoutRectangle.Bottom, LayoutRectangle.Left, LayoutRectangle.Bottom);
+            SDL.SDL_RenderDrawLine(Desktop.Renderer, LayoutRectangle.Left, LayoutRectangle.Bottom, LayoutRectangle.Left, LayoutRectangle.Top);
+
+            foreach (var child in Children) if (child.IsMounted) child.DrawOutline();
+        }
+
         protected virtual void DrawSelf()
         {
             if (BackgroundPatch != null) RendererHelper.DrawPatch(Desktop.Renderer, BackgroundPatch, LayoutRectangle);

@@ -1,4 +1,5 @@
 ﻿using DeepSwarmCommon;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
@@ -44,13 +45,11 @@ namespace DeepSwarmClient
                     {
                         case ServerPacketType.Welcome:
                             if (!EnsureView(EngineView.Loading)) break;
-                            var isPlaying = _packetReader.ReadByte() != 0;
-                            View = isPlaying ? EngineView.Playing : EngineView.Lobby;
-                            _engine.Interface.OnViewChanged();
+
+                            ReadWelcome();
                             break;
 
                         case ServerPacketType.PlayerList:
-                            if (!EnsureLobbyOrPlayingView()) break;
                             ReadPlayerList();
                             break;
 
@@ -80,6 +79,42 @@ namespace DeepSwarmClient
             }
         }
 
+        void ReadWelcome()
+        {
+            var isPlaying = _packetReader.ReadByte() != 0;
+            View = isPlaying ? EngineView.Playing : EngineView.Lobby;
+
+            if (!isPlaying)
+            {
+                var scenarioCount = _packetReader.ReadByte();
+                ScenarioEntries.Clear();
+                for (var i = 0; i < scenarioCount; i++)
+                {
+                    ScenarioEntries.Add(new ScenarioEntry
+                    {
+                        Name = _packetReader.ReadByteSizeString(),
+                        MinPlayers = _packetReader.ReadByte(),
+                        MaxPlayers = _packetReader.ReadByte(),
+                        SupportedModes = (ScenarioEntry.ScenarioMode)_packetReader.ReadByte(),
+                        Description = _packetReader.ReadShortSizeString()
+                    });
+                }
+
+                var savedGamesCount = _packetReader.ReadByte();
+                SavedGameEntries.Clear();
+                for (var i = 0; i < savedGamesCount; i++)
+                {
+                    throw new NotImplementedException();
+                }
+            }
+            else
+            {
+
+            }
+
+            _engine.Interface.OnViewChanged();
+        }
+
         void ReadPlayerList()
         {
             PlayerList.Clear();
@@ -90,13 +125,18 @@ namespace DeepSwarmClient
             {
                 var name = _packetReader.ReadByteSizeString();
                 var flags = _packetReader.ReadByte();
-                var isOnline = (flags & 1) != 0;
-                var isHost = (flags & 2) != 0;
+                var isHost = (flags & 1) != 0;
+                var isOnline = (flags & 2) != 0;
+                var isReady = (flags & 4) != 0;
 
-                PlayerList.Add(new PlayerListEntry { Name = name, IsOnline = isOnline, IsHost = isHost });
+                PlayerList.Add(new PlayerListEntry { Name = name, IsHost = isHost, IsOnline = isOnline, IsReady = isReady });
             }
 
-            _engine.Interface.PlayingView.OnPlayerListUpdated();
+            switch (View)
+            {
+                case EngineView.Playing: _engine.Interface.PlayingView.OnPlayerListUpdated(); break;
+                case EngineView.Lobby: _engine.Interface.LobbyView.OnPlayerListUpdated(); break;
+            }
         }
 
         void ReadChat()

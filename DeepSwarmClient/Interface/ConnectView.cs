@@ -11,18 +11,25 @@ namespace DeepSwarmClient.Interface
         public ConnectView(Interface @interface)
             : base(@interface, null)
         {
-            var panel = new Panel(Desktop, this, new TexturePatch(0x88aa88ff))
+            var windowPanel = new Panel(Desktop, this, new TexturePatch(0x228800ff))
             {
                 Width = 320,
                 Flow = Flow.Shrink,
-                Padding = 8,
-                ChildLayout = ChildLayoutMode.Top
+                ChildLayout = ChildLayoutMode.Top,
             };
 
-            new Label(Desktop, panel) { Text = "- DeepSwarm r1 -", Flow = Flow.Shrink, Bottom = 16 };
-            new Label(Desktop, panel) { Text = "Enter your name:", Bottom = 8 };
+            var titlePanel = new Panel(Desktop, windowPanel, new TexturePatch(0x88aa88ff));
+            new Label(Desktop, titlePanel) { Text = "- DeepSwarm r2 -", Flow = Flow.Shrink, Padding = 8 };
 
-            _nameInput = new TextInput(Desktop, panel)
+            var mainPanel = new Panel(Desktop, windowPanel, new TexturePatch(0x228800ff))
+            {
+                Padding = 8,
+                ChildLayout = ChildLayoutMode.Top,
+            };
+
+            new Label(Desktop, mainPanel) { Text = "Enter your name:", Bottom = 8 };
+
+            _nameInput = new TextInput(Desktop, mainPanel)
             {
                 Height = 32,
                 Bottom = 8,
@@ -31,16 +38,16 @@ namespace DeepSwarmClient.Interface
                 MaxLength = Protocol.MaxPlayerNameLength
             };
 
-            new Label(Desktop, panel) { Text = "Server address:", Bottom = 8 };
+            new Label(Desktop, mainPanel) { Text = "Server address:", Bottom = 8 };
 
-            _serverAddressInput = new TextInput(Desktop, panel)
+            _serverAddressInput = new TextInput(Desktop, mainPanel)
             {
                 Height = 32,
                 Padding = 8,
                 BackgroundPatch = new TexturePatch(0x004400ff)
             };
 
-            var actionsContainer = new Element(Desktop, panel) { ChildLayout = ChildLayoutMode.Left, Top = 16 };
+            var actionsContainer = new Element(Desktop, mainPanel) { ChildLayout = ChildLayoutMode.Left, Top = 16 };
 
             new TextButton(Desktop, actionsContainer)
             {

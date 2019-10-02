@@ -127,6 +127,8 @@ namespace DeepSwarmServer
             _unindentifiedPeerSockets.Remove(peer.Socket);
             _identifiedPeerSockets.Add(peer.Socket);
 
+            BroadcastPlayerList();
+
             // Reply
             _packetWriter.WriteByte((byte)Protocol.ServerPacketType.Welcome);
             _packetWriter.WriteByte((byte)_stage);
@@ -134,15 +136,19 @@ namespace DeepSwarmServer
             switch (_stage)
             {
                 case ServerStage.Lobby:
+                    _packetWriter.WriteByte((byte)_scenarioEntries.Count);
+                    foreach (var entry in _scenarioEntries)
+                    {
+                        _packetWriter.WriteByteSizeString(entry.Name);
+                        _packetWriter.WriteByte((byte)entry.MinPlayers);
+                        _packetWriter.WriteByte((byte)entry.MaxPlayers);
+                        _packetWriter.WriteByte((byte)entry.SupportedModes);
+                        _packetWriter.WriteShortSizeString(entry.Description);
+                    }
+
                     _packetWriter.WriteByte((byte)_savedGameEntries.Count);
 
                     foreach (var entry in _savedGameEntries)
-                    {
-                        throw new NotImplementedException();
-                    }
-
-                    _packetWriter.WriteByte((byte)_scenarioEntries.Count);
-                    foreach (var entry in _scenarioEntries)
                     {
                         throw new NotImplementedException();
                     }

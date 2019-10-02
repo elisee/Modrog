@@ -191,7 +191,13 @@ namespace DeepSwarmClient.UI
 
         public bool IsCtrlDown => _rightCtrlDown || _leftCtrlDown;
 
-        public void Draw() => RootElement.Draw();
+        public void Draw()
+        {
+            RootElement.Draw();
+
+            // RootElement.DrawOutline();
+            // if (HoveredElement != null) RendererHelper.DrawText(Renderer, 5, 5, $"{HoveredElement.GetType().Name} {HoveredElement.LayoutRectangle.X} {HoveredElement.LayoutRectangle.Y}", Color.White);
+        }
         #endregion
     }
 }

@@ -1,58 +1,134 @@
 ﻿using DeepSwarmClient.UI;
-using System;
 
 namespace DeepSwarmClient.Interface
 {
     class LobbyView : InterfaceElement
     {
-        readonly Panel _verticalSplitter;
+        readonly Panel _playerListPanel;
+        readonly Panel _scenarioListPanel;
+        readonly Panel _savedGamesListPanel;
 
         public LobbyView(Interface @interface)
             : base(@interface, null)
         {
             var panel = new Panel(Desktop, this, new TexturePatch(0x88aa88ff))
             {
-                Flow = Flow.Shrink,
                 ChildLayout = ChildLayoutMode.Top,
             };
 
-            new Label(Desktop, panel) { Text = "Lobby" };
-            var horizontalSplitter = new Element(Desktop, panel)
+            new Label(Desktop, panel) { Text = "Lobby", Padding = 8 };
+            var playerListAndMainPanelContainer = new Panel(Desktop, panel, null)
             {
+                LayoutWeight = 1,
                 ChildLayout = ChildLayoutMode.Left
             };
 
             {
-                // TODO: Display player list
-                var playerListPanel = new Panel(Desktop, horizontalSplitter, new TexturePatch(0xaa0000ff))
+                var mainPanel = new Panel(Desktop, playerListAndMainPanelContainer, new TexturePatch(0x228800ff))
                 {
-                    Width = 200
+                    LayoutWeight = 1,
+                    ChildLayout = ChildLayoutMode.Left
                 };
 
-                new Label(Desktop, playerListPanel) { Text = "Player list" };
+                {
+                    var gameSelectionPanel = new Panel(Desktop, mainPanel, null)
+                    {
+                        Width = 260,
+                        ChildLayout = ChildLayoutMode.Top,
+                    };
+
+                    new Label(Desktop, gameSelectionPanel)
+                    {
+                        Padding = 8,
+                        Text = "Scenarios",
+                        BackgroundPatch = new TexturePatch(0x112345ff),
+                    };
+
+                    _scenarioListPanel = new Panel(Desktop, gameSelectionPanel, null)
+                    {
+                        LayoutWeight = 1,
+                        ChildLayout = ChildLayoutMode.Top,
+                        VerticalFlow = Flow.Scroll
+                    };
+
+                    new Label(Desktop, gameSelectionPanel)
+                    {
+                        Padding = 8,
+                        Text = "Saved Games",
+                        BackgroundPatch = new TexturePatch(0x112345ff),
+                    };
+
+                    _savedGamesListPanel = new Panel(Desktop, gameSelectionPanel, null)
+                    {
+                        LayoutWeight = 1,
+                        ChildLayout = ChildLayoutMode.Top,
+                        VerticalFlow = Flow.Scroll
+                    };
+                }
+
+                {
+                    var gameInfoPanel = new Panel(Desktop, mainPanel, new TexturePatch(0x456721ff))
+                    {
+                        LayoutWeight = 1,
+                        ChildLayout = ChildLayoutMode.Top,
+                    };
+
+                    // TODO: Min / Max players, Description, and populate the list of existing players
+                }
             }
 
             {
-                _verticalSplitter = new Panel(Desktop, horizontalSplitter, new TexturePatch(0x228800ff))
+                // TODO: Move this in the lower part of the game info panel and separate players between known identities & unknown if loading a saved game
+                // TODO: Add chat box
+                var playerListArea = new Panel(Desktop, playerListAndMainPanelContainer, new TexturePatch(0xaa0000ff))
+                {
+                    Width = 200,
+                    ChildLayout = ChildLayoutMode.Top,
+                };
+
+                new Label(Desktop, playerListArea) { Text = "Player list", Padding = 8, BackgroundPatch = new TexturePatch(0x112345ff) };
+
+                _playerListPanel = new Panel(Desktop, playerListArea, null)
                 {
                     LayoutWeight = 1,
-                    Width = 500,
                     ChildLayout = ChildLayoutMode.Top
                 };
+            }
 
-                new Label(Desktop, _verticalSplitter)
+            {
+                var actionsContainer = new Panel(Desktop, panel, null)
                 {
-                    LayoutWeight = 1,
                     Padding = 8,
-                    Text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Praesent vehicula velit libero, ac eleifend sapien malesuada ultricies. Sed metus orci, ultrices at mauris ut, pretium tempor arcu. Nunc eu quam sit amet nunc lobortis laoreet sit amet et risus. Nam orci ex, pretium quis commodo eu, imperdiet quis mi. Sed tristique mattis purus, fringilla elementum leo volutpat eget. Donec sollicitudin nisi libero, a pretium sapien facilisis vitae. Donec massa nisl, fermentum a feugiat non, tristique sit amet turpis. Etiam ornare pellentesque molestie. Praesent molestie ultrices nunc, nec mattis urna finibus nec.",
-                    Wrap = true,
-                    Ellipsize = true
+                    ChildLayout = ChildLayoutMode.Left
                 };
 
-                new Label(Desktop, _verticalSplitter)
+                new TextButton(Desktop, actionsContainer)
                 {
-                    BackgroundPatch = new TexturePatch(0x123456ff),
-                    Text = "Text",
+                    Text = "Ready",
+                    Padding = 8,
+                    Right = 8,
+                    Flow = Flow.Shrink,
+                    BackgroundPatch = new TexturePatch(0x4444aaff),
+                    OnActivate = Validate
+                };
+
+                new TextButton(Desktop, actionsContainer)
+                {
+                    Text = "Start Game",
+                    Padding = 8,
+                    Right = 8,
+                    Flow = Flow.Shrink,
+                    BackgroundPatch = new TexturePatch(0x4444aaff),
+                };
+
+                new TextButton(Desktop, actionsContainer)
+                {
+                    Text = "Leave",
+                    Padding = 8,
+                    Right = 8,
+                    Flow = Flow.Shrink,
+                    BackgroundPatch = new TexturePatch(0x4444aaff),
+                    OnActivate = Engine.State.Disconnect
                 };
             }
 
@@ -62,22 +138,46 @@ namespace DeepSwarmClient.Interface
 
         public override void OnMounted()
         {
-            Desktop.RegisterAnimation(Animate);
+            Desktop.SetFocusedElement(this);
+
+            OnPlayerListUpdated();
+
+            _scenarioListPanel.Clear();
+            foreach (var entry in Engine.State.ScenarioEntries)
+            {
+                new TextButton(Desktop, _scenarioListPanel)
+                {
+                    Padding = 8,
+                    Text = entry.Name,
+                    OnActivate = () => { /* TODO */ }
+                };
+            }
+            _scenarioListPanel.Layout();
+
+            _savedGamesListPanel.Clear();
+            foreach (var entry in Engine.State.SavedGameEntries)
+            {
+                // TODO: Add date last played and stuff like that
+                new TextButton(Desktop, _scenarioListPanel)
+                {
+                    Padding = 8,
+                    Text = entry.ScenarioName,
+                    OnActivate = () => { /* TODO */ }
+                };
+            }
         }
 
-        public override void OnUnmounted()
+        public void OnPlayerListUpdated()
         {
-            Desktop.UnregisterAnimation(Animate);
-        }
+            _playerListPanel.Clear();
 
-        float _timer;
+            foreach (var playerEntry in Engine.State.PlayerList)
+            {
+                var playerPanel = new Panel(Desktop, _playerListPanel, null) { Padding = 8 };
+                var label = new Label(Desktop, playerPanel) { Text = $"[{(playerEntry.IsReady ? "x" : " ")}] {playerEntry.Name}" };
+            }
 
-        void Animate(float deltaTime)
-        {
-            _timer += deltaTime;
-
-            _verticalSplitter.Width = 400 + (int)(MathF.Cos(_timer) * 100);
-            _verticalSplitter.Layout();
+            _playerListPanel.Layout();
         }
     }
 }

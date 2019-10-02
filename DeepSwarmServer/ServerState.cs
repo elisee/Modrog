@@ -1,6 +1,7 @@
 ﻿using DeepSwarmCommon;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Net;
 using System.Net.Sockets;
 
@@ -27,8 +28,8 @@ namespace DeepSwarmServer
         readonly PacketReader _packetReader = new PacketReader();
 
         // Lobby
-        readonly List<SavedGameEntry> _savedGameEntries = new List<SavedGameEntry>();
         readonly List<ScenarioEntry> _scenarioEntries = new List<ScenarioEntry>();
+        readonly List<SavedGameEntry> _savedGameEntries = new List<SavedGameEntry>();
 
         // Playing
         float _tickAccumulatedTime = 0f;
@@ -38,6 +39,14 @@ namespace DeepSwarmServer
         public ServerState(Guid hostGuid)
         {
             _hostGuid = hostGuid;
+
+            var scenariosPath = FileHelper.FindAppFolder("Scenarios");
+
+            foreach (var folder in Directory.GetDirectories(scenariosPath, "*.*", SearchOption.TopDirectoryOnly))
+            {
+                var entry = new ScenarioEntry { Name = folder[(scenariosPath.Length + 1)..], Description = File.ReadAllText(Path.Combine(folder, "Description.txt")) };
+                _scenarioEntries.Add(entry);
+            }
         }
 
         public void Start()
@@ -173,7 +182,7 @@ namespace DeepSwarmServer
             foreach (var identity in _playerIdentities)
             {
                 _packetWriter.WriteByteSizeString(identity.Name);
-                _packetWriter.WriteByte((byte)((identity.IsOnline ? 2 : 0) | (identity.IsHost ? 1 : 0)));
+                _packetWriter.WriteByte((byte)((identity.IsHost ? 1 : 0) | (identity.IsOnline ? 2 : 0) | (identity.IsReady ? 4 : 0)));
             }
 
             Broadcast();
