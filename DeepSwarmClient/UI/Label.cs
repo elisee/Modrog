@@ -12,7 +12,7 @@ namespace DeepSwarmClient.UI
         public bool Wrap;
         public bool Ellipsize;
 
-        string _text;
+        string _text = string.Empty;
         readonly List<string> _segments = new List<string>();
 
         public Label(Element parent) : this(parent.Desktop, parent) { }
