@@ -8,12 +8,14 @@ namespace DeepSwarmClient.Interface
         readonly TextInput _nameInput;
         readonly TextInput _serverAddressInput;
 
+        readonly Label _errorLabel;
+
         public ConnectView(Interface @interface)
             : base(@interface, null)
         {
             var windowPanel = new Panel(this, new TexturePatch(0x228800ff))
             {
-                Width = 320,
+                Width = 480,
                 Flow = Flow.Shrink,
                 ChildLayout = ChildLayoutMode.Top,
             };
@@ -47,6 +49,15 @@ namespace DeepSwarmClient.Interface
                 BackgroundPatch = new TexturePatch(0x004400ff)
             };
 
+            _errorLabel = new Label(mainPanel)
+            {
+                BackgroundPatch = new TexturePatch(0xff4444ff),
+                Top = 8,
+                Padding = 8,
+                Wrap = true,
+                IsVisible = false
+            };
+
             var actionsContainer = new Element(mainPanel) { ChildLayout = ChildLayoutMode.Left, Top = 16 };
 
             new TextButton(actionsContainer)
@@ -61,6 +72,16 @@ namespace DeepSwarmClient.Interface
 
         public override void OnMounted()
         {
+            if (Engine.State.ErrorMessage != null)
+            {
+                _errorLabel.IsVisible = true;
+                _errorLabel.Text = Engine.State.ErrorMessage;
+            }
+            else
+            {
+                _errorLabel.IsVisible = false;
+            }
+
             _nameInput.SetValue(Engine.State.SelfPlayerName ?? "");
             _serverAddressInput.SetValue(Engine.State.SavedServerAddress ?? "localhost");
 
@@ -69,7 +90,6 @@ namespace DeepSwarmClient.Interface
 
         public override void Validate()
         {
-            // TODO: Display errors
             var name = _nameInput.Value.Trim();
             if (name.Length == 0) return;
 

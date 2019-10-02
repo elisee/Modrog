@@ -13,8 +13,8 @@ namespace DeepSwarmClient
         {
             void Abort(string reason)
             {
-                Trace.WriteLine($"Abort: {reason}");
-                Stop();
+                Trace.WriteLine($"Aborted: {reason}");
+                Disconnect(error: $"Aborted: {reason}");
             }
 
             foreach (var packet in packets)

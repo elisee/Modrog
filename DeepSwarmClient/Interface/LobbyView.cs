@@ -144,7 +144,7 @@ namespace DeepSwarmClient.Interface
                     Right = 8,
                     Flow = Flow.Shrink,
                     BackgroundPatch = new TexturePatch(0x4444aaff),
-                    OnActivate = Engine.State.Disconnect
+                    OnActivate = () => Engine.State.Disconnect()
                 };
             }
 

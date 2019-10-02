@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
+using System.Threading.Tasks;
 
 namespace DeepSwarmClient
 {
@@ -25,12 +26,17 @@ namespace DeepSwarmClient
 
         public string SavedServerAddress = "localhost"; // TODO: Save and load from settings
 
+        public string ErrorMessage { get; private set; }
+
         // Self
         public Guid SelfGuid;
         public string SelfPlayerName;
         public int SelfPlayerIndex;
         public int SelfBaseChunkX;
         public int SelfBaseChunkY;
+
+        // Loading
+        public string LoadingProgressText { get; private set; }
 
         // Player list
         public readonly List<PlayerListEntry> PlayerList = new List<PlayerListEntry>();
@@ -77,30 +83,51 @@ namespace DeepSwarmClient
 
             _socket = new Socket(SocketType.Stream, ProtocolType.Tcp) { NoDelay = true, LingerState = new LingerOption(true, seconds: 1) };
 
-            // TODO: Do this in a background thread and have a connecting popup
-            try
-            {
-                _socket.Connect(new IPEndPoint(IPAddress.Loopback, Protocol.Port));
-            }
-            catch
-            {
-                return;
-            }
-
-            _packetReceiver = new PacketReceiver(_socket);
-
-            _packetWriter.WriteByte((byte)Protocol.ClientPacketType.Hello);
-            _packetWriter.WriteByteSizeString(Protocol.VersionString);
-            _packetWriter.WriteBytes(SelfGuid.ToByteArray());
-            _packetWriter.WriteByteSizeString(SelfPlayerName);
-            SendPacket();
-
+            LoadingProgressText = "Connecting...";
             View = EngineView.Loading;
             _engine.Interface.OnViewChanged();
+
+            Task.Run(() =>
+            {
+                try
+                {
+                    _socket.Connect(new IPEndPoint(IPAddress.Loopback, Protocol.Port));
+                }
+                catch (Exception exception)
+                {
+                    _engine.RunOnEngineThread(() =>
+                    {
+                        if (exception is SocketException socketException) ErrorMessage = $"Could not connect: {socketException.SocketErrorCode}.";
+                        else ErrorMessage = $"Could not connect: {exception.Message}";
+
+                        View = EngineView.Connect;
+                        _engine.Interface.OnViewChanged();
+                    });
+
+                    return;
+                }
+
+                _engine.RunOnEngineThread(() =>
+                {
+                    LoadingProgressText = "Loading...";
+                    _engine.Interface.LoadingView.OnProgress();
+
+                    _packetReceiver = new PacketReceiver(_socket);
+
+                    _packetWriter.WriteByte((byte)Protocol.ClientPacketType.Hello);
+                    _packetWriter.WriteByteSizeString(Protocol.VersionString);
+                    _packetWriter.WriteBytes(SelfGuid.ToByteArray());
+                    _packetWriter.WriteByteSizeString(SelfPlayerName);
+                    SendPacket();
+                });
+            });
+
         }
 
-        public void Disconnect()
+        public void Disconnect(string error = null)
         {
+            ErrorMessage = error;
+
             _socket?.Close();
             _socket = null;
 
@@ -249,8 +276,7 @@ namespace DeepSwarmClient
             {
                 if (!_packetReceiver.Read(out var packets))
                 {
-                    Trace.WriteLine($"Disconnected from server.");
-                    Stop();
+                    Disconnect(error: "Connection lost while trying to read from server.");
                     return;
                 }
 
