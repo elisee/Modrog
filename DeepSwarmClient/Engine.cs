@@ -9,6 +9,9 @@ namespace DeepSwarmClient
 {
     partial class Engine
     {
+        // Threading
+        readonly ThreadActionQueue _actionQueue;
+
         // Rendering
         public readonly Rectangle Viewport = new Rectangle(0, 0, 1280, 720);
         public readonly IntPtr Window;
@@ -30,6 +33,8 @@ namespace DeepSwarmClient
 
         public Engine(bool newIdentity)
         {
+            _actionQueue = new ThreadActionQueue(Thread.CurrentThread.ManagedThreadId);
+
             // Rendering
             SDL.SDL_Init(SDL.SDL_INIT_VIDEO);
             SDL.SDL_CreateWindowAndRenderer(Viewport.Width, Viewport.Height, 0, out Window, out Renderer);
@@ -81,6 +86,8 @@ namespace DeepSwarmClient
             Run();
         }
 
+        public void RunOnEngineThread(Action action) => _actionQueue.Run(action);
+
         void Run()
         {
             var stopwatch = Stopwatch.StartNew();
@@ -124,6 +131,7 @@ namespace DeepSwarmClient
                 stopwatch.Restart();
 
                 Update(deltaTime);
+                _actionQueue.ExecuteActions();
 
                 // Render
                 SDL.SDL_SetRenderDrawColor(Renderer, 0, 0, 0, 255);
