@@ -26,34 +26,12 @@ namespace DeepSwarmClient
             else
             {
                 // TODO: Support patch.HorizontalBorder and patch.VerticalBorder
-                var sourceRect = Desktop.ToSDL_Rect(patch.TextureArea.Area);
+                var sourceRect = Desktop.ToSDL_Rect(patch.TextureArea.Rectangle);
                 var destRect = Desktop.ToSDL_Rect(rectangle);
                 SDL.SDL_RenderCopy(renderer, patch.TextureArea.Texture, ref sourceRect, ref destRect);
             }
 
             if (patch.Color.A != byte.MaxValue) SDL.SDL_SetRenderDrawBlendMode(renderer, SDL.SDL_BlendMode.SDL_BLENDMODE_NONE);
-        }
-        #endregion
-
-        #region Text
-        public static IntPtr FontTexture;
-        public const int FontSourceSize = 8;
-        public const int FontRenderSize = 16;
-
-        public static void DrawText(IntPtr renderer, int x, int y, string text, Color color)
-        {
-            SDL.SDL_SetTextureColorMod(FontTexture, color.R, color.G, color.B);
-
-            for (var i = 0; i < text.Length; i++)
-            {
-                var index = text[i] - 32;
-                var column = index % 15;
-                var row = index / 15;
-
-                var sourceRect = new SDL.SDL_Rect { x = column * FontSourceSize, y = row * FontSourceSize, w = FontSourceSize, h = FontSourceSize };
-                var destRect = new SDL.SDL_Rect { x = x + i * FontRenderSize, y = y, w = FontRenderSize, h = FontRenderSize };
-                SDL.SDL_RenderCopy(renderer, FontTexture, ref sourceRect, ref destRect);
-            }
         }
         #endregion
 

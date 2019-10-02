@@ -27,6 +27,7 @@
 
   <ItemGroup>
     <PackageReference Include="KeraLua" Version="1.0.22" />
+    <PackageReference Include="System.Json" Version="4.6.0" />
   </ItemGroup>
 
   <ItemGroup>

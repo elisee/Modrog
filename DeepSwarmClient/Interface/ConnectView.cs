@@ -33,7 +33,6 @@ namespace DeepSwarmClient.Interface
 
             _nameInput = new TextInput(mainPanel)
             {
-                Height = 32,
                 Bottom = 8,
                 Padding = 8,
                 BackgroundPatch = new TexturePatch(0x004400ff),
@@ -44,7 +43,6 @@ namespace DeepSwarmClient.Interface
 
             _serverAddressInput = new TextInput(mainPanel)
             {
-                Height = 32,
                 Padding = 8,
                 BackgroundPatch = new TexturePatch(0x004400ff)
             };

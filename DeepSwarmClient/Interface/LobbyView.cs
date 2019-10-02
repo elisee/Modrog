@@ -78,15 +78,23 @@ namespace DeepSwarmClient.Interface
                     _noGameSelectedLabel = new Label(gameInfoPanel) { Text = "No game selected.", IsVisible = true, Padding = 8 };
 
                     _gameInfoContainer = new Panel(gameInfoPanel) { ChildLayout = ChildLayoutMode.Top, IsVisible = false, Padding = 8 };
-                    _gameTitleLabel = new Label(_gameInfoContainer) { Bottom = 16 };
+                    _gameTitleLabel = new Label(_gameInfoContainer) { Bottom = 16, FontStyle = new FontStyle(@interface.TitleFont) { LetterSpacing = 1 } };
 
                     var minMaxPlayersPanel = new Panel(_gameInfoContainer) { ChildLayout = ChildLayoutMode.Left, Bottom = 16 };
-                    new Label(minMaxPlayersPanel) { Text = "MIN / MAX PLAYERS: " };
+                    new Label(minMaxPlayersPanel) { Text = "Min / Max players: " };
                     _gameMinMaxPlayersLabel = new Label(minMaxPlayersPanel);
 
                     var descriptionPanel = new Panel(_gameInfoContainer) { ChildLayout = ChildLayoutMode.Top };
-                    new Label(descriptionPanel) { Text = "DESCRIPTION:", Bottom = 8 };
+                    new Label(descriptionPanel) { Text = "Description:", Bottom = 8 };
                     _gameDescriptionLabel = new Label(descriptionPanel) { Wrap = true };
+
+                    new TextEditor(_gameInfoContainer)
+                    {
+                        Top = 16,
+                        Height = 300,
+                        Padding = 8,
+                        BackgroundPatch = new TexturePatch(0x123789ff)
+                    }.SetText("Bonjour! This is a test.");
 
                     // TODO: the list of existing players
                 }

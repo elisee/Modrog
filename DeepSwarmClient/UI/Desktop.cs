@@ -11,6 +11,8 @@ namespace DeepSwarmClient.UI
     public class Desktop
     {
         public IntPtr Renderer;
+        public FontStyle MainFontStyle;
+        public FontStyle MonoFontStyle;
 
         public readonly Element RootElement;
         public Element FocusedElement { get; private set; }
@@ -31,9 +33,12 @@ namespace DeepSwarmClient.UI
         bool _leftCtrlDown = false;
         bool _rightCtrlDown = false;
 
-        public Desktop(IntPtr renderer)
+        public Desktop(IntPtr renderer, FontStyle mainFontStyle, FontStyle monoFontStyle)
         {
             Renderer = renderer;
+            MainFontStyle = mainFontStyle;
+            MonoFontStyle = monoFontStyle;
+
             RootElement = new Element(this, null);
             RootElement.Mount();
         }

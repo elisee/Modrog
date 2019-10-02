@@ -1,10 +1,15 @@
 ﻿using DeepSwarmClient.UI;
+using System.IO;
 
 namespace DeepSwarmClient.Interface
 {
     class Interface
     {
         public readonly Engine Engine;
+
+        public readonly Font TitleFont;
+        public readonly Font MainFont;
+        public readonly Font MonoFont;
 
         public readonly Desktop Desktop;
         public readonly Panel ViewLayer;
@@ -19,7 +24,14 @@ namespace DeepSwarmClient.Interface
         {
             Engine = engine;
 
-            Desktop = new Desktop(engine.Renderer);
+            TitleFont = Font.LoadFromChevyRayFolder(Engine.Renderer, Path.Combine(Engine.AssetsPath, "Fonts", "ChevyRay - Roundabout"));
+            MainFont = Font.LoadFromChevyRayFolder(Engine.Renderer, Path.Combine(Engine.AssetsPath, "Fonts", "ChevyRay - Softsquare"));
+            MonoFont = Font.LoadFromChevyRayFolder(Engine.Renderer, Path.Combine(Engine.AssetsPath, "Fonts", "ChevyRay - Softsquare Mono"));
+
+            Desktop = new Desktop(engine.Renderer,
+                mainFontStyle: new FontStyle(MainFont) { Scale = 2, LetterSpacing = 1, LineSpacing = 8 },
+                monoFontStyle: new FontStyle(MonoFont) { Scale = 2, LetterSpacing = 1, LineSpacing = 8 });
+
             ViewLayer = new Panel(Desktop.RootElement, new TexturePatch(0x000000ff));
             PopupLayer = new Panel(Desktop.RootElement, new TexturePatch(0x00000066)) { IsVisible = false };
 

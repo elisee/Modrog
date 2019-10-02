@@ -7,6 +7,8 @@ namespace DeepSwarmClient.UI
 {
     public class Label : Element
     {
+        public FontStyle FontStyle;
+
         public Color TextColor = new Color(0xffffffff);
         public string Text { get => _text; set { _text = value; _segments.Clear(); } }
         public bool Wrap;
@@ -15,17 +17,22 @@ namespace DeepSwarmClient.UI
         string _text = string.Empty;
         readonly List<string> _segments = new List<string>();
 
+        public static readonly string EllipsisText = "…";
+
         public Label(Element parent) : this(parent.Desktop, parent) { }
-        public Label(Desktop desktop, Element parent = null) : base(desktop, parent) { }
+        public Label(Desktop desktop, Element parent = null) : base(desktop, parent)
+        {
+            FontStyle = Desktop.MainFontStyle;
+        }
 
         public override Point ComputeSize(int? maxWidth, int? maxHeight)
         {
             var size = Point.Zero;
 
             // TODO: Support line breaks
-            var textWidth = _text.Length * RendererHelper.FontRenderSize;
+            var textWidth = FontStyle.MeasureText(_text);
             if (Width == null) size.X = textWidth;
-            if (Height == null) size.Y = RendererHelper.FontRenderSize;
+            if (Height == null) size.Y = FontStyle.LineHeight;
 
             var actualMaxWidth = Width ?? maxWidth;
 
@@ -42,12 +49,12 @@ namespace DeepSwarmClient.UI
 
                     while (segmentCursor < _text.Length)
                     {
-                        // TODO: Measure actual text width when we have variable-width fonts
-                        var characterWidth = RendererHelper.FontRenderSize;
+                        // TODO: Could just pass the current and previous character
+                        var newSegmentWidth = FontStyle.MeasureText(_text[segmentStart..(segmentCursor + 1)]);
 
                         if (segmentCursor != segmentStart && _text[segmentCursor] == ' ') segmentEnd = segmentCursor;
 
-                        if (segmentWidth + characterWidth >= actualMaxWidth.Value && segmentStart != segmentEnd)
+                        if (newSegmentWidth >= actualMaxWidth.Value && segmentStart != segmentEnd)
                         {
                             lineCount++;
                             segmentWidth = 0;
@@ -57,15 +64,15 @@ namespace DeepSwarmClient.UI
                         }
                         else
                         {
-                            segmentWidth += characterWidth;
+                            segmentWidth = newSegmentWidth;
                             segmentCursor++;
                         }
                     }
 
                     if (_text.Length != segmentStart) lineCount++;
 
-                    size.X = actualMaxWidth.Value * RendererHelper.FontRenderSize;
-                    size.Y = lineCount * RendererHelper.FontRenderSize;
+                    size.X = actualMaxWidth.Value;
+                    size.Y = lineCount * FontStyle.LineHeight;
                 }
                 else
                 {
@@ -81,8 +88,6 @@ namespace DeepSwarmClient.UI
         {
             _segments.Clear();
 
-            var ellipsisCharacterWidth = RendererHelper.FontRenderSize;
-
             if (Wrap)
             {
                 var segmentStart = 0;
@@ -90,21 +95,21 @@ namespace DeepSwarmClient.UI
                 var segmentCursor = 0;
                 var segmentWidth = 0;
 
-                var lineHeight = RendererHelper.FontRenderSize;
-
                 while (segmentCursor < _text.Length)
                 {
-                    // TODO: Measure actual text width when we have variable-width fonts
-                    var characterWidth = RendererHelper.FontRenderSize;
+                    // TODO: Compute just pass the current and previous character
+                    var newSegmentWidth = FontStyle.MeasureText(_text[segmentStart..(segmentCursor + 1)]);
 
                     if (segmentCursor != segmentStart && _text[segmentCursor] == ' ') segmentEnd = segmentCursor;
 
-                    if (Wrap && segmentWidth + characterWidth >= RectangleAfterPadding.Width && segmentStart != segmentEnd)
+                    if (Wrap && newSegmentWidth >= RectangleAfterPadding.Width && segmentStart != segmentEnd)
                     {
-                        if (Ellipsize && (_segments.Count + 1) * lineHeight >= RectangleAfterPadding.Height)
+                        if (Ellipsize && (_segments.Count + 1) * FontStyle.LineHeight >= RectangleAfterPadding.Height)
                         {
-                            if (segmentWidth + ellipsisCharacterWidth > RectangleAfterPadding.Width) segmentCursor--;
-                            _segments.Add(_text[segmentStart..segmentCursor] + "…");
+                            var ellipsizedSegmentWidth = FontStyle.MeasureText(_text[segmentStart..segmentCursor] + EllipsisText);
+
+                            if (ellipsizedSegmentWidth > RectangleAfterPadding.Width) segmentCursor--;
+                            _segments.Add(_text[segmentStart..segmentCursor] + EllipsisText);
                             return;
                         }
                         else _segments.Add(_text[segmentStart..segmentEnd]);
@@ -116,7 +121,7 @@ namespace DeepSwarmClient.UI
                     }
                     else
                     {
-                        segmentWidth += characterWidth;
+                        segmentWidth = newSegmentWidth;
                         segmentCursor++;
                     }
                 }
@@ -125,20 +130,23 @@ namespace DeepSwarmClient.UI
             }
             else
             {
-                var textWidth = 0;
-
-                for (var textCursor = 0; textCursor < _text.Length; textCursor++)
+                if (Ellipsize)
                 {
-                    // TODO: Measure actual text width when we have variable-width fonts
-                    var characterWidth = RendererHelper.FontRenderSize;
+                    var textWidth = FontStyle.MeasureText(_text);
 
-                    if (textWidth + characterWidth + (textCursor < _text.Length - 1 ? ellipsisCharacterWidth : 0) > RectangleAfterPadding.Width)
+                    if (textWidth > RectangleAfterPadding.Width)
                     {
-                        _segments.Add(_text[0..textCursor] + "…");
-                        return;
-                    }
+                        for (var textCursor = 0; textCursor < _text.Length; textCursor++)
+                        {
+                            var newEllipsizedSegmentWidth = FontStyle.MeasureText(_text[0..(textCursor + 1)] + EllipsisText);
 
-                    textWidth += characterWidth;
+                            if (newEllipsizedSegmentWidth > RectangleAfterPadding.Width)
+                            {
+                                _segments.Add(_text[0..textCursor] + EllipsisText);
+                                return;
+                            }
+                        }
+                    }
                 }
 
                 _segments.Add(_text);
@@ -153,7 +161,8 @@ namespace DeepSwarmClient.UI
 
             for (var i = 0; i < _segments.Count; i++)
             {
-                RendererHelper.DrawText(Desktop.Renderer, RectangleAfterPadding.X, RectangleAfterPadding.Y + i * RendererHelper.FontRenderSize, _segments[i], TextColor);
+                TextColor.UseAsDrawColor(Desktop.Renderer);
+                FontStyle.DrawText(RectangleAfterPadding.X, RectangleAfterPadding.Y + i * FontStyle.LineHeight + FontStyle.LineSpacing / 2, _segments[i]);
             }
         }
     }

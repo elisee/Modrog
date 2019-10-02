@@ -6,12 +6,12 @@ namespace DeepSwarmClient.UI
     public class TextureArea
     {
         public IntPtr Texture;
-        public Rectangle Area;
+        public Rectangle Rectangle;
 
         public TextureArea(IntPtr texture, Rectangle area)
         {
             Texture = texture;
-            Area = area;
+            Rectangle = area;
         }
     }
 }

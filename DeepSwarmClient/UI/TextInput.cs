@@ -6,6 +6,7 @@ namespace DeepSwarmClient.UI
 {
     public class TextInput : Element
     {
+        public FontStyle FontStyle;
         public Color TextColor = new Color(0xffffffff);
         public string Value { get; private set; } = "";
         public int MaxLength = byte.MaxValue;
@@ -18,7 +19,10 @@ namespace DeepSwarmClient.UI
         int _scrollingPixelsX;
 
         public TextInput(Element parent) : this(parent.Desktop, parent) { }
-        public TextInput(Desktop desktop, Element parent) : base(desktop, parent) { }
+        public TextInput(Desktop desktop, Element parent) : base(desktop, parent)
+        {
+            FontStyle = Desktop.MainFontStyle;
+        }
 
         #region Configuration
         public void SetValue(string value)
@@ -29,6 +33,13 @@ namespace DeepSwarmClient.UI
         #endregion
 
         #region Internals
+        public override Point ComputeSize(int? maxWidth, int? maxHeight)
+        {
+            var size = Point.Zero;
+            if (Height == null) size.Y = FontStyle.Size;
+            return size + base.ComputeSize(maxWidth, maxHeight);
+        }
+
         void Animate(float deltaTime)
         {
             _cursorTimer += deltaTime;
@@ -38,14 +49,28 @@ namespace DeepSwarmClient.UI
         {
             var x = Desktop.MouseX + _scrollingPixelsX - RectangleAfterPadding.X;
 
-            var targetX = x / RendererHelper.FontRenderSize;
+            var targetIndex = Value.Length;
+            var textWidth = 0;
 
-            var wasRightHalfClicked = x % RendererHelper.FontRenderSize > RendererHelper.FontRenderSize / 2;
-            if (wasRightHalfClicked) targetX++;
+            for (var i = 0; i < Value.Length; i++)
+            {
+                var newTextWidth = FontStyle.MeasureText(Value[0..(i + 1)]);
+                if (x < newTextWidth)
+                {
+                    targetIndex = i;
 
-            targetX = Math.Clamp(targetX, 0, Value.Length);
+                    var wasRightHalfClicked = x - textWidth > (newTextWidth - textWidth) / 2;
+                    if (wasRightHalfClicked) targetIndex++;
 
-            return targetX;
+                    break;
+                }
+
+                textWidth = newTextWidth;
+            }
+
+            targetIndex = Math.Clamp(targetIndex, 0, Value.Length);
+
+            return targetIndex;
         }
 
         void GetSelectionRange(out int start, out int end)
@@ -73,9 +98,12 @@ namespace DeepSwarmClient.UI
 
         void ClampScrolling()
         {
+            var cursorPixelsX = FontStyle.MeasureText(Value[0.._cursorX]);
+            var textWidth = FontStyle.MeasureText(Value);
+
             _scrollingPixelsX = Math.Clamp(_scrollingPixelsX,
-                Math.Max(0, _cursorX * RendererHelper.FontRenderSize - RectangleAfterPadding.Width),
-                Math.Max(0, Math.Min(_cursorX * RendererHelper.FontRenderSize, Value.Length * RendererHelper.FontRenderSize - RectangleAfterPadding.Width)));
+                Math.Max(0, cursorPixelsX - RectangleAfterPadding.Width),
+                Math.Max(0, Math.Min(cursorPixelsX, textWidth - RectangleAfterPadding.Width)));
         }
         #endregion
 
@@ -250,14 +278,17 @@ namespace DeepSwarmClient.UI
                 new Color(0x0000ffaa).UseAsDrawColor(Desktop.Renderer);
                 GetSelectionRange(out var firstX, out var lastX);
 
+                var firstPixelsX = FontStyle.MeasureText(Value[0..firstX]);
+                var lastPixelsX = FontStyle.MeasureText(Value[0..lastX]);
+
                 var selectionRect = Desktop.ToSDL_Rect(new Rectangle(
-                    RectangleAfterPadding.X + firstX * RendererHelper.FontRenderSize - _scrollingPixelsX,
-                    RectangleAfterPadding.Y,
-                    (lastX - firstX) * RendererHelper.FontRenderSize, RendererHelper.FontRenderSize));
+                    RectangleAfterPadding.X + firstPixelsX - _scrollingPixelsX, RectangleAfterPadding.Y,
+                    lastPixelsX - firstPixelsX, FontStyle.Ascent));
                 SDL.SDL_RenderFillRect(Desktop.Renderer, ref selectionRect);
             }
 
-            RendererHelper.DrawText(Desktop.Renderer, RectangleAfterPadding.X - _scrollingPixelsX, RectangleAfterPadding.Y, Value, TextColor);
+            TextColor.UseAsDrawColor(Desktop.Renderer);
+            FontStyle.DrawText(RectangleAfterPadding.X - _scrollingPixelsX, RectangleAfterPadding.Y, Value);
 
             SDL.SDL_RenderSetClipRect(Desktop.Renderer, IntPtr.Zero);
 
@@ -266,8 +297,8 @@ namespace DeepSwarmClient.UI
             {
                 new Color(0xffffffff).UseAsDrawColor(Desktop.Renderer);
 
-                var cursorRect = Desktop.ToSDL_Rect(new DeepSwarmCommon.Rectangle(
-                    RectangleAfterPadding.X + _cursorX * RendererHelper.FontRenderSize - _scrollingPixelsX,
+                var cursorRect = Desktop.ToSDL_Rect(new Rectangle(
+                    RectangleAfterPadding.X + FontStyle.MeasureText(Value[0.._cursorX]) - _scrollingPixelsX,
                     RectangleAfterPadding.Y,
                     2, RectangleAfterPadding.Height));
                 SDL.SDL_RenderDrawRect(Desktop.Renderer, ref cursorRect);

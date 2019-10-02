@@ -7,7 +7,9 @@ namespace DeepSwarmClient.UI
 {
     public class TextEditor : Element
     {
+        public FontStyle FontStyle;
         public Color TextColor = new Color(0xffffffff);
+        public Point CellSize = new Point(12, 16);
 
         public readonly List<string> Lines = new List<string> { "" };
 
@@ -18,7 +20,10 @@ namespace DeepSwarmClient.UI
         Point _scrollingPixels;
 
         public TextEditor(Element parent) : this(parent.Desktop, parent) { }
-        public TextEditor(Desktop desktop, Element parent) : base(desktop, parent) { }
+        public TextEditor(Desktop desktop, Element parent) : base(desktop, parent)
+        {
+            FontStyle = Desktop.MonoFontStyle;
+        }
 
         #region Configuration
         public void SetText(string text)
@@ -92,13 +97,13 @@ namespace DeepSwarmClient.UI
 
         Point GetHoveredTextPosition()
         {
-            var x = Desktop.MouseX + _scrollingPixels.X - LayoutRectangle.X;
-            var y = Desktop.MouseY + _scrollingPixels.Y - LayoutRectangle.Y;
+            var x = Desktop.MouseX + _scrollingPixels.X - RectangleAfterPadding.X;
+            var y = Desktop.MouseY + _scrollingPixels.Y - RectangleAfterPadding.Y;
 
-            var targetX = x / RendererHelper.FontRenderSize;
-            var targetY = y / RendererHelper.FontRenderSize;
+            var targetX = x / CellSize.X;
+            var targetY = y / CellSize.Y;
 
-            var wasRightHalfClicked = x % RendererHelper.FontRenderSize > RendererHelper.FontRenderSize / 2;
+            var wasRightHalfClicked = x % CellSize.X > CellSize.X / 2;
             if (wasRightHalfClicked) targetX++;
 
             targetY = Math.Clamp(targetY, 0, Lines.Count - 1);
@@ -110,8 +115,8 @@ namespace DeepSwarmClient.UI
         void ClampScrolling()
         {
             _scrollingPixels.Y = Math.Clamp(_scrollingPixels.Y,
-                Math.Max(0, (_cursor.Y + 1) * RendererHelper.FontRenderSize - LayoutRectangle.Height),
-                Math.Max(0, Math.Min(_cursor.Y * RendererHelper.FontRenderSize, Lines.Count * RendererHelper.FontRenderSize - LayoutRectangle.Height)));
+                Math.Max(0, (_cursor.Y + 1) * CellSize.Y - RectangleAfterPadding.Height),
+                Math.Max(0, Math.Min(_cursor.Y * CellSize.Y, Lines.Count * CellSize.Y - RectangleAfterPadding.Height)));
         }
         #endregion
 
@@ -341,8 +346,8 @@ namespace DeepSwarmClient.UI
                 _cursor = GetHoveredTextPosition();
 
                 var mouseY = Desktop.MouseY;
-                if (mouseY < LayoutRectangle.Top) Scroll(1);
-                if (mouseY > LayoutRectangle.Bottom) Scroll(-1);
+                if (mouseY < RectangleAfterPadding.Top) Scroll(1);
+                if (mouseY > RectangleAfterPadding.Bottom) Scroll(-1);
 
                 ClampScrolling();
             }
@@ -377,10 +382,10 @@ namespace DeepSwarmClient.UI
         {
             base.DrawSelf();
 
-            var startY = _scrollingPixels.Y / RendererHelper.FontRenderSize;
-            var endY = Math.Min(Lines.Count - 1, (_scrollingPixels.Y + LayoutRectangle.Height) / RendererHelper.FontRenderSize);
+            var startY = _scrollingPixels.Y / CellSize.Y;
+            var endY = Math.Min(Lines.Count - 1, (_scrollingPixels.Y + RectangleAfterPadding.Height) / CellSize.Y);
 
-            var clipRect = Desktop.ToSDL_Rect(LayoutRectangle);
+            var clipRect = Desktop.ToSDL_Rect(RectangleAfterPadding);
             SDL.SDL_RenderSetClipRect(Desktop.Renderer, ref clipRect);
 
             // Draw selection
@@ -392,31 +397,31 @@ namespace DeepSwarmClient.UI
                 if (firstPosition.Y == lastPosition.Y)
                 {
                     var selectionRect = Desktop.ToSDL_Rect(new Rectangle(
-                    LayoutRectangle.X + firstPosition.X * RendererHelper.FontRenderSize - _scrollingPixels.X,
-                    LayoutRectangle.Y + firstPosition.Y * RendererHelper.FontRenderSize - _scrollingPixels.Y,
-                    (lastPosition.X - firstPosition.X) * RendererHelper.FontRenderSize, RendererHelper.FontRenderSize));
+                    RectangleAfterPadding.X + firstPosition.X * CellSize.X - _scrollingPixels.X,
+                    RectangleAfterPadding.Y + firstPosition.Y * CellSize.Y - _scrollingPixels.Y,
+                    (lastPosition.X - firstPosition.X) * CellSize.X, CellSize.Y));
                     SDL.SDL_RenderFillRect(Desktop.Renderer, ref selectionRect);
                 }
                 else
                 {
                     var firstLineSelectionRect = Desktop.ToSDL_Rect(new Rectangle(
-                    LayoutRectangle.X + firstPosition.X * RendererHelper.FontRenderSize - _scrollingPixels.X,
-                    LayoutRectangle.Y + firstPosition.Y * RendererHelper.FontRenderSize - _scrollingPixels.Y,
-                    (Lines[firstPosition.Y][firstPosition.X..].Length) * RendererHelper.FontRenderSize, RendererHelper.FontRenderSize));
+                    RectangleAfterPadding.X + firstPosition.X * CellSize.X - _scrollingPixels.X,
+                    RectangleAfterPadding.Y + firstPosition.Y * CellSize.Y - _scrollingPixels.Y,
+                    (Lines[firstPosition.Y][firstPosition.X..].Length) * CellSize.X, CellSize.Y));
 
                     for (int i = firstPosition.Y + 1; i < lastPosition.Y; i++)
                     {
                         var midSelectionRect = Desktop.ToSDL_Rect(new Rectangle(
-                            LayoutRectangle.X + 0 - _scrollingPixels.X,
-                            LayoutRectangle.Y + i * RendererHelper.FontRenderSize - _scrollingPixels.Y,
-                            (Lines[i].Length) * RendererHelper.FontRenderSize, RendererHelper.FontRenderSize));
+                            RectangleAfterPadding.X + 0 - _scrollingPixels.X,
+                            RectangleAfterPadding.Y + i * CellSize.Y - _scrollingPixels.Y,
+                            (Lines[i].Length) * CellSize.X, CellSize.Y));
                         SDL.SDL_RenderFillRect(Desktop.Renderer, ref midSelectionRect);
                     }
 
                     var lastLineSelectionRect = Desktop.ToSDL_Rect(new Rectangle(
-                    LayoutRectangle.X + 0 - _scrollingPixels.X,
-                    LayoutRectangle.Y + lastPosition.Y * RendererHelper.FontRenderSize - _scrollingPixels.Y,
-                    (Lines[lastPosition.Y][..lastPosition.X].Length) * RendererHelper.FontRenderSize, RendererHelper.FontRenderSize));
+                    RectangleAfterPadding.X + 0 - _scrollingPixels.X,
+                    RectangleAfterPadding.Y + lastPosition.Y * CellSize.Y - _scrollingPixels.Y,
+                    (Lines[lastPosition.Y][..lastPosition.X].Length) * CellSize.X, CellSize.Y));
 
                     SDL.SDL_RenderFillRect(Desktop.Renderer, ref firstLineSelectionRect);
                     SDL.SDL_RenderFillRect(Desktop.Renderer, ref lastLineSelectionRect);
@@ -424,12 +429,13 @@ namespace DeepSwarmClient.UI
             }
 
             // Draw text
+            TextColor.UseAsDrawColor(Desktop.Renderer);
             for (var y = startY; y <= endY; y++)
             {
-                RendererHelper.DrawText(Desktop.Renderer,
-                    LayoutRectangle.X - _scrollingPixels.X,
-                    LayoutRectangle.Y + y * RendererHelper.FontRenderSize - _scrollingPixels.Y,
-                    Lines[y], TextColor);
+                FontStyle.DrawText(
+                    RectangleAfterPadding.X - _scrollingPixels.X,
+                    RectangleAfterPadding.Y + y * CellSize.Y - _scrollingPixels.Y,
+                    Lines[y]);
             }
 
             SDL.SDL_RenderSetClipRect(Desktop.Renderer, IntPtr.Zero);
@@ -440,9 +446,9 @@ namespace DeepSwarmClient.UI
                 new Color(0xffffffff).UseAsDrawColor(Desktop.Renderer);
 
                 var cursorRect = Desktop.ToSDL_Rect(new Rectangle(
-                    LayoutRectangle.X + _cursor.X * RendererHelper.FontRenderSize - _scrollingPixels.X,
-                    LayoutRectangle.Y + _cursor.Y * RendererHelper.FontRenderSize - _scrollingPixels.Y,
-                    2, RendererHelper.FontRenderSize));
+                    RectangleAfterPadding.X + _cursor.X * CellSize.X - _scrollingPixels.X,
+                    RectangleAfterPadding.Y + _cursor.Y * CellSize.Y - _scrollingPixels.Y,
+                    2, CellSize.Y));
                 SDL.SDL_RenderDrawRect(Desktop.Renderer, ref cursorRect);
             }
         }

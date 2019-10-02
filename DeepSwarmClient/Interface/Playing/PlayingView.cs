@@ -415,11 +415,9 @@ namespace DeepSwarmClient.Interface.Playing
             if (selectedEntity == null) return;
 
             _entityNameLabel.Text = selectedEntity.Type.ToString();
-            var entityNameLength = _entityNameLabel.Text.Length * RendererHelper.FontRenderSize;
             // TODO(ui): _entityNameLabel.Anchor.Left = (EntityStatsContainerWidth - entityNameLength) / 2;
 
             _entityOwnerLabel.Text = PlayerListEntry.GetEntryLabel(Engine.State.PlayerList[selectedEntity.PlayerIndex]);
-            var entityOwnerLength = _entityOwnerLabel.Text.Length * RendererHelper.FontRenderSize;
             // TODO(ui): _entityOwnerLabel.Anchor.Left = (EntityStatsContainerWidth - entityOwnerLength) / 2;
 
             Add(_entityStatsContainer);

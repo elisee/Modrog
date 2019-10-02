@@ -12,8 +12,9 @@ You'll need .NET Core 3 and Visual Studio 2019. VS Code might work.
 ## Things to do
 
     - UI: Implement chat in lobby
-    - UI: Replace ugly single font with some of Chevy Ray's pixel fonts. Grab code that I wrote for Confiture
-    - UI: Report errors when connection fails rather than failing silently
+      - TextInput to send stuff
+      - Scrolling panel with labels to receive stuff
+    - Server: Send message when kicking player so reason can be displayed in the UI
     - InGameView: Fix not being able to select an entity when HoveredTileX/HoveredTileY is negative
     - UI: Copy / Paste in TextInput / TextEditor
     - UI: Keyboard fast movement (Ctrl) in TextInput / TextEditor
@@ -23,6 +24,7 @@ You'll need .NET Core 3 and Visual Studio 2019. VS Code might work.
     - Server: Mark chunk as non-free if an entity enters it to prevent spawning people in it (or we need to track entities by chunk and check for that)
     - Server: Generate and control enemies
     - Implement Attack move
+    - Rendering: Add light checkerboard pattern on the floor?
     - Design & implement more unit types: one that can fire from a distance but has less health, one that digs faster, etc.
     - Design & implement more building types: turrets, refinery, etc.
     - The Factory should be able to produce its own crystals very slowly so that you're never stuck (but it's so slow that it's not sustainable beyond building a couple workers)
