@@ -5,8 +5,8 @@ namespace DeepSwarmClient.UI
 {
     public class Button : Element
     {
-        public TexturePatch HoveredPatch;
-        public TexturePatch PressedPatch;
+        public TexturePatch HoveredPatch = new TexturePatch(0xff0000ff);
+        public TexturePatch PressedPatch = new TexturePatch(0x0000ffff);
 
         public Action OnActivate;
 
@@ -54,8 +54,8 @@ namespace DeepSwarmClient.UI
         {
             base.DrawSelf();
 
-            if (IsHovered) { if (HoveredPatch != null) RendererHelper.DrawPatch(Desktop.Renderer, HoveredPatch, LayoutRectangle); }
-            else if (IsPressed) { if (PressedPatch != null) RendererHelper.DrawPatch(Desktop.Renderer, PressedPatch, LayoutRectangle); }
+            if (IsPressed) { if (PressedPatch != null) RendererHelper.DrawPatch(Desktop.Renderer, PressedPatch, LayoutRectangle); }
+            else if (IsHovered) { if (HoveredPatch != null) RendererHelper.DrawPatch(Desktop.Renderer, HoveredPatch, LayoutRectangle); }
         }
     }
 }
