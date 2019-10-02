@@ -75,17 +75,17 @@ namespace DeepSwarmClient.Interface
                 {
                     var gameInfoPanel = new Panel(mainPanel, new TexturePatch(0x456721ff)) { LayoutWeight = 1, ChildLayout = ChildLayoutMode.Top };
 
-                    _noGameSelectedLabel = new Label(gameInfoPanel) { Text = "No game selected.", IsVisible = true };
+                    _noGameSelectedLabel = new Label(gameInfoPanel) { Text = "No game selected.", IsVisible = true, Padding = 8 };
 
-                    _gameInfoContainer = new Panel(gameInfoPanel) { ChildLayout = ChildLayoutMode.Top, IsVisible = false };
-                    _gameTitleLabel = new Label(_gameInfoContainer);
+                    _gameInfoContainer = new Panel(gameInfoPanel) { ChildLayout = ChildLayoutMode.Top, IsVisible = false, Padding = 8 };
+                    _gameTitleLabel = new Label(_gameInfoContainer) { Bottom = 16 };
 
-                    var minMaxPlayersPanel = new Panel(_gameInfoContainer) { ChildLayout = ChildLayoutMode.Left };
-                    new Label(minMaxPlayersPanel) { Text = "Min / Max players: " };
+                    var minMaxPlayersPanel = new Panel(_gameInfoContainer) { ChildLayout = ChildLayoutMode.Left, Bottom = 16 };
+                    new Label(minMaxPlayersPanel) { Text = "MIN / MAX PLAYERS: " };
                     _gameMinMaxPlayersLabel = new Label(minMaxPlayersPanel);
 
                     var descriptionPanel = new Panel(_gameInfoContainer) { ChildLayout = ChildLayoutMode.Top };
-                    new Label(descriptionPanel) { Text = "Description:" };
+                    new Label(descriptionPanel) { Text = "DESCRIPTION:", Bottom = 8 };
                     _gameDescriptionLabel = new Label(descriptionPanel) { Wrap = true };
 
                     // TODO: the list of existing players
