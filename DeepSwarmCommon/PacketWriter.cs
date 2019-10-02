@@ -45,7 +45,7 @@ namespace DeepSwarmCommon
 
         public void WriteByteSizeString(string value)
         {
-            var sizeInBytes = Encoding.UTF8.GetBytes(value, 0, value.Length, Buffer, _cursor + 1);
+            var sizeInBytes = Encoding.UTF8.GetBytes(value, 0, value.Length, Buffer, _cursor + sizeof(byte));
             Debug.Assert(sizeInBytes <= byte.MaxValue);
             WriteByte((byte)sizeInBytes);
             _cursor += sizeInBytes;
@@ -53,7 +53,7 @@ namespace DeepSwarmCommon
 
         public void WriteShortSizeString(string value)
         {
-            var sizeInBytes = Encoding.UTF8.GetBytes(value, 0, value.Length, Buffer, _cursor + 1);
+            var sizeInBytes = Encoding.UTF8.GetBytes(value, 0, value.Length, Buffer, _cursor + sizeof(short));
             Debug.Assert(sizeInBytes <= short.MaxValue);
             WriteShort((short)sizeInBytes);
             _cursor += sizeInBytes;
