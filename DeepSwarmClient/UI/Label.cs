@@ -20,12 +20,12 @@ namespace DeepSwarmClient.UI
 
         public override Point ComputeSize(int? maxWidth, int? maxHeight)
         {
-            var size = base.ComputeSize(maxWidth, maxHeight);
+            var size = Point.Zero;
 
             // TODO: Support line breaks
             var textWidth = _text.Length * RendererHelper.FontRenderSize;
-            if (Width == null) size.X += textWidth;
-            if (Height == null) size.Y += RendererHelper.FontRenderSize;
+            if (Width == null) size.X = textWidth;
+            if (Height == null) size.Y = RendererHelper.FontRenderSize;
 
             var actualMaxWidth = Width ?? maxWidth;
 
@@ -74,7 +74,7 @@ namespace DeepSwarmClient.UI
                 }
             }
 
-            return size;
+            return size + base.ComputeSize(maxWidth, maxHeight);
         }
 
         public override void LayoutSelf()
