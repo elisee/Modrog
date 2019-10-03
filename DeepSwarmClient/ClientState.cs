@@ -148,6 +148,15 @@ namespace DeepSwarmClient
         }
         #endregion
 
+        #region Lobby / Playing View
+        public void SendChatMessage(string text)
+        {
+            _packetWriter.WriteByte((byte)Protocol.ClientPacketType.Chat);
+            _packetWriter.WriteByteSizeString(text);
+            SendPacket();
+        }
+        #endregion
+
         #region Lobby View
         public void ChooseScenario(string scenarioName)
         {

@@ -17,16 +17,7 @@ namespace DeepSwarmServer
                 return;
             }
 
-            if (packetType == Protocol.ClientPacketType.Chat)
-            {
-                ReadChat(peer);
-                var text = _packetReader.ReadByteSizeString();
-                _packetWriter.WriteByte((byte)Protocol.ServerPacketType.Chat);
-                _packetWriter.WriteByteSizeString(peer.Identity.Name);
-                _packetWriter.WriteByteSizeString(text);
-                Broadcast();
-                return;
-            }
+            if (packetType == Protocol.ClientPacketType.Chat) { ReadChat(peer); return; }
 
             switch (_stage)
             {
@@ -135,11 +126,10 @@ namespace DeepSwarmServer
         #region Lobby and Playing Stages
         void ReadChat(Peer peer)
         {
-            var message = _packetReader.ReadByteSizeString();
-
+            var text = _packetReader.ReadByteSizeString();
             _packetWriter.WriteByte((byte)Protocol.ServerPacketType.Chat);
             _packetWriter.WriteByteSizeString(peer.Identity.Name);
-            _packetWriter.WriteByteSizeString(message);
+            _packetWriter.WriteByteSizeString(text);
             Broadcast();
         }
         #endregion

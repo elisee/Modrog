@@ -15,6 +15,9 @@ namespace DeepSwarmClient.Interface
         readonly Label _modesLabel;
         readonly Label _scenarioDescriptionLabel;
 
+        readonly Panel _chatLog;
+        readonly TextInput _chatInput;
+
         public LobbyView(Interface @interface)
             : base(@interface, null)
         {
@@ -103,7 +106,26 @@ namespace DeepSwarmClient.Interface
                         // TODO: the list of existing players
                     }
 
-                    // TODO: the list of existing players
+                    {
+                        var chatPanel = new Panel(centerPanel, new TexturePatch(0x756124ff))
+                        {
+                            Height = 200,
+                            ChildLayout = ChildLayoutMode.Top
+                        };
+
+                        _chatLog = new Panel(chatPanel)
+                        {
+                            LayoutWeight = 1,
+                            ChildLayout = ChildLayoutMode.Bottom,
+                            Flow = Flow.Scroll
+                        };
+
+                        _chatInput = new TextInput(chatPanel)
+                        {
+                            Padding = 8,
+                            BackgroundPatch = new TexturePatch(0x123456ff)
+                        };
+                    }
                 }
             }
 
@@ -200,6 +222,23 @@ namespace DeepSwarmClient.Interface
             */
         }
 
+        public override void OnUnmounted()
+        {
+            _chatLog.Clear();
+            _chatInput.SetValue("");
+        }
+
+        public override void Validate()
+        {
+            if (Desktop.FocusedElement == _chatInput)
+            {
+                var text = _chatInput.Value.Trim();
+                _chatInput.SetValue("");
+
+                if (text.Length > 0) Engine.State.SendChatMessage(text);
+            }
+        }
+
         public void OnPlayerListUpdated()
         {
             _playerListPanel.Clear();
@@ -211,6 +250,17 @@ namespace DeepSwarmClient.Interface
             }
 
             _playerListPanel.Layout();
+        }
+
+        public void OnChatMessageReceived(string author, string message)
+        {
+            new Label(_chatLog)
+            {
+                TopPadding = 8,
+                HorizontalPadding = 8,
+                Wrap = true
+            }.Text = $"{author}: {message}";
+            _chatLog.Layout();
         }
 
 

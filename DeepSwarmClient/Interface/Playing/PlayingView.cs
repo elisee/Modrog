@@ -381,6 +381,11 @@ namespace DeepSwarmClient.Interface.Playing
             _playerListPanel.Layout(LayoutRectangle);
         }
 
+        public void OnChatMessageReceived(string author, string message)
+        {
+            throw new NotImplementedException();
+        }
+
         public void OnScriptListUpdated()
         {
             _scriptSelectorList.Clear();

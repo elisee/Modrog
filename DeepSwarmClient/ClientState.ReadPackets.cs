@@ -141,7 +141,14 @@ namespace DeepSwarmClient
 
         void ReadChat()
         {
-            // TODO
+            var author = _packetReader.ReadByteSizeString();
+            var message = _packetReader.ReadByteSizeString();
+
+            switch (View)
+            {
+                case EngineView.Playing: _engine.Interface.PlayingView.OnChatMessageReceived(author, message); break;
+                case EngineView.Lobby: _engine.Interface.LobbyView.OnChatMessageReceived(author, message); break;
+            }
         }
         #endregion
 
