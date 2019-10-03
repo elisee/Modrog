@@ -8,6 +8,8 @@ namespace DeepSwarmClient.Interface
         public readonly Engine Engine;
 
         public readonly Font TitleFont;
+        public readonly Font HeaderFont;
+        public readonly FontStyle HeaderFontStyle;
         public readonly Font MainFont;
         public readonly Font MonoFont;
 
@@ -25,6 +27,9 @@ namespace DeepSwarmClient.Interface
             Engine = engine;
 
             TitleFont = Font.LoadFromChevyRayFolder(Engine.Renderer, Path.Combine(Engine.AssetsPath, "Fonts", "ChevyRay - Roundabout"));
+            HeaderFont = Font.LoadFromChevyRayFolder(Engine.Renderer, Path.Combine(Engine.AssetsPath, "Fonts", "ChevyRay - Skullboy"));
+            HeaderFontStyle = new FontStyle(HeaderFont) { Scale = 2, LetterSpacing = 1, LineSpacing = 8 };
+
             MainFont = Font.LoadFromChevyRayFolder(Engine.Renderer, Path.Combine(Engine.AssetsPath, "Fonts", "ChevyRay - Softsquare"));
             MonoFont = Font.LoadFromChevyRayFolder(Engine.Renderer, Path.Combine(Engine.AssetsPath, "Fonts", "ChevyRay - Softsquare Mono"));
 
