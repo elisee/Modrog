@@ -12,9 +12,12 @@ namespace DeepSwarmClient.UI
 
         public Button(Desktop desktop, Element parent) : base(desktop, parent)
         {
+            OutlineColor = new Color(0xff0000ff);
         }
 
         public override Element HitTest(int x, int y) => LayoutRectangle.Contains(x, y) ? this : null;
+
+        public override bool AcceptsFocus() => true;
 
         public override void OnMouseEnter()
         {
@@ -43,6 +46,8 @@ namespace DeepSwarmClient.UI
                 if (IsHovered) OnActivate?.Invoke();
             }
         }
+
+        public override void Validate() => OnActivate?.Invoke();
 
         public override Point ComputeSize(int? maxWidth, int? maxHeight)
         {

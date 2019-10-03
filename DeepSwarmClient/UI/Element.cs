@@ -63,6 +63,7 @@ namespace DeepSwarmClient.UI
 
         // Background
         public TexturePatch BackgroundPatch;
+        public Color OutlineColor;
 
         // State
         public bool IsMounted { get; private set; }
@@ -361,10 +362,16 @@ namespace DeepSwarmClient.UI
         public virtual void OnMounted() { }
         public virtual void OnUnmounted() { }
 
+        public virtual bool AcceptsFocus() => false;
+
         public virtual void OnKeyDown(SDL.SDL_Keycode key, bool repeat)
         {
-            if (!repeat && key == SDL.SDL_Keycode.SDLK_RETURN) Validate();
-            else if (!repeat && key == SDL.SDL_Keycode.SDLK_ESCAPE) Dismiss();
+            if (!repeat)
+            {
+                if (key == SDL.SDL_Keycode.SDLK_RETURN) Validate();
+                else if (key == SDL.SDL_Keycode.SDLK_ESCAPE) Dismiss();
+                else if (key == SDL.SDL_Keycode.SDLK_TAB) Desktop.MoveFocus(backwards: Desktop.IsShiftDown);
+            }
         }
 
         public virtual void OnKeyUp(SDL.SDL_Keycode key) { }
@@ -389,6 +396,7 @@ namespace DeepSwarmClient.UI
             Debug.Assert(IsMounted);
 
             DrawSelf();
+
             foreach (var child in Children) if (child.IsMounted) child.Draw();
         }
 
@@ -400,8 +408,6 @@ namespace DeepSwarmClient.UI
             SDL.SDL_RenderDrawLine(Desktop.Renderer, LayoutRectangle.Right, LayoutRectangle.Top, LayoutRectangle.Right, LayoutRectangle.Bottom);
             SDL.SDL_RenderDrawLine(Desktop.Renderer, LayoutRectangle.Right, LayoutRectangle.Bottom, LayoutRectangle.Left, LayoutRectangle.Bottom);
             SDL.SDL_RenderDrawLine(Desktop.Renderer, LayoutRectangle.Left, LayoutRectangle.Bottom, LayoutRectangle.Left, LayoutRectangle.Top);
-
-            foreach (var child in Children) if (child.IsMounted) child.DrawOutline();
         }
 
         protected virtual void DrawSelf()

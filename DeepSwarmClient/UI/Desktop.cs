@@ -62,6 +62,92 @@ namespace DeepSwarmClient.UI
             FocusedElement?.OnFocus();
         }
 
+        public void MoveFocus(bool backwards)
+        {
+            var element = FocusedElement;
+
+            while (element != null)
+            {
+                var nextOrPreviousElement = !backwards ? GetNextSibling(element) : GetPreviousSibling(element);
+                if (nextOrPreviousElement == null) element = element.Parent;
+                else { element = nextOrPreviousElement; break; }
+            }
+
+            if (element == null) element = RootElement;
+            element = !backwards ? GetFirstFocusable(element) : GetLastFocusable(element);
+            if (element == null && backwards) element = GetLastFocusable(RootElement);
+            if (element != null) SetFocusedElement(element);
+
+            Element GetNextSibling(Element element)
+            {
+                if (element.Parent == null) return null;
+
+                var siblings = element.Parent.Children;
+                var index = siblings.IndexOf(element) + 1;
+
+                while (index < siblings.Count)
+                {
+                    if (siblings[index].IsMounted) return siblings[index];
+                    index++;
+                }
+
+                return null;
+            }
+
+            Element GetPreviousSibling(Element element)
+            {
+                if (element.Parent == null) return null;
+
+                var siblings = element.Parent.Children;
+                var index = siblings.IndexOf(element) - 1;
+
+                while (index >= 0)
+                {
+                    if (siblings[index].IsMounted) return siblings[index];
+                    index--;
+                }
+
+                return null;
+            }
+
+            Element GetFirstFocusable(Element element)
+            {
+                if (element.AcceptsFocus()) return element;
+
+                if (element.Children.Count > 0)
+                {
+                    foreach (var child in element.Children)
+                    {
+                        if (!child.IsMounted) continue;
+                        var focusable = GetFirstFocusable(child);
+                        if (focusable != null) return focusable;
+                    }
+                }
+
+                var nextInTree = GetNextSibling(element) ?? GetNextSibling(element.Parent);
+                return nextInTree != null ? GetFirstFocusable(nextInTree) : null;
+            }
+
+            Element GetLastFocusable(Element element)
+            {
+                if (element.AcceptsFocus()) return element;
+
+                if (element.Children.Count > 0)
+                {
+                    for (var i = element.Children.Count - 1; i >= 0; i--)
+                    {
+                        var child = element.Children[i];
+                        if (!child.IsMounted) continue;
+                        var focusable = GetLastFocusable(child);
+                        if (focusable != null) return focusable;
+                    }
+                }
+
+                var previousInTree = GetPreviousSibling(element) ?? GetPreviousSibling(element.Parent);
+                return previousInTree != null ? GetLastFocusable(previousInTree) : null;
+            }
+        }
+
         public void OnHoveredElementUnmounted()
         {
             HoveredElement?.OnMouseExit();
@@ -200,8 +286,33 @@ namespace DeepSwarmClient.UI
         {
             RootElement.Draw();
 
-            // RootElement.DrawOutline();
-            // if (HoveredElement != null) RendererHelper.DrawText(Renderer, 5, 5, $"{HoveredElement.GetType().Name} {HoveredElement.LayoutRectangle.X} {HoveredElement.LayoutRectangle.Y}", Color.White);
+            if (FocusedElement != null && FocusedElement.OutlineColor.A != 0)
+            {
+                SDL.SDL_SetRenderDrawBlendMode(Renderer, SDL.SDL_BlendMode.SDL_BLENDMODE_BLEND);
+                FocusedElement.OutlineColor.UseAsDrawColor(Renderer);
+                FocusedElement.DrawOutline();
+                SDL.SDL_SetRenderDrawBlendMode(Renderer, SDL.SDL_BlendMode.SDL_BLENDMODE_NONE);
+            }
+
+#if DEBUG && false
+            SDL.SDL_SetRenderDrawBlendMode(Renderer, SDL.SDL_BlendMode.SDL_BLENDMODE_BLEND);
+            new Color(0xff00ff44).UseAsDrawColor(Renderer);
+
+            void DrawOutline(Element element)
+            {
+                if (HoveredElement == element) new Color(0xff0000ff).UseAsDrawColor(Renderer);
+                element.DrawOutline();
+                if (HoveredElement == element) new Color(0xff00ff44).UseAsDrawColor(Renderer);
+
+                foreach (var child in element.Children) if (child.IsMounted) DrawOutline(child);
+            }
+
+            DrawOutline(RootElement);
+            SDL.SDL_SetRenderDrawBlendMode(Renderer, SDL.SDL_BlendMode.SDL_BLENDMODE_NONE);
+
+            Color.White.UseAsDrawColor(Renderer);
+            if (HoveredElement != null) MainFontStyle.DrawText(5, 5, $"{HoveredElement.GetType().Name} {HoveredElement.LayoutRectangle.X} {HoveredElement.LayoutRectangle.Y}");
+#endif
         }
         #endregion
     }

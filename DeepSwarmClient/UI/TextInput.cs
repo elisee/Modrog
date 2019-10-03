@@ -40,6 +40,8 @@ namespace DeepSwarmClient.UI
             return size + base.ComputeSize(maxWidth, maxHeight);
         }
 
+        public override bool AcceptsFocus() => true;
+
         void Animate(float deltaTime)
         {
             _cursorTimer += deltaTime;
