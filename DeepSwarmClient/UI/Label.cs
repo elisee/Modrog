@@ -10,7 +10,7 @@ namespace DeepSwarmClient.UI
         public FontStyle FontStyle;
 
         public Color TextColor = new Color(0xffffffff);
-        public string Text { get => _text; set { _text = value; _segments.Clear(); } }
+        public string Text { get => _text; set { _text = value ?? throw new Exception("Can't set text to null"); _segments.Clear(); } }
         public bool Wrap;
         public bool Ellipsize;
 
