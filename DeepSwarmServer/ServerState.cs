@@ -46,7 +46,12 @@ namespace DeepSwarmServer
 
             foreach (var folder in Directory.GetDirectories(scenariosPath, "*.*", SearchOption.TopDirectoryOnly))
             {
-                var entry = new ScenarioEntry { Name = folder[(scenariosPath.Length + 1)..], Description = File.ReadAllText(Path.Combine(folder, "Description.txt")) };
+                var entry = new ScenarioEntry
+                {
+                    Name = folder[(scenariosPath.Length + 1)..],
+                    Description = File.ReadAllText(Path.Combine(folder, "Description.txt")).Replace("\r", "")
+                };
+
                 _scenarioEntries.Add(entry);
             }
         }
