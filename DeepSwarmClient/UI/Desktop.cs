@@ -17,7 +17,7 @@ namespace DeepSwarmClient.UI
         public readonly Element RootElement;
         public Element FocusedElement { get; private set; }
         public Element HoveredElement { get; private set; }
-        public bool IsHoveredElementPressed;
+        public bool IsHoveredElementPressed { get; private set; }
 
         public int MouseX { get; private set; }
         public int MouseY { get; private set; }
