@@ -1,6 +1,5 @@
 {
-  "Name": "The Prophecy of Nalbor",
-  "MinPlayers": 2,
-  "MaxPlayers": 8,
-  "SupportedModes": [ "Competitive" ]
+  "title": "The Prophecy of Nalbor",
+  "minMaxPlayers": [ 2, 8 ],
+  "supportsVersus": true
 }

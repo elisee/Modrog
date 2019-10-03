@@ -5,11 +5,10 @@
         public string Name;
 
         public string Title;
-        public string Description;
         public int MinPlayers;
         public int MaxPlayers;
-
-        public enum ScenarioMode { Cooperative, Competitive, Both }
-        public ScenarioMode SupportedModes;
+        public bool SupportsCoop;
+        public bool SupportsVersus;
+        public string Description;
     }
 }

@@ -9,10 +9,11 @@ namespace DeepSwarmClient.Interface
         readonly Panel _savedGamesListPanel;
 
         readonly Label _noGameSelectedLabel;
-        readonly Panel _gameInfoContainer;
-        readonly Label _gameTitleLabel;
-        readonly Label _gameMinMaxPlayersLabel;
-        readonly Label _gameDescriptionLabel;
+        readonly Panel _scenarioInfoContainer;
+        readonly Label _scenarioTitleLabel;
+        readonly Label _minMaxPlayersLabel;
+        readonly Label _modesLabel;
+        readonly Label _scenarioDescriptionLabel;
 
         public LobbyView(Interface @interface)
             : base(@interface, null)
@@ -73,28 +74,34 @@ namespace DeepSwarmClient.Interface
                 }
 
                 {
-                    var gameInfoPanel = new Panel(mainPanel, new TexturePatch(0x456721ff)) { LayoutWeight = 1, ChildLayout = ChildLayoutMode.Top };
-
-                    _noGameSelectedLabel = new Label(gameInfoPanel) { Text = "No game selected.", IsVisible = true, Padding = 8 };
-
-                    _gameInfoContainer = new Panel(gameInfoPanel) { ChildLayout = ChildLayoutMode.Top, IsVisible = false, Padding = 8 };
-                    _gameTitleLabel = new Label(_gameInfoContainer) { Bottom = 16, FontStyle = new FontStyle(@interface.TitleFont) { LetterSpacing = 1 } };
-
-                    var minMaxPlayersPanel = new Panel(_gameInfoContainer) { ChildLayout = ChildLayoutMode.Left, Bottom = 16 };
-                    new Label(minMaxPlayersPanel) { Text = "Min / Max players: " };
-                    _gameMinMaxPlayersLabel = new Label(minMaxPlayersPanel);
-
-                    var descriptionPanel = new Panel(_gameInfoContainer) { ChildLayout = ChildLayoutMode.Top };
-                    new Label(descriptionPanel) { Text = "Description:", Bottom = 8 };
-                    _gameDescriptionLabel = new Label(descriptionPanel) { Wrap = true };
-
-                    new TextEditor(_gameInfoContainer)
+                    var centerPanel = new Panel(mainPanel)
                     {
-                        Top = 16,
-                        Height = 300,
-                        Padding = 8,
-                        BackgroundPatch = new TexturePatch(0x123789ff)
-                    }.SetText("Bonjour! This is a test.");
+                        LayoutWeight = 1,
+                        ChildLayout = ChildLayoutMode.Top,
+                    };
+
+                    {
+                        var gameInfoPanel = new Panel(centerPanel, new TexturePatch(0x456721ff)) { LayoutWeight = 1, ChildLayout = ChildLayoutMode.Top };
+
+                        _noGameSelectedLabel = new Label(gameInfoPanel) { Text = "No game selected.", IsVisible = true, Padding = 8 };
+
+                        _scenarioInfoContainer = new Panel(gameInfoPanel) { ChildLayout = ChildLayoutMode.Top, IsVisible = false, Padding = 8 };
+                        _scenarioTitleLabel = new Label(_scenarioInfoContainer) { Bottom = 16, FontStyle = new FontStyle(@interface.TitleFont) { LetterSpacing = 1 } };
+
+                        var minMaxPlayersPanel = new Panel(_scenarioInfoContainer) { ChildLayout = ChildLayoutMode.Left, Bottom = 16 };
+                        new Label(minMaxPlayersPanel) { Text = "Min / Max players: " };
+                        _minMaxPlayersLabel = new Label(minMaxPlayersPanel);
+
+                        var modesPanel = new Panel(_scenarioInfoContainer) { ChildLayout = ChildLayoutMode.Left, Bottom = 16 };
+                        new Label(modesPanel) { Text = "Supported modes: " };
+                        _modesLabel = new Label(modesPanel);
+
+                        var descriptionPanel = new Panel(_scenarioInfoContainer) { ChildLayout = ChildLayoutMode.Top };
+                        new Label(descriptionPanel) { Text = "Description:", Bottom = 8 };
+                        _scenarioDescriptionLabel = new Label(descriptionPanel) { Wrap = true };
+
+                        // TODO: the list of existing players
+                    }
 
                     // TODO: the list of existing players
                 }
@@ -172,7 +179,7 @@ namespace DeepSwarmClient.Interface
                 new TextButton(_scenarioListPanel)
                 {
                     Padding = 8,
-                    Text = entry.Name,
+                    Text = entry.Title,
                     OnActivate = () => { Engine.State.ChooseScenario(entry.Name); }
                 };
             }
@@ -206,22 +213,27 @@ namespace DeepSwarmClient.Interface
             _playerListPanel.Layout();
         }
 
+
         public void OnActiveScenarioChanged()
         {
-            if (Engine.State.ActiveScenario != null)
+            var scenario = Engine.State.ActiveScenario;
+
+            if (scenario != null)
             {
                 _noGameSelectedLabel.IsVisible = false;
-                _gameInfoContainer.IsVisible = true;
+                _scenarioInfoContainer.IsVisible = true;
 
-                _gameTitleLabel.Text = Engine.State.ActiveScenario.Name; // TODO: Title
-                _gameDescriptionLabel.Text = Engine.State.ActiveScenario.Description;
+                _scenarioTitleLabel.Text = scenario.Title;
+                _minMaxPlayersLabel.Text = $"{scenario.MinPlayers} to {scenario.MaxPlayers}";
+                _modesLabel.Text = scenario.SupportsCoop ? (scenario.SupportsVersus ? "Coop & Versus" : "Coop") : "Versus";
+                _scenarioDescriptionLabel.Text = scenario.Description;
 
-                _gameInfoContainer.Parent.Layout();
+                _scenarioInfoContainer.Parent.Layout();
             }
             else
             {
                 _noGameSelectedLabel.IsVisible = true;
-                _gameInfoContainer.IsVisible = false;
+                _scenarioInfoContainer.IsVisible = false;
 
                 _noGameSelectedLabel.Parent.Layout();
             }

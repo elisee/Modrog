@@ -1,6 +1,5 @@
 {
-  "Name": "Castle Grundmog",
-  "MinPlayers": 1,
-  "MaxPlayers": 4,
-  "SupportedModes": [ "Cooperative" ]
+  "title": "Castle Grundmog",
+  "minMaxPlayers": [ 1, 4 ],
+  "supportsCoop": true
 }

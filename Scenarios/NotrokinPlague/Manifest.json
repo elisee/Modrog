@@ -1,6 +1,5 @@
 {
-  "Name": "The Plague of Notrokin",
-  "MinPlayers": 1,
-  "MaxPlayers": 4,
-  "SupportedModes": [ "Cooperative" ]
+  "title": "The Plague of Notrokin",
+  "minMaxPlayers": [ 1, 4 ],
+  "supportsCoop": true
 }

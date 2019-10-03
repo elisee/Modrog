@@ -105,9 +105,11 @@ namespace DeepSwarmServer
                     foreach (var entry in _scenarioEntries)
                     {
                         _packetWriter.WriteByteSizeString(entry.Name);
+                        _packetWriter.WriteByteSizeString(entry.Title);
                         _packetWriter.WriteByte((byte)entry.MinPlayers);
                         _packetWriter.WriteByte((byte)entry.MaxPlayers);
-                        _packetWriter.WriteByte((byte)entry.SupportedModes);
+                        _packetWriter.WriteByte((byte)(entry.SupportsCoop ? 1 : 0));
+                        _packetWriter.WriteByte((byte)(entry.SupportsVersus ? 1 : 0));
                         _packetWriter.WriteShortSizeString(entry.Description);
                     }
 
@@ -148,12 +150,10 @@ namespace DeepSwarmServer
             if (!peer.Identity.IsHost) throw new PacketException("Can't choose game if not host.");
 
             var scenarioName = _packetReader.ReadByteSizeString();
-            var scenario = _scenarioEntries.Find(x => x.Name == scenarioName);
-            if (scenario == null) throw new PacketException($"Unknown scenario: {scenarioName}.");
-            _activeScenario = scenario;
+            _activeScenario = _scenarioEntries.Find(x => x.Name == scenarioName) ?? throw new PacketException($"Unknown scenario: {scenarioName}.");
 
             _packetWriter.WriteByte((byte)Protocol.ServerPacketType.SetupGame);
-            _packetWriter.WriteByteSizeString(scenario.Name);
+            _packetWriter.WriteByteSizeString(_activeScenario.Name);
             Broadcast();
         }
 

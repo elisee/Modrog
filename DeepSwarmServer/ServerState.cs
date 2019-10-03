@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Json;
 using System.Net;
 using System.Net.Sockets;
 
@@ -46,9 +47,16 @@ namespace DeepSwarmServer
 
             foreach (var folder in Directory.GetDirectories(scenariosPath, "*.*", SearchOption.TopDirectoryOnly))
             {
+                var manifestJson = JsonValue.Parse(File.ReadAllText(Path.Combine(folder, "Manifest.json")));
+
                 var entry = new ScenarioEntry
                 {
                     Name = folder[(scenariosPath.Length + 1)..],
+                    Title = manifestJson["title"],
+                    MinPlayers = manifestJson["minMaxPlayers"][0],
+                    MaxPlayers = manifestJson["minMaxPlayers"][1],
+                    SupportsCoop = manifestJson.ContainsKey("supportsCoop") && manifestJson["supportsCoop"],
+                    SupportsVersus = manifestJson.ContainsKey("supportsVersus") && manifestJson["supportsVersus"],
                     Description = File.ReadAllText(Path.Combine(folder, "Description.txt")).Replace("\r", "")
                 };
 

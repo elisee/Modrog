@@ -85,9 +85,11 @@ namespace DeepSwarmClient
                     ScenarioEntries.Add(new ScenarioEntry
                     {
                         Name = _packetReader.ReadByteSizeString(),
+                        Title = _packetReader.ReadByteSizeString(),
                         MinPlayers = _packetReader.ReadByte(),
                         MaxPlayers = _packetReader.ReadByte(),
-                        SupportedModes = (ScenarioEntry.ScenarioMode)_packetReader.ReadByte(),
+                        SupportsCoop = _packetReader.ReadByte() != 0,
+                        SupportsVersus = _packetReader.ReadByte() != 0,
                         Description = _packetReader.ReadShortSizeString()
                     });
                 }
