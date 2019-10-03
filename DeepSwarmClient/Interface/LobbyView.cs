@@ -92,18 +92,16 @@ namespace DeepSwarmClient.Interface
                         _scenarioTitleLabel = new Label(_scenarioInfoContainer) { Bottom = 16, FontStyle = new FontStyle(@interface.TitleFont) { LetterSpacing = 1 } };
 
                         var minMaxPlayersPanel = new Panel(_scenarioInfoContainer) { ChildLayout = ChildLayoutMode.Left, Bottom = 16 };
-                        new Label(minMaxPlayersPanel) { Text = "Min / Max players: " };
-                        _minMaxPlayersLabel = new Label(minMaxPlayersPanel);
+                        new Label(minMaxPlayersPanel) { Text = "Players: ", FontStyle = @interface.HeaderFontStyle };
+                        _minMaxPlayersLabel = new Label(minMaxPlayersPanel) { VerticalFlow = Flow.Shrink, Bottom = 0 };
 
                         var modesPanel = new Panel(_scenarioInfoContainer) { ChildLayout = ChildLayoutMode.Left, Bottom = 16 };
-                        new Label(modesPanel) { Text = "Supported modes: " };
-                        _modesLabel = new Label(modesPanel);
+                        new Label(modesPanel) { Text = "Supported modes: ", FontStyle = @interface.HeaderFontStyle };
+                        _modesLabel = new Label(modesPanel) { Flow = Flow.Shrink, Bottom = 0 };
 
                         var descriptionPanel = new Panel(_scenarioInfoContainer) { ChildLayout = ChildLayoutMode.Top };
-                        new Label(descriptionPanel) { Text = "Description:", Bottom = 8 };
+                        new Label(descriptionPanel) { Text = "Description:", FontStyle = @interface.HeaderFontStyle, Bottom = 8 };
                         _scenarioDescriptionLabel = new Label(descriptionPanel) { Wrap = true };
-
-                        // TODO: the list of existing players
                     }
 
                     {
@@ -148,41 +146,10 @@ namespace DeepSwarmClient.Interface
             }
 
             {
-                var actionsContainer = new Panel(panel)
-                {
-                    Padding = 8,
-                    ChildLayout = ChildLayoutMode.Left
-                };
-
-                new TextButton(actionsContainer)
-                {
-                    Text = "Ready",
-                    Padding = 8,
-                    Right = 8,
-                    Flow = Flow.Shrink,
-                    BackgroundPatch = new TexturePatch(0x4444aaff),
-                    OnActivate = () => Engine.State.ToggleReady()
-                };
-
-                new TextButton(actionsContainer)
-                {
-                    Text = "Start Game",
-                    Padding = 8,
-                    Right = 8,
-                    Flow = Flow.Shrink,
-                    BackgroundPatch = new TexturePatch(0x4444aaff),
-                    OnActivate = () => Engine.State.StartGame()
-                };
-
-                new TextButton(actionsContainer)
-                {
-                    Text = "Leave",
-                    Padding = 8,
-                    Right = 8,
-                    Flow = Flow.Shrink,
-                    BackgroundPatch = new TexturePatch(0x4444aaff),
-                    OnActivate = () => Engine.State.Disconnect()
-                };
+                var actionsContainer = new Panel(panel) { Padding = 8, ChildLayout = ChildLayoutMode.Left };
+                new StyledTextButton(actionsContainer) { Text = "Ready", Right = 8, OnActivate = () => Engine.State.ToggleReady() };
+                new StyledTextButton(actionsContainer) { Text = "Start Game", Right = 8, OnActivate = () => Engine.State.StartGame() };
+                new StyledTextButton(actionsContainer) { Text = "Leave", Right = 8, OnActivate = () => Engine.State.Disconnect() };
             }
 
             // TODO: Display saved games & scenarios to choose from
@@ -191,8 +158,6 @@ namespace DeepSwarmClient.Interface
 
         public override void OnMounted()
         {
-            Desktop.SetFocusedElement(this);
-
             OnPlayerListUpdated();
 
             _scenarioListPanel.Clear();
@@ -203,7 +168,7 @@ namespace DeepSwarmClient.Interface
                     Padding = 8,
                     Text = entry.Title,
                     OnActivate = () => { Engine.State.ChooseScenario(entry.Name); }
-                };
+                }.Label.Ellipsize = true;
             }
             _scenarioListPanel.Layout();
 
@@ -220,6 +185,8 @@ namespace DeepSwarmClient.Interface
                 };
             }
             */
+
+            Desktop.SetFocusedElement(_chatInput);
         }
 
         public override void OnUnmounted()

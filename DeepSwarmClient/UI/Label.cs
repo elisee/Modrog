@@ -17,7 +17,7 @@ namespace DeepSwarmClient.UI
         string _text = string.Empty;
         readonly List<string> _segments = new List<string>();
 
-        public static readonly string EllipsisText = "…";
+        public static readonly string EllipsisText = "..."; // "…";
 
         public Label(Element parent) : this(parent.Desktop, parent) { }
         public Label(Desktop desktop, Element parent = null) : base(desktop, parent)

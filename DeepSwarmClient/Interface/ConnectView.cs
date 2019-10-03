@@ -58,12 +58,9 @@ namespace DeepSwarmClient.Interface
 
             var actionsContainer = new Element(mainPanel) { ChildLayout = ChildLayoutMode.Left, Top = 16 };
 
-            new TextButton(actionsContainer)
+            new StyledTextButton(actionsContainer)
             {
                 Text = "Connect",
-                Padding = 8,
-                Flow = Flow.Shrink,
-                BackgroundPatch = new TexturePatch(0x4444aaff),
                 OnActivate = Validate
             };
         }

@@ -2,14 +2,14 @@
 {
     public class TextButton : Button
     {
-        public string Text { get => _label.Text; set => _label.Text = value; }
+        public string Text { get => Label.Text; set => Label.Text = value; }
 
-        readonly Label _label;
+        public readonly Label Label;
 
         public TextButton(Element parent) : this(parent.Desktop, parent) { }
         public TextButton(Desktop desktop, Element parent) : base(desktop, parent)
         {
-            _label = new Label(desktop, this);
+            Label = new Label(desktop, this);
         }
     }
 }
