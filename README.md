@@ -11,16 +11,14 @@ You'll need .NET Core 3 and Visual Studio 2019. VS Code might work.
 
 ## Things to do
 
-    - UI: Implement chat in lobby
-      - TextInput to send stuff
-      - Scrolling panel with labels to receive stuff
     - Server: Send message when kicking player so reason can be displayed in the UI
+    - Implement scrolling + ChildLayout.Bottom / .Right
+    - UI: Possibly show focus outline only when using keyboard to avoid distracting players
     - InGameView: Fix not being able to select an entity when HoveredTileX/HoveredTileY is negative
     - UI: Copy / Paste in TextInput / TextEditor
     - UI: Keyboard fast movement (Ctrl) in TextInput / TextEditor
     - UI: Display script errors somewhere
     - UI: Increase script window size?
-    - UI: Support resizable window (requires better AnchorRectangle system)
     - Server: Mark chunk as non-free if an entity enters it to prevent spawning people in it (or we need to track entities by chunk and check for that)
     - Server: Generate and control enemies
     - Implement Attack move

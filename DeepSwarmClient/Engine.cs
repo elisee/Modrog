@@ -13,7 +13,7 @@ namespace DeepSwarmClient
         readonly ThreadActionQueue _actionQueue;
 
         // Rendering
-        public readonly Rectangle Viewport = new Rectangle(0, 0, 1280, 720);
+        static readonly Point MinimumWindowSize = new Point(1280, 720);
         public readonly IntPtr Window;
         public readonly IntPtr Renderer;
 
@@ -37,8 +37,10 @@ namespace DeepSwarmClient
 
             // Rendering
             SDL.SDL_Init(SDL.SDL_INIT_VIDEO);
-            SDL.SDL_CreateWindowAndRenderer(Viewport.Width, Viewport.Height, 0, out Window, out Renderer);
+            SDL.SDL_CreateWindowAndRenderer(MinimumWindowSize.X, MinimumWindowSize.Y, 0, out Window, out Renderer);
             SDL.SDL_SetWindowTitle(Window, "DeepSwarm");
+            SDL.SDL_SetWindowResizable(Window, SDL.SDL_bool.SDL_TRUE);
+            SDL.SDL_SetWindowMinimumSize(Window, MinimumWindowSize.X, MinimumWindowSize.Y);
 
             // State
             State = new ClientState(this);
@@ -77,7 +79,7 @@ namespace DeepSwarmClient
             SpritesheetTexture = SDL_image.IMG_LoadTexture(Renderer, Path.Combine(AssetsPath, "Spritesheet.png"));
 
             // Interface
-            Interface = new Interface.Interface(this);
+            Interface = new Interface.Interface(this, new Rectangle(0, 0, MinimumWindowSize.X, MinimumWindowSize.Y));
         }
 
         public void Start()
@@ -107,6 +109,10 @@ namespace DeepSwarmClient
                             {
                                 case SDL.SDL_WindowEventID.SDL_WINDOWEVENT_CLOSE:
                                     State.Stop();
+                                    break;
+
+                                case SDL.SDL_WindowEventID.SDL_WINDOWEVENT_SIZE_CHANGED:
+                                    Interface.SetViewport(new Rectangle(0, 0, @event.window.data1, @event.window.data2));
                                     break;
                             }
 

@@ -243,8 +243,9 @@ namespace DeepSwarmClient.Interface.Playing
 
         public override void OnMounted()
         {
-            _scrollingPixelsX = (int)((Engine.State.SelfBaseChunkX + 0.5f) * Map.ChunkSize * Map.TileSize) - Engine.Viewport.Width / 2;
-            _scrollingPixelsY = (int)((Engine.State.SelfBaseChunkY + 0.5f) * Map.ChunkSize * Map.TileSize) - Engine.Viewport.Height / 2;
+            var viewport = Engine.Interface.Viewport;
+            _scrollingPixelsX = (int)((Engine.State.SelfBaseChunkX + 0.5f) * Map.ChunkSize * Map.TileSize) - viewport.Width / 2;
+            _scrollingPixelsY = (int)((Engine.State.SelfBaseChunkY + 0.5f) * Map.ChunkSize * Map.TileSize) - viewport.Height / 2;
 
             Desktop.RegisterAnimation(Animate);
             Desktop.SetFocusedElement(this);
@@ -450,9 +451,8 @@ namespace DeepSwarmClient.Interface.Playing
                 _sidebarContainer.Add(_manualModeSidebarsByEntityType[selectedEntity.Type]);
             }
 
-            _entityStatsContainer.Layout(Engine.Viewport);
-
-            _sidebarContainer.Layout(Engine.Viewport);
+            _entityStatsContainer.Layout();
+            _sidebarContainer.Layout();
         }
 
         public void OnSelectedEntityUpdated()
@@ -491,8 +491,9 @@ namespace DeepSwarmClient.Interface.Playing
             var startTileX = (int)_scrollingPixelsX / Map.TileSize;
             var startTileY = (int)_scrollingPixelsY / Map.TileSize;
 
-            var tilesPerRow = (int)MathF.Ceiling((float)Engine.Viewport.Width / Map.TileSize + 1);
-            var tilesPerColumn = (int)MathF.Ceiling((float)Engine.Viewport.Height / Map.TileSize + 1);
+            var viewport = Engine.Interface.Viewport;
+            var tilesPerRow = (int)MathF.Ceiling((float)viewport.Width / Map.TileSize + 1);
+            var tilesPerColumn = (int)MathF.Ceiling((float)viewport.Height / Map.TileSize + 1);
 
             var map = Engine.State.Map;
 
@@ -558,8 +559,8 @@ namespace DeepSwarmClient.Interface.Playing
                             destRect.x += renderX;
                             destRect.y += renderY;
 
-                            if (destRect.x + destRect.w < 0 || destRect.x > Engine.Viewport.Width) continue;
-                            if (destRect.y + destRect.h < 0 || destRect.y > Engine.Viewport.Height) continue;
+                            if (destRect.x + destRect.w < 0 || destRect.x > viewport.Width) continue;
+                            if (destRect.y + destRect.h < 0 || destRect.y > viewport.Height) continue;
 
                             SDL.SDL_RenderCopy(Engine.Renderer, Engine.SpritesheetTexture, ref sourceRect, ref destRect);
                             break;
@@ -574,8 +575,8 @@ namespace DeepSwarmClient.Interface.Playing
                             color.UseAsDrawColor(Engine.Renderer);
 
                             var destRect = Desktop.ToSDL_Rect(new Rectangle(renderX, renderY, Map.TileSize, Map.TileSize));
-                            if (destRect.x + destRect.w < 0 || destRect.x > Engine.Viewport.Width) continue;
-                            if (destRect.y + destRect.h < 0 || destRect.y > Engine.Viewport.Height) continue;
+                            if (destRect.x + destRect.w < 0 || destRect.x > viewport.Width) continue;
+                            if (destRect.y + destRect.h < 0 || destRect.y > viewport.Height) continue;
 
                             SDL.SDL_RenderFillRect(Engine.Renderer, ref destRect);
                             break;

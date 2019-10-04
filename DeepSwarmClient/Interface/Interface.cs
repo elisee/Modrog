@@ -1,4 +1,5 @@
 ﻿using DeepSwarmClient.UI;
+using DeepSwarmCommon;
 using System.IO;
 
 namespace DeepSwarmClient.Interface
@@ -6,6 +7,7 @@ namespace DeepSwarmClient.Interface
     class Interface
     {
         public readonly Engine Engine;
+        public Rectangle Viewport { get; private set; }
 
         public readonly Font TitleFont;
         public readonly Font HeaderFont;
@@ -22,9 +24,10 @@ namespace DeepSwarmClient.Interface
         public readonly LobbyView LobbyView;
         public readonly Playing.PlayingView PlayingView;
 
-        public Interface(Engine engine)
+        public Interface(Engine engine, Rectangle viewport)
         {
             Engine = engine;
+            Viewport = viewport;
 
             TitleFont = Font.LoadFromChevyRayFolder(Engine.Renderer, Path.Combine(Engine.AssetsPath, "Fonts", "ChevyRay - Roundabout"));
             HeaderFont = Font.LoadFromChevyRayFolder(Engine.Renderer, Path.Combine(Engine.AssetsPath, "Fonts", "ChevyRay - Skullboy"));
@@ -45,8 +48,14 @@ namespace DeepSwarmClient.Interface
             LobbyView = new LobbyView(this);
             PlayingView = new Playing.PlayingView(this);
 
-            Desktop.RootElement.Layout(Engine.Viewport);
+            Desktop.RootElement.Layout(Viewport);
             OnViewChanged();
+        }
+
+        public void SetViewport(Rectangle viewport)
+        {
+            Viewport = viewport;
+            Desktop.RootElement.Layout(Viewport);
         }
 
         public void OnViewChanged()
