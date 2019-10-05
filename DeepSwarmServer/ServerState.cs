@@ -111,8 +111,29 @@ namespace DeepSwarmServer
             switch (_stage)
             {
                 case ServerStage.CountingDown:
+                    var previousCountdown = (int)(Protocol.StartCountdownDuration - _startCountdownTimer);
+
                     _startCountdownTimer += deltaTime;
-                    if (_startCountdownTimer >= Protocol.StartCountdownDuration) StartPlaying();
+
+                    var newCountdown = (int)(Protocol.StartCountdownDuration - _startCountdownTimer);
+
+                    if (previousCountdown != newCountdown)
+                    {
+                        _packetWriter.WriteByte((byte)Protocol.ServerPacketType.Chat);
+                        _packetWriter.WriteByteSizeString("");
+                        _packetWriter.WriteByteSizeString($"Game starts in {previousCountdown}s...");
+                        Broadcast();
+                    }
+
+                    if (_startCountdownTimer >= Protocol.StartCountdownDuration)
+                    {
+                        _packetWriter.WriteByte((byte)Protocol.ServerPacketType.Chat);
+                        _packetWriter.WriteByteSizeString("");
+                        _packetWriter.WriteByteSizeString($"Loading scenario...");
+                        Broadcast();
+
+                        StartPlaying();
+                    }
                     break;
                 case ServerStage.Playing:
                     _tickAccumulatedTime += deltaTime;
