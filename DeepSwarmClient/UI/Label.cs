@@ -1,4 +1,6 @@
-﻿using DeepSwarmBasics.Math;
+﻿using DeepSwarmBasics;
+using DeepSwarmBasics.Math;
+using DeepSwarmClient.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;

@@ -1,4 +1,6 @@
-﻿using DeepSwarmBasics.Math;
+﻿using DeepSwarmBasics;
+using DeepSwarmBasics.Math;
+using DeepSwarmClient.Graphics;
 using SDL2;
 using System;
 using System.Collections.Generic;
@@ -412,7 +414,7 @@ namespace DeepSwarmClient.UI
 
         protected virtual void DrawSelf()
         {
-            if (BackgroundPatch != null) RendererHelper.DrawPatch(Desktop.Renderer, BackgroundPatch, LayoutRectangle);
+            BackgroundPatch?.Draw(Desktop.Renderer, LayoutRectangle);
         }
     }
 }

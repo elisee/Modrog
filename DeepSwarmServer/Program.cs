@@ -31,32 +31,6 @@ namespace DeepSwarmServer
 
             serverState.Stop();
             cancelTokenSource.Dispose();
-
-            /*
-            var random = new Random();
-
-            var mapFilePath = Path.Combine(AppContext.BaseDirectory, "Map.dat");
-            var map = new Map();
-
-            if (!isNew && File.Exists(mapFilePath))
-            {
-                Console.WriteLine($"Loading map from {mapFilePath}...");
-                map.LoadFromFile(mapFilePath);
-                Console.WriteLine($"Done loading map.");
-            }
-            else
-            {
-                Console.WriteLine($"Generating map, saving to {mapFilePath}...");
-                map.Generate();
-                map.SaveToFile(mapFilePath);
-                Console.WriteLine($"Done generating map.");
-            }
-
-
-            Console.WriteLine($"Saving map to {mapFilePath} before quitting...");
-            map.SaveToFile(mapFilePath);
-            Console.WriteLine("Map saved, quitting.");
-            */
         }
     }
 }

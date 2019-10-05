@@ -1,6 +1,10 @@
-﻿using DeepSwarmCommon;
+﻿using DeepSwarmApi.Server;
+using DeepSwarmCommon;
+using Microsoft.CodeAnalysis;
 using System;
+using System.IO;
 using System.Linq;
+using System.Reflection;
 
 namespace DeepSwarmServer
 {
@@ -25,8 +29,8 @@ namespace DeepSwarmServer
                     switch (packetType)
                     {
                         case Protocol.ClientPacketType.ChooseGame: ReadChooseGame(peer); break;
-                        case Protocol.ClientPacketType.StartGame: ReadStartGame(peer); break;
                         case Protocol.ClientPacketType.Ready: ReadSetReady(peer); break;
+                        case Protocol.ClientPacketType.StartGame: ReadStartGame(peer); break;
                         default:
                             throw new PacketException($"Invalid packet type for {nameof(ServerStage.Lobby)} stage: {packetType}.");
                     }
@@ -68,7 +72,7 @@ namespace DeepSwarmServer
             }
             else
             {
-                peer.Identity = new PlayerIdentity { Guid = guid, IsOnline = true };
+                peer.Identity = new Game.PlayerIdentity { Guid = guid, IsOnline = true };
                 _playerIdentities.Add(peer.Identity);
             }
 
@@ -147,25 +151,67 @@ namespace DeepSwarmServer
             Broadcast();
         }
 
-        void ReadStartGame(Peer peer)
-        {
-            if (!peer.Identity.IsHost) throw new PacketException("Can't start game if not host.");
-
-            if (_activeScenario == null || _playerIdentities.Any(x => !x.IsReady))
-            {
-                // Ignore
-                return;
-            }
-
-            // TODO: Send a countdown instead
-            _stage = ServerStage.Playing;
-        }
-
         void ReadSetReady(Peer peer)
         {
             peer.Identity.IsReady = _packetReader.ReadByte() != 0;
             BroadcastPlayerList();
         }
+
+        void ReadStartGame(Peer peer)
+        {
+            if (!peer.Identity.IsHost) throw new PacketException("Can't start game if not host.");
+            if (_activeScenario == null || _playerIdentities.Any(x => !x.IsReady)) return;
+
+            // Setting scenario script
+            var scenarioScriptsPath = Path.Combine(_scenariosPath, _activeScenario.Name, "Scripts");
+
+            var scriptFilePaths = Directory.GetFiles(scenarioScriptsPath, "*.cs", SearchOption.AllDirectories);
+            var scriptFileContents = new string[scriptFilePaths.Length];
+            for (var i = 0; i < scriptFilePaths.Length; i++) scriptFileContents[i] = File.ReadAllText(scriptFilePaths[i]);
+
+            var basicsRef = MetadataReference.CreateFromFile(typeof(DeepSwarmBasics.Math.Point).Assembly.Location);
+            var apiRef = MetadataReference.CreateFromFile(typeof(ServerApi).Assembly.Location);
+
+            if (!DeepSwarmCommon.Scripting.Script.TryBuild("ScenarioScript", scriptFileContents, new[] { basicsRef, apiRef }, out var script, out var emitResult))
+            {
+                Console.WriteLine("Failed to build scripts for scenario:");
+                foreach (var diagnostic in emitResult.Diagnostics) Console.WriteLine(diagnostic);
+                throw new NotImplementedException("TODO: Handle error");
+            }
+
+            var scenarioScriptType = script.Assembly.GetType($"ScenarioScript");
+            if (scenarioScriptType == null)
+            {
+                Console.WriteLine("Could not find ScenarioScript class in scripts");
+                throw new NotImplementedException("TODO: Handle error");
+            }
+
+            var scenarioScriptConstructor = scenarioScriptType.GetConstructor(new Type[] { typeof(ServerApi) });
+            if (scenarioScriptConstructor == null)
+            {
+                Console.WriteLine($"Could not find ScenarioScript({typeof(ServerApi).FullName}) constructor in scripts");
+                throw new NotImplementedException("TODO: Handle error");
+            }
+
+            var apiConstructor = typeof(ServerApi).GetConstructor(BindingFlags.Instance | BindingFlags.NonPublic, null, new Type[] { typeof(DeepSwarmApi.Server.Player[]) }, null);
+            var apiPlayers = new DeepSwarmApi.Server.Player[1] { new DeepSwarmApi.Server.Player() };
+            var api = apiConstructor.Invoke(new object[] { apiPlayers });
+
+            try
+            {
+                var scenarioScript = (IScenarioScript)scenarioScriptConstructor.Invoke(new object[] { api });
+            }
+            catch (Exception exception)
+            {
+                Console.WriteLine(exception.InnerException);
+            }
+
+            script.Dispose();
+
+            // TODO: Send a countdown instead
+            _stage = ServerStage.Playing;
+        }
+
         #endregion
 
         #region Playing Stage

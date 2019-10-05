@@ -12,8 +12,9 @@ You'll need .NET Core 3 and Visual Studio 2019. VS Code might work.
 ## Things to do
 
     - Server: Send message when kicking player so reason can be displayed in the UI
-    - Implement scrolling + ChildLayout.Bottom / .Right
+    - UI: Implement scrolling + ChildLayout.Bottom / .Right
     - UI: Possibly show focus outline only when using keyboard to avoid distracting players
+    - UI: Implement support for linebreaks in Label
     - InGameView: Fix not being able to select an entity when HoveredTileX/HoveredTileY is negative
     - UI: Copy / Paste in TextInput / TextEditor
     - UI: Keyboard fast movement (Ctrl) in TextInput / TextEditor

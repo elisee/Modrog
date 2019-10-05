@@ -1,4 +1,5 @@
 ﻿using DeepSwarmBasics.Math;
+using DeepSwarmClient.Graphics;
 using SDL2;
 using System;
 using System.IO;

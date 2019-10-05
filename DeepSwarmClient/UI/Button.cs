@@ -1,4 +1,6 @@
-﻿using DeepSwarmBasics.Math;
+﻿using DeepSwarmBasics;
+using DeepSwarmBasics.Math;
+using DeepSwarmClient.Graphics;
 using System;
 
 namespace DeepSwarmClient.UI
@@ -21,12 +23,12 @@ namespace DeepSwarmClient.UI
 
         public override void OnMouseEnter()
         {
-            SDL2.SDL.SDL_SetCursor(RendererHelper.HandCursor);
+            SDL2.SDL.SDL_SetCursor(Cursors.HandCursor);
         }
 
         public override void OnMouseExit()
         {
-            SDL2.SDL.SDL_SetCursor(RendererHelper.ArrowCursor);
+            SDL2.SDL.SDL_SetCursor(Cursors.ArrowCursor);
         }
 
         public override void OnMouseDown(int button)
@@ -58,8 +60,8 @@ namespace DeepSwarmClient.UI
         {
             base.DrawSelf();
 
-            if (IsPressed) { if (PressedPatch != null) RendererHelper.DrawPatch(Desktop.Renderer, PressedPatch, LayoutRectangle); }
-            else if (IsHovered) { if (HoveredPatch != null) RendererHelper.DrawPatch(Desktop.Renderer, HoveredPatch, LayoutRectangle); }
+            if (IsPressed) PressedPatch?.Draw(Desktop.Renderer, LayoutRectangle);
+            else if (IsHovered) HoveredPatch?.Draw(Desktop.Renderer, LayoutRectangle);
         }
     }
 }

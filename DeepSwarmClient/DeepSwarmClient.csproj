@@ -26,13 +26,16 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="KeraLua" Version="1.0.22" />
     <PackageReference Include="System.Json" Version="4.6.0" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\DeepSwarmCommon\DeepSwarmCommon.csproj" />
     <ProjectReference Include="..\ThirdParty\SDL2-CS\SDL2-CS.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Game\" />
   </ItemGroup>
 
 </Project>

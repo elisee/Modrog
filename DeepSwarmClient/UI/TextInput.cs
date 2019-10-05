@@ -1,4 +1,6 @@
-﻿using DeepSwarmBasics.Math;
+﻿using DeepSwarmBasics;
+using DeepSwarmBasics.Math;
+using DeepSwarmClient.Graphics;
 using SDL2;
 using System;
 
@@ -112,8 +114,8 @@ namespace DeepSwarmClient.UI
         #region Events
         public override Element HitTest(int x, int y) => LayoutRectangle.Contains(x, y) ? this : null;
 
-        public override void OnMouseEnter() => SDL.SDL_SetCursor(RendererHelper.IbeamCursor);
-        public override void OnMouseExit() => SDL.SDL_SetCursor(RendererHelper.ArrowCursor);
+        public override void OnMouseEnter() => SDL.SDL_SetCursor(Cursors.IBeamCursor);
+        public override void OnMouseExit() => SDL.SDL_SetCursor(Cursors.ArrowCursor);
 
         public override void OnFocus() { _cursorTimer = 0f; Desktop.RegisterAnimation(Animate); }
         public override void OnBlur() => Desktop.UnregisterAnimation(Animate);

@@ -1,9 +1,12 @@
-using DeepSwarmApi;
+using DeepSwarmApi.Server;
+using DeepSwarmBasics.Math;
+using System.Collections.Generic;
 
-class Scenario : DeepSwarmScenario
+class ScenarioScript : IScenarioScript
 {
-    public readonly DeepSwarmApi DeepSwarm;
+    public readonly ServerApi DeepSwarm;
 
+    public readonly Tile FloorTile;
     public readonly Tile DirtTile;
     public readonly Tile StoneTile;
 
@@ -29,13 +32,13 @@ class Scenario : DeepSwarmScenario
     // Enemies
     public readonly List<Entity> Zombies = new List<Entity>();
 
-    public Scenario(DeepSwarmApi deepSwarm)
+    public ScenarioScript(ServerApi deepSwarm)
     {
         DeepSwarm = deepSwarm;
 
-        FloorTile = DeepSwarm.CreateTile(sprite: new Point(0, 0));
-        DirtTile = DeepSwarm.CreateTile(sprite: new Point(1, 0));
-        StoneTile = DeepSwarm.CreateTile(sprite: new Point(2, 0));
+        FloorTile = DeepSwarm.CreateTile(spriteLocation: new Point(0, 0));
+        DirtTile = DeepSwarm.CreateTile(spriteLocation: new Point(1, 0));
+        StoneTile = DeepSwarm.CreateTile(spriteLocation: new Point(2, 0));
 
         // TODO: Build the map or load it from a file, whatever
         OutsideWorld = DeepSwarm.CreateWorld(16, 16);
@@ -43,26 +46,23 @@ class Scenario : DeepSwarmScenario
 
         // world.Map.SetTile(i, j, DirtTile); ...
 
-        // TODO: Flesh out API for setting up entity kinds. Should allow selecting frames from a spritesheet
-        KnightEntityKind = DeepSwarm.CreateEntityKind(sprite: new Point(0, 1));
+        KnightEntityKind = DeepSwarm.CreateEntityKind(spriteLocation: new Point(0, 1));
         KnightEntityKind.SetManualControlScheme(ManualControlScheme.Default);
+        KnightEntityKind.SetCapabilities(EntityCapabilities.Move);
 
-        HeavyEntityKind = DeepSwarm.CreateEntityKind(sprite: new Point(0, 2));
+        HeavyEntityKind = DeepSwarm.CreateEntityKind(spriteLocation: new Point(0, 2));
         HeavyEntityKind.SetScriptable(true);
-        HeavyEntityKind.SetCapabilities(EntityCapabilities.Attack);
-
-        // etc.
+        HeavyEntityKind.SetCapabilities(EntityCapabilities.Move | EntityCapabilities.Attack | EntityCapabilities.Push);
 
         Player = DeepSwarm.Players[0];
-        King = OutsideWorld.SpawnEntity(EntityType.King, new Point(32, 32), owner: player);
+        Knight = OutsideWorld.SpawnEntity(KnightEntityKind, new Point(32, 32), owner: Player);
 
         // TODO: Build an API that allows taking control of player cameras for cutscenes?
         Player.Teleport(OutsideWorld, new Point(8, 8));
-
         Player.ShowTip("Enter the crypt! Select the Knight and move it with WASD.");
     }
 
-    public override void Tick()
+    public void Tick()
     {
         if (Player.World == OutsideWorld)
         {

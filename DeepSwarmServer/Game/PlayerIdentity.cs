@@ -1,8 +1,8 @@
 ﻿using System;
 
-namespace DeepSwarmCommon
+namespace DeepSwarmServer.Game
 {
-    public class PlayerIdentity
+    class PlayerIdentity
     {
         public Guid Guid;
         public string Name;
