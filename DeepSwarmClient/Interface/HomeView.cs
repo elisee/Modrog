@@ -4,14 +4,14 @@ using DeepSwarmCommon;
 
 namespace DeepSwarmClient.Interface
 {
-    class ConnectView : InterfaceElement
+    class HomeView : InterfaceElement
     {
         readonly TextInput _nameInput;
         readonly TextInput _serverAddressInput;
 
         readonly Label _errorLabel;
 
-        public ConnectView(Interface @interface)
+        public HomeView(Interface @interface)
             : base(@interface, null)
         {
             var windowPanel = new Panel(this, new TexturePatch(0x228800ff))

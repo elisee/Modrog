@@ -20,40 +20,50 @@ namespace DeepSwarmClient
             foreach (var packet in packets)
             {
                 _packetReader.Open(packet);
-                if (!IsRunning) break;
+                if (Stage == ClientStage.Exited) break;
 
                 try
                 {
                     var packetType = (Protocol.ServerPacketType)_packetReader.ReadByte();
 
-                    bool EnsureView(EngineView view)
+                    bool EnsureStage(ClientStage view)
                     {
-                        if (View == view) return true;
-                        Abort($"Received packet {packetType} during wrong stage (expected {view} but in {View}.");
+                        if (Stage == view) return true;
+                        Abort($"Received packet {packetType} during wrong stage (expected {view} but in {Stage}.");
                         return false;
                     }
 
                     bool EnsureLobbyOrPlayingView()
                     {
-                        if (View == EngineView.Lobby || View == EngineView.Playing) return true;
-                        Abort($"Received packet {packetType} in wrong view (expected Lobby or Playing but in {View}.");
+                        if (Stage == ClientStage.Lobby || Stage == ClientStage.Playing) return true;
+                        Abort($"Received packet {packetType} in wrong view (expected Lobby or Playing but in {Stage}.");
                         return false;
                     }
 
                     switch (packetType)
                     {
                         case ServerPacketType.Welcome:
-                            if (!EnsureView(EngineView.Loading)) break;
+                            if (!EnsureStage(ClientStage.Loading)) break;
 
                             ReadWelcome();
                             break;
 
-                        case ServerPacketType.PlayerList: ReadPlayerList(); break;
+                        case ServerPacketType.PeerList: ReadPeerList(); break;
                         case ServerPacketType.Chat: ReadChat(); break;
 
-                        case ServerPacketType.SetupGame:
-                            if (!EnsureView(EngineView.Lobby)) break;
-                            ReadSetupGame();
+                        case ServerPacketType.SetScenario:
+                            if (!EnsureStage(ClientStage.Lobby)) break;
+                            ReadSetScenario();
+                            break;
+
+                        case ServerPacketType.SetupCountdown:
+                            if (!EnsureStage(ClientStage.Lobby)) break;
+                            ReadSetupCountdown();
+                            break;
+
+                        case ServerPacketType.SetPeerOnline:
+                            if (!EnsureStage(ClientStage.Playing)) break;
+                            throw new NotImplementedException();
                             break;
 
                         case ServerPacketType.Tick:
@@ -70,11 +80,11 @@ namespace DeepSwarmClient
             }
         }
 
-        #region Loading View
+        #region Loading Stage
         void ReadWelcome()
         {
             var isPlaying = _packetReader.ReadByte() != 0;
-            View = isPlaying ? EngineView.Playing : EngineView.Lobby;
+            Stage = isPlaying ? ClientStage.Playing : ClientStage.Lobby;
 
             if (!isPlaying)
             {
@@ -103,19 +113,33 @@ namespace DeepSwarmClient
                 }
                 */
 
-                ReadSetupGame();
+                ReadSetScenario();
             }
             else
             {
 
             }
 
-            _engine.Interface.OnViewChanged();
+            _engine.Interface.OnStageChanged();
         }
         #endregion
 
-        #region Lobby or Playing View
-        void ReadPlayerList()
+        #region Lobby or Playing Stage
+        void ReadChat()
+        {
+            var author = _packetReader.ReadByteSizeString();
+            var message = _packetReader.ReadByteSizeString();
+
+            switch (Stage)
+            {
+                case ClientStage.Lobby: _engine.Interface.LobbyView.OnChatMessageReceived(author, message); break;
+                case ClientStage.Playing: _engine.Interface.PlayingView.OnChatMessageReceived(author, message); break;
+            }
+        }
+        #endregion
+
+        #region Lobby Stage
+        void ReadPeerList()
         {
             PlayerList.Clear();
 
@@ -125,46 +149,49 @@ namespace DeepSwarmClient
             {
                 var name = _packetReader.ReadByteSizeString();
                 var flags = _packetReader.ReadByte();
-                var isHost = (flags & 1) != 0;
-                var isOnline = (flags & 2) != 0;
-                var isReady = (flags & 4) != 0;
+                var playerId = (int)_packetReader.ReadByte();
 
-                PlayerList.Add(new PlayerListEntry { Name = name, IsHost = isHost, IsOnline = isOnline, IsReady = isReady });
+                PlayerList.Add(new PeerIdentity
+                {
+                    Name = name,
+                    IsHost = (flags & 1) != 0,
+                    IsOnline = (flags & 2) != 0,
+                    IsReady = (flags & 4) != 0,
+                    PlayerId = playerId
+                });
             }
 
-            switch (View)
+            switch (Stage)
             {
-                case EngineView.Playing: _engine.Interface.PlayingView.OnPlayerListUpdated(); break;
-                case EngineView.Lobby: _engine.Interface.LobbyView.OnPlayerListUpdated(); break;
+                case ClientStage.Lobby: _engine.Interface.LobbyView.OnPlayerListUpdated(); break;
+                case ClientStage.Playing: _engine.Interface.PlayingView.OnPlayerListUpdated(); break;
             }
         }
 
-        void ReadChat()
-        {
-            var author = _packetReader.ReadByteSizeString();
-            var message = _packetReader.ReadByteSizeString();
-
-            switch (View)
-            {
-                case EngineView.Playing: _engine.Interface.PlayingView.OnChatMessageReceived(author, message); break;
-                case EngineView.Lobby: _engine.Interface.LobbyView.OnChatMessageReceived(author, message); break;
-            }
-        }
-        #endregion
-
-        #region Lobby View
-        void ReadSetupGame()
+        void ReadSetScenario()
         {
             var scenarioName = _packetReader.ReadByteSizeString();
             ActiveScenario = ScenarioEntries.Find(x => x.Name == scenarioName);
             _engine.Interface.LobbyView.OnActiveScenarioChanged();
         }
+
+        void ReadSetupCountdown()
+        {
+            IsCountingDown = _packetReader.ReadByte() != 0;
+            _engine.Interface.LobbyView.OnIsCountingDownChanged();
+        }
         #endregion
 
-        #region Playing View
+        #region Playing Stage
         void ReadTick()
         {
-            throw new NotImplementedException();
+            if (Stage == ClientStage.Lobby)
+            {
+                Stage = ClientStage.Playing;
+                _engine.Interface.OnStageChanged();
+            }
+
+            // TODO
         }
         #endregion
     }

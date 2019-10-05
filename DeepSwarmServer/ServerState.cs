@@ -8,7 +8,7 @@ using System.Net.Sockets;
 
 namespace DeepSwarmServer
 {
-    enum ServerStage { Lobby, Playing }
+    enum ServerStage { Lobby, CountingDown, Playing }
 
     partial class ServerState
     {
@@ -22,7 +22,7 @@ namespace DeepSwarmServer
         readonly Dictionary<Socket, Peer> _peersBySocket = new Dictionary<Socket, Peer>();
         readonly List<Socket> _unindentifiedPeerSockets = new List<Socket>();
         readonly List<Socket> _identifiedPeerSockets = new List<Socket>();
-        readonly List<Game.PlayerIdentity> _playerIdentities = new List<Game.PlayerIdentity>();
+        readonly List<PeerIdentity> _peerIdentities = new List<PeerIdentity>();
 
         readonly List<Socket> _pollSockets = new List<Socket>();
 
@@ -33,12 +33,13 @@ namespace DeepSwarmServer
         readonly List<ScenarioEntry> _scenarioEntries = new List<ScenarioEntry>();
         // readonly List<SavedGameEntry> _savedGameEntries = new List<SavedGameEntry>();
 
-        // Playing
-        ScenarioEntry _activeScenario;
+        // CountingDown
+        float _startCountdownTimer;
 
+        // Playing
+        string _scenarioName;
+        Game.Universe _universe;
         float _tickAccumulatedTime = 0f;
-        int _tickIndex = -1;
-        const float TickInterval = 0.2f;
 
         public ServerState(Guid hostGuid)
         {
@@ -107,21 +108,27 @@ namespace DeepSwarmServer
                 }
             }
 
-            if (_stage == ServerStage.Playing)
+            switch (_stage)
             {
-                _tickAccumulatedTime += deltaTime;
+                case ServerStage.CountingDown:
+                    _startCountdownTimer += deltaTime;
+                    if (_startCountdownTimer >= Protocol.StartCountdownDuration) StartPlaying();
+                    break;
+                case ServerStage.Playing:
+                    _tickAccumulatedTime += deltaTime;
 
-                if (_tickAccumulatedTime > TickInterval)
-                {
-                    Tick();
-                    _tickAccumulatedTime %= TickInterval;
-                }
+                    if (_tickAccumulatedTime > Protocol.TickInterval)
+                    {
+                        Tick();
+                        _tickAccumulatedTime %= Protocol.TickInterval;
+                    }
+                    break;
             }
         }
 
         void ReadFromPeer(Peer peer)
         {
-            if (!peer.Receiver.Read(out var packets)) { KickPeer(peer, null); return; }
+            if (!peer.Receiver.Read(out var packets)) { RemovePeer(peer, null); return; }
 
             foreach (var packet in packets)
             {
@@ -132,43 +139,54 @@ namespace DeepSwarmServer
                 }
                 catch (PacketException exception)
                 {
-                    KickPeer(peer, exception.Message);
+                    RemovePeer(peer, exception.Message);
                 }
                 catch (Exception exception)
                 {
-                    KickPeer(peer, $"Unhandled exception: {exception.Message}");
+                    RemovePeer(peer, $"Unhandled exception: {exception.Message}");
                 }
             }
-        }
 
-        void KickPeer(Peer peer, string kickReason)
-        {
-            if (kickReason != null)
+            void RemovePeer(Peer peer, string kickReason)
             {
-                _packetWriter.WriteByte((byte)Protocol.ServerPacketType.Kick);
-                _packetWriter.WriteByteSizeString(kickReason);
-                Send(peer.Socket);
+                if (kickReason != null)
+                {
+                    _packetWriter.WriteByte((byte)Protocol.ServerPacketType.Kick);
+                    _packetWriter.WriteByteSizeString(kickReason);
+                    Send(peer.Socket);
+                }
+
+                var endPoint = peer.Socket.RemoteEndPoint;
+                peer.Socket.Close();
+
+                _peersBySocket.Remove(peer.Socket);
+
+                if (peer.Identity != null)
+                {
+                    peer.Identity.IsOnline = false;
+                    _identifiedPeerSockets.Remove(peer.Socket);
+
+                    if (_stage == ServerStage.Lobby)
+                    {
+                        _peerIdentities.Remove(peer.Identity);
+                        BroadcastPeerList();
+                    }
+                    else
+                    {
+                        _packetWriter.WriteByte((byte)Protocol.ServerPacketType.SetPeerOnline);
+                        _packetWriter.WriteByteSizeString(peer.Identity.Name);
+                        _packetWriter.WriteByte(0);
+                        Broadcast();
+                    }
+                }
+                else
+                {
+                    _unindentifiedPeerSockets.Remove(peer.Socket);
+                }
+
+                if (kickReason == null) Console.WriteLine($"{endPoint} - Socket disconnected.");
+                else Console.WriteLine($"{endPoint} - Kicked: {kickReason}");
             }
-
-            var endPoint = peer.Socket.RemoteEndPoint;
-            peer.Socket.Close();
-
-            _peersBySocket.Remove(peer.Socket);
-
-            if (peer.Identity != null)
-            {
-                peer.Identity.IsOnline = false;
-                _identifiedPeerSockets.Remove(peer.Socket);
-                _playerIdentities.Remove(peer.Identity);
-                BroadcastPlayerList();
-            }
-            else
-            {
-                _unindentifiedPeerSockets.Remove(peer.Socket);
-            }
-
-            if (kickReason == null) Console.WriteLine($"{endPoint} - Socket disconnected.");
-            else Console.WriteLine($"{endPoint} - Kicked: {kickReason}");
         }
 
         void Broadcast()
@@ -190,23 +208,19 @@ namespace DeepSwarmServer
             try { socket.Send(_packetWriter.Buffer, 0, length, SocketFlags.None); } catch { }
         }
 
-        void BroadcastPlayerList()
+        void BroadcastPeerList()
         {
-            _packetWriter.WriteByte((byte)Protocol.ServerPacketType.PlayerList);
-            _packetWriter.WriteInt(_playerIdentities.Count);
+            _packetWriter.WriteByte((byte)Protocol.ServerPacketType.PeerList);
+            _packetWriter.WriteInt(_peerIdentities.Count);
 
-            foreach (var identity in _playerIdentities)
+            foreach (var identity in _peerIdentities)
             {
                 _packetWriter.WriteByteSizeString(identity.Name);
                 _packetWriter.WriteByte((byte)((identity.IsHost ? 1 : 0) | (identity.IsOnline ? 2 : 0) | (identity.IsReady ? 4 : 0)));
+                _packetWriter.WriteByte((byte)identity.PlayerId);
             }
 
             Broadcast();
-        }
-
-        void Tick()
-        {
-            throw new NotImplementedException();
         }
     }
 }

@@ -1,10 +1,7 @@
-﻿using DeepSwarmApi.Server;
-using DeepSwarmCommon;
+﻿using DeepSwarmCommon;
 using Microsoft.CodeAnalysis;
 using System;
-using System.IO;
 using System.Linq;
-using System.Reflection;
 
 namespace DeepSwarmServer
 {
@@ -28,11 +25,18 @@ namespace DeepSwarmServer
                 case ServerStage.Lobby:
                     switch (packetType)
                     {
-                        case Protocol.ClientPacketType.ChooseGame: ReadChooseGame(peer); break;
+                        case Protocol.ClientPacketType.SetScenario: ReadSetScenario(peer); break;
                         case Protocol.ClientPacketType.Ready: ReadSetReady(peer); break;
                         case Protocol.ClientPacketType.StartGame: ReadStartGame(peer); break;
                         default:
                             throw new PacketException($"Invalid packet type for {nameof(ServerStage.Lobby)} stage: {packetType}.");
+                    }
+                    break;
+
+                case ServerStage.CountingDown:
+                    switch (packetType)
+                    {
+                        case Protocol.ClientPacketType.StopGame: ReadStopGame(peer); break;
                     }
                     break;
 
@@ -61,19 +65,29 @@ namespace DeepSwarmServer
             try { name = _packetReader.ReadByteSizeString(); }
             catch { throw new PacketException($"Invalid peer name in {nameof(Protocol.ClientPacketType.Hello)} packet."); }
             if (!Protocol.PlayerNameRegex.IsMatch(name)) throw new PacketException($"Invalid player name: {name}.");
-            if (_playerIdentities.Any(x => x.Guid != guid && x.Name == name)) throw new PacketException($"Name already in use.");
+            if (_peerIdentities.Any(x => x.Guid != guid && x.Name == name)) throw new PacketException($"Name already in use.");
 
-            peer.Identity = _playerIdentities.Find(x => x.Guid == guid);
+            peer.Identity = _peerIdentities.Find(x => x.Guid == guid);
 
             if (peer.Identity != null)
             {
                 if (peer.Identity.IsOnline) throw new PacketException($"There is already someone connected with that player identity.");
                 peer.Identity.IsOnline = true;
+
+                if (_stage != ServerStage.Lobby)
+                {
+                    _packetWriter.WriteByte((byte)Protocol.ServerPacketType.SetPeerOnline);
+                    _packetWriter.WriteByteSizeString(peer.Identity.Name);
+                    _packetWriter.WriteByte(1);
+                    Broadcast();
+                }
             }
             else
             {
-                peer.Identity = new Game.PlayerIdentity { Guid = guid, IsOnline = true };
-                _playerIdentities.Add(peer.Identity);
+                if (_stage != ServerStage.Lobby) throw new PacketException("New player cannot join outside of lobby.");
+
+                peer.Identity = new PeerIdentity { Guid = guid, IsOnline = true };
+                _peerIdentities.Add(peer.Identity);
             }
 
             if (_hostGuid == Guid.Empty || _hostGuid == peer.Identity.Guid)
@@ -87,7 +101,7 @@ namespace DeepSwarmServer
             _unindentifiedPeerSockets.Remove(peer.Socket);
             _identifiedPeerSockets.Add(peer.Socket);
 
-            BroadcastPlayerList();
+            BroadcastPeerList();
 
             // Reply
             _packetWriter.WriteByte((byte)Protocol.ServerPacketType.Welcome);
@@ -117,11 +131,11 @@ namespace DeepSwarmServer
                     }
                     */
 
-                    _packetWriter.WriteByteSizeString(_activeScenario?.Name ?? "");
+                    _packetWriter.WriteByteSizeString(_scenarioName ?? "");
                     break;
 
                 case ServerStage.Playing:
-                    throw new NotImplementedException();
+                    break;
             }
 
             Send(peer.Socket);
@@ -139,88 +153,80 @@ namespace DeepSwarmServer
         #endregion
 
         #region Lobby Stage
-        void ReadChooseGame(Peer peer)
+        void ReadSetScenario(Peer peer)
         {
             if (!peer.Identity.IsHost) throw new PacketException("Can't choose game if not host.");
 
             var scenarioName = _packetReader.ReadByteSizeString();
-            _activeScenario = _scenarioEntries.Find(x => x.Name == scenarioName) ?? throw new PacketException($"Unknown scenario: {scenarioName}.");
+            var scenarioEntry = _scenarioEntries.Find(x => x.Name == scenarioName) ?? throw new PacketException($"Unknown scenario: {scenarioName}.");
+            _scenarioName = scenarioEntry.Name;
 
-            _packetWriter.WriteByte((byte)Protocol.ServerPacketType.SetupGame);
-            _packetWriter.WriteByteSizeString(_activeScenario.Name);
+            _packetWriter.WriteByte((byte)Protocol.ServerPacketType.SetScenario);
+            _packetWriter.WriteByteSizeString(_scenarioName);
             Broadcast();
         }
 
         void ReadSetReady(Peer peer)
         {
             peer.Identity.IsReady = _packetReader.ReadByte() != 0;
-            BroadcastPlayerList();
+            BroadcastPeerList();
         }
 
         void ReadStartGame(Peer peer)
         {
             if (!peer.Identity.IsHost) throw new PacketException("Can't start game if not host.");
-            if (_activeScenario == null || _playerIdentities.Any(x => !x.IsReady)) return;
 
-            // Setting scenario script
-            var scenarioScriptsPath = Path.Combine(_scenariosPath, _activeScenario.Name, "Scripts");
-
-            var scriptFilePaths = Directory.GetFiles(scenarioScriptsPath, "*.cs", SearchOption.AllDirectories);
-            var scriptFileContents = new string[scriptFilePaths.Length];
-            for (var i = 0; i < scriptFilePaths.Length; i++) scriptFileContents[i] = File.ReadAllText(scriptFilePaths[i]);
-
-            var basicsRef = MetadataReference.CreateFromFile(typeof(DeepSwarmBasics.Math.Point).Assembly.Location);
-            var apiRef = MetadataReference.CreateFromFile(typeof(ServerApi).Assembly.Location);
-
-            if (!DeepSwarmCommon.Scripting.Script.TryBuild("ScenarioScript", scriptFileContents, new[] { basicsRef, apiRef }, out var script, out var emitResult))
+            void SendChatError(string message)
             {
-                Console.WriteLine("Failed to build scripts for scenario:");
-                foreach (var diagnostic in emitResult.Diagnostics) Console.WriteLine(diagnostic);
-                throw new NotImplementedException("TODO: Handle error");
+                _packetWriter.WriteByte((byte)Protocol.ServerPacketType.Chat);
+                _packetWriter.WriteByteSizeString("");
+                _packetWriter.WriteByteSizeString(message);
+                Send(peer.Socket);
             }
 
-            var scenarioScriptType = script.Assembly.GetType($"ScenarioScript");
-            if (scenarioScriptType == null)
-            {
-                Console.WriteLine("Could not find ScenarioScript class in scripts");
-                throw new NotImplementedException("TODO: Handle error");
-            }
+            if (_scenarioName == null) { SendChatError("You must select a scenario to play before starting the game."); return; }
 
-            var scenarioScriptConstructor = scenarioScriptType.GetConstructor(new Type[] { typeof(ServerApi) });
-            if (scenarioScriptConstructor == null)
-            {
-                Console.WriteLine($"Could not find ScenarioScript({typeof(ServerApi).FullName}) constructor in scripts");
-                throw new NotImplementedException("TODO: Handle error");
-            }
+            var scenarioEntry = _scenarioEntries.Find(x => x.Name == _scenarioName);
+            if (_peerIdentities.Count < scenarioEntry.MinPlayers) { SendChatError($"Cannot start game, not enough players for this scenario (minimum is {scenarioEntry.MinPlayers})."); return; }
+            if (_peerIdentities.Count > scenarioEntry.MaxPlayers) { SendChatError($"Cannot start game, too many players for this scenario (maximum is {scenarioEntry.MaxPlayers})."); return; }
+            if (_peerIdentities.Any(x => !x.IsReady)) { SendChatError("Cannot start game, not all players are ready."); return; }
 
-            var apiConstructor = typeof(ServerApi).GetConstructor(BindingFlags.Instance | BindingFlags.NonPublic, null, new Type[] { typeof(DeepSwarmApi.Server.Player[]) }, null);
-            var apiPlayers = new DeepSwarmApi.Server.Player[1] { new DeepSwarmApi.Server.Player() };
-            var api = apiConstructor.Invoke(new object[] { apiPlayers });
+            // TODO: Check if team configurations are okay once that is implemented
 
-            try
-            {
-                var scenarioScript = (IScenarioScript)scenarioScriptConstructor.Invoke(new object[] { api });
-            }
-            catch (Exception exception)
-            {
-                Console.WriteLine(exception.InnerException);
-            }
-
-            script.Dispose();
-
-            // TODO: Send a countdown instead
-            _stage = ServerStage.Playing;
+            _stage = ServerStage.CountingDown;
+            _startCountdownTimer = 0f;
+            _packetWriter.WriteByte((byte)Protocol.ServerPacketType.SetupCountdown);
+            _packetWriter.WriteByte(1);
+            Broadcast();
         }
 
+        void ReadStopGame(Peer peer)
+        {
+            if (!peer.Identity.IsHost) throw new PacketException("Can't stop game if not host.");
+
+            if (_stage == ServerStage.Playing)
+            {
+                _universe.Dispose();
+                _universe = null;
+            }
+
+            _stage = ServerStage.Lobby;
+            _packetWriter.WriteByte((byte)Protocol.ServerPacketType.SetupCountdown);
+            _packetWriter.WriteByte(0);
+            Broadcast();
+
+            _peerIdentities.RemoveAll(x => !x.IsOnline);
+            BroadcastPeerList();
+        }
         #endregion
 
         #region Playing Stage
         void ReadPlanMoves(Peer peer)
         {
             var clientTickIndex = _packetReader.ReadInt();
-            if (clientTickIndex != _tickIndex)
+            if (clientTickIndex != _universe.TickIndex)
             {
-                Console.WriteLine($"{peer.Socket.RemoteEndPoint} - Ignoring {nameof(Protocol.ClientPacketType.PlanMoves)} packet from tick {clientTickIndex}, we're at {_tickIndex}.");
+                Console.WriteLine($"{peer.Socket.RemoteEndPoint} - Ignoring {nameof(Protocol.ClientPacketType.PlanMoves)} packet from tick {clientTickIndex}, we're at {_universe.TickIndex}.");
                 return;
             }
 

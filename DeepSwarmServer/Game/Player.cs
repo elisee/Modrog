@@ -4,8 +4,8 @@ namespace DeepSwarmServer.Game
 {
     class Player
     {
-        public PlayerIdentity Identity;
-        public int PlayerIndex;
+        public int Id;
+        public string Name;
 
         public World World;
         public readonly List<Entity> OwnedEntities = new List<Entity>();

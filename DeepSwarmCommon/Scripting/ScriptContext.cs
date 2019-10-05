@@ -8,12 +8,12 @@ using System.Reflection;
 namespace DeepSwarmCommon.Scripting
 {
     // See https://github.com/dotnet/roslyn/wiki/Scripting-API-Samples
-    public sealed class Script : IDisposable
+    public sealed class ScriptContext : IDisposable
     {
         public readonly Assembly Assembly;
         readonly ScriptAssemblyLoadContext _assemblyLoadContext = new ScriptAssemblyLoadContext();
 
-        Script(MemoryStream stream)
+        ScriptContext(MemoryStream stream)
         {
             Assembly = _assemblyLoadContext.LoadFromStream(stream);
         }
@@ -23,9 +23,9 @@ namespace DeepSwarmCommon.Scripting
             _assemblyLoadContext.Unload();
         }
 
-        public static bool TryBuild(string assemblyName, string[] fileContents, MetadataReference[] assemblyRefs, out Script script, out EmitResult result)
+        public static bool TryBuild(string assemblyName, string[] fileContents, MetadataReference[] assemblyRefs, out ScriptContext scriptContext, out EmitResult emitResult)
         {
-            script = null;
+            scriptContext = null;
 
             var syntaxTrees = new SyntaxTree[fileContents.Length];
 
@@ -50,11 +50,11 @@ namespace DeepSwarmCommon.Scripting
 
             using (var stream = new MemoryStream())
             {
-                result = compilation.Emit(stream);
-                if (!result.Success) return false;
+                emitResult = compilation.Emit(stream);
+                if (!emitResult.Success) return false;
 
                 stream.Position = 0;
-                script = new Script(stream);
+                scriptContext = new ScriptContext(stream);
             }
 
             return true;

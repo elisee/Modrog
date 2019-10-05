@@ -11,6 +11,9 @@ namespace DeepSwarmCommon
 
         public const int MaxScriptNameLength = 64;
 
+        public const float StartCountdownDuration = 3f;
+        public const float TickInterval = 0.2f;
+
         public enum ServerPacketType : byte
         {
             // Handshake
@@ -19,12 +22,14 @@ namespace DeepSwarmCommon
 
             // Lobby and Playing
             Chat,
-            PlayerList,
+            PeerList,
 
             // Lobby,
-            SetupGame,
+            SetScenario,
+            SetupCountdown,
 
             // Playing
+            SetPeerOnline,
             Tick,
         }
 
@@ -35,11 +40,12 @@ namespace DeepSwarmCommon
 
             // Lobby and Playing
             Chat,
+            StopGame,
 
             // Lobby
-            ChooseGame,
-            StartGame,
+            SetScenario,
             Ready,
+            StartGame,
 
             // Playing
             PlanMoves,

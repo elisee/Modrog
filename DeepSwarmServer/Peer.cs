@@ -8,7 +8,7 @@ namespace DeepSwarmServer
         public readonly PacketReceiver Receiver;
 
         public Socket Socket;
-        public Game.PlayerIdentity Identity;
+        public PeerIdentity Identity;
 
         public Peer(Socket socket)
         {

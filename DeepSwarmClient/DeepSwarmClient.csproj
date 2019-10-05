@@ -34,8 +34,4 @@
     <ProjectReference Include="..\ThirdParty\SDL2-CS\SDL2-CS.Core.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Game\" />
-  </ItemGroup>
-
 </Project>

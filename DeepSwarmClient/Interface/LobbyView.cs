@@ -168,7 +168,7 @@ namespace DeepSwarmClient.Interface
                 {
                     Padding = 8,
                     Text = entry.Title,
-                    OnActivate = () => { Engine.State.ChooseScenario(entry.Name); }
+                    OnActivate = () => { Engine.State.SetScenario(entry.Name); }
                 }.Label.Ellipsize = true;
             }
             _scenarioListPanel.Layout();
@@ -222,15 +222,20 @@ namespace DeepSwarmClient.Interface
 
         public void OnChatMessageReceived(string author, string message)
         {
+            if (author.Length > 0) AppendToChatLog($"{author}: {message}");
+            else AppendToChatLog($"[Server] {message}");
+            _chatLog.Layout();
+        }
+
+        void AppendToChatLog(string text)
+        {
             new Label(_chatLog)
             {
                 TopPadding = 8,
                 HorizontalPadding = 8,
                 Wrap = true
-            }.Text = $"{author}: {message}";
-            _chatLog.Layout();
+            }.Text = text;
         }
-
 
         public void OnActiveScenarioChanged()
         {
@@ -256,5 +261,17 @@ namespace DeepSwarmClient.Interface
                 _noGameSelectedLabel.Parent.Layout();
             }
         }
+
+        public void OnIsCountingDownChanged()
+        {
+            var isCountingDown = Engine.State.IsCountingDown;
+
+            // TODO: Disable / enable all buttons except chat
+
+            if (isCountingDown) AppendToChatLog("Game starts in a few seconds...");
+            else AppendToChatLog("Countdown cancelled.");
+            _chatLog.Layout();
+        }
+
     }
 }

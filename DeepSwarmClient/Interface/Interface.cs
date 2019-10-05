@@ -20,7 +20,7 @@ namespace DeepSwarmClient.Interface
         public readonly Panel ViewLayer;
         public readonly Panel PopupLayer;
 
-        public readonly ConnectView ConnectView;
+        public readonly HomeView HomeView;
         public readonly LoadingView LoadingView;
         public readonly LobbyView LobbyView;
         public readonly Playing.PlayingView PlayingView;
@@ -44,13 +44,13 @@ namespace DeepSwarmClient.Interface
             ViewLayer = new Panel(Desktop.RootElement, new TexturePatch(0x000000ff));
             PopupLayer = new Panel(Desktop.RootElement, new TexturePatch(0x00000066)) { IsVisible = false };
 
-            ConnectView = new ConnectView(this);
+            HomeView = new HomeView(this);
             LoadingView = new LoadingView(this);
             LobbyView = new LobbyView(this);
             PlayingView = new Playing.PlayingView(this);
 
             Desktop.RootElement.Layout(Viewport);
-            OnViewChanged();
+            OnStageChanged();
         }
 
         public void SetViewport(Rectangle viewport)
@@ -59,17 +59,17 @@ namespace DeepSwarmClient.Interface
             Desktop.RootElement.Layout(Viewport);
         }
 
-        public void OnViewChanged()
+        public void OnStageChanged()
         {
             Desktop.SetFocusedElement(null);
             ViewLayer.Clear();
 
-            switch (Engine.State.View)
+            switch (Engine.State.Stage)
             {
-                case EngineView.Connect: ViewLayer.Add(ConnectView); break;
-                case EngineView.Loading: ViewLayer.Add(LoadingView); break;
-                case EngineView.Lobby: ViewLayer.Add(LobbyView); break;
-                case EngineView.Playing: ViewLayer.Add(PlayingView); break;
+                case ClientStage.Home: ViewLayer.Add(HomeView); break;
+                case ClientStage.Loading: ViewLayer.Add(LoadingView); break;
+                case ClientStage.Lobby: ViewLayer.Add(LobbyView); break;
+                case ClientStage.Playing: ViewLayer.Add(PlayingView); break;
             }
 
             ViewLayer.Layout(Desktop.RootElement.LayoutRectangle);

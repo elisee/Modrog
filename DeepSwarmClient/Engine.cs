@@ -94,10 +94,10 @@ namespace DeepSwarmClient
         {
             var stopwatch = Stopwatch.StartNew();
 
-            while (State.IsRunning)
+            while (State.Stage != ClientStage.Exited)
             {
                 // Input
-                while (State.IsRunning && SDL.SDL_PollEvent(out var @event) != 0)
+                while (State.Stage != ClientStage.Exited && SDL.SDL_PollEvent(out var @event) != 0)
                 {
                     switch (@event.type)
                     {
@@ -131,7 +131,7 @@ namespace DeepSwarmClient
                     }
                 }
 
-                if (!State.IsRunning) break;
+                if (State.Stage == ClientStage.Exited) break;
 
                 var deltaTime = (float)stopwatch.Elapsed.TotalSeconds;
                 stopwatch.Restart();

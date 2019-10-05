@@ -8,14 +8,11 @@ using System.Threading.Tasks;
 
 namespace DeepSwarmClient
 {
-    enum EngineView { Connect, Loading, Lobby, Playing, Disconnected }
+    enum ClientStage { Home, Loading, Lobby, Playing, Disconnected, Exited }
 
     partial class ClientState
     {
-        public bool IsRunning = true;
-
-        // View
-        public EngineView View;
+        public ClientStage Stage;
 
         // Networking
         Socket _socket;
@@ -35,7 +32,7 @@ namespace DeepSwarmClient
         public string LoadingProgressText { get; private set; }
 
         // Player list
-        public readonly List<PlayerListEntry> PlayerList = new List<PlayerListEntry>();
+        public readonly List<PeerIdentity> PlayerList = new List<PeerIdentity>();
 
         // Lobby
         bool _isSelfReady;
@@ -43,6 +40,7 @@ namespace DeepSwarmClient
         public readonly List<ScenarioEntry> ScenarioEntries = new List<ScenarioEntry>();
         // public readonly List<SavedGameEntry> SavedGameEntries = new List<SavedGameEntry>();
         public ScenarioEntry ActiveScenario;
+        public bool IsCountingDown;
 
         // Playing
 
@@ -63,7 +61,7 @@ namespace DeepSwarmClient
             _socket?.Close();
             _socket = null;
 
-            IsRunning = false;
+            Stage = ClientStage.Exited;
         }
 
         public void Connect(string address)
@@ -73,8 +71,8 @@ namespace DeepSwarmClient
             _socket = new Socket(SocketType.Stream, ProtocolType.Tcp) { NoDelay = true, LingerState = new LingerOption(true, seconds: 1) };
 
             LoadingProgressText = "Connecting...";
-            View = EngineView.Loading;
-            _engine.Interface.OnViewChanged();
+            Stage = ClientStage.Loading;
+            _engine.Interface.OnStageChanged();
 
             Task.Run(() =>
             {
@@ -89,8 +87,8 @@ namespace DeepSwarmClient
                         if (exception is SocketException socketException) ErrorMessage = $"Could not connect: {socketException.SocketErrorCode}.";
                         else ErrorMessage = $"Could not connect: {exception.Message}";
 
-                        View = EngineView.Connect;
-                        _engine.Interface.OnViewChanged();
+                        Stage = ClientStage.Home;
+                        _engine.Interface.OnStageChanged();
                     });
 
                     return;
@@ -120,8 +118,8 @@ namespace DeepSwarmClient
             _socket?.Close();
             _socket = null;
 
-            View = EngineView.Connect;
-            _engine.Interface.OnViewChanged();
+            Stage = ClientStage.Home;
+            _engine.Interface.OnStageChanged();
         }
 
         void SendPacket()
@@ -129,7 +127,7 @@ namespace DeepSwarmClient
             try { _socket.Send(_packetWriter.Buffer, 0, _packetWriter.Finish(), SocketFlags.None); } catch { }
         }
 
-        #region Connect View
+        #region Connect Stage
         public void SetName(string name)
         {
             SelfPlayerName = name;
@@ -137,19 +135,25 @@ namespace DeepSwarmClient
         }
         #endregion
 
-        #region Lobby / Playing View
+        #region Lobby / Playing Stages
         public void SendChatMessage(string text)
         {
             _packetWriter.WriteByte((byte)Protocol.ClientPacketType.Chat);
             _packetWriter.WriteByteSizeString(text);
             SendPacket();
         }
+
+        public void StopGame()
+        {
+            _packetWriter.WriteByte((byte)Protocol.ClientPacketType.StopGame);
+            SendPacket();
+        }
         #endregion
 
-        #region Lobby View
-        public void ChooseScenario(string scenarioName)
+        #region Lobby Stage
+        public void SetScenario(string scenarioName)
         {
-            _packetWriter.WriteByte((byte)Protocol.ClientPacketType.ChooseGame);
+            _packetWriter.WriteByte((byte)Protocol.ClientPacketType.SetScenario);
             // TODO: Add a byte to say whether scenario or saved game
             _packetWriter.WriteByteSizeString(scenarioName);
             SendPacket();
@@ -171,7 +175,7 @@ namespace DeepSwarmClient
         }
         #endregion
 
-        #region Playing View
+        #region Playing Stage
         #endregion
 
         internal void Update(float deltaTime)
