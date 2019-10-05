@@ -1,5 +1,5 @@
-﻿using DeepSwarmClient.UI;
-using DeepSwarmCommon;
+﻿using DeepSwarmBasics.Math;
+using DeepSwarmClient.UI;
 using System.IO;
 
 namespace DeepSwarmClient.Interface

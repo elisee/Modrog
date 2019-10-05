@@ -1,4 +1,4 @@
-﻿using DeepSwarmCommon;
+﻿using DeepSwarmBasics.Math;
 using System;
 
 namespace DeepSwarmClient.UI

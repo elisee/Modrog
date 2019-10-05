@@ -1,4 +1,5 @@
-﻿using DeepSwarmCommon;
+﻿using DeepSwarmBasics.Math;
+using DeepSwarmCommon;
 using SDL2;
 using System;
 using System.Diagnostics;

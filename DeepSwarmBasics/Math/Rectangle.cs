@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Diagnostics;
 
-namespace DeepSwarmCommon
+namespace DeepSwarmBasics.Math
 {
-    [DebuggerDisplay("{DebugDisplayString,nq}")]
+    [DebuggerDisplay("{DebugDisplay,nq}")]
     public struct Rectangle : IEquatable<Rectangle>
     {
         public int X;
@@ -33,6 +33,6 @@ namespace DeepSwarmCommon
         public static bool operator ==(Rectangle left, Rectangle right) => left.Equals(right);
         public static bool operator !=(Rectangle left, Rectangle right) => !(left == right);
 
-        internal string DebugDisplayString => $"{X} {Y} {Width} {Height}";
+        internal string DebugDisplay => $"{X} {Y} {Width} {Height}";
     }
 }

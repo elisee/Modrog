@@ -1,4 +1,4 @@
-﻿using DeepSwarmCommon;
+﻿using DeepSwarmBasics.Math;
 using SDL2;
 using System;
 using System.Collections.Generic;

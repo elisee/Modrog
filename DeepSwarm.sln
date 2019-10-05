@@ -15,6 +15,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SDL2-CS.Core", "ThirdParty\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DeepSwarmMapGenerator", "DeepSwarmMapGenerator\DeepSwarmMapGenerator.csproj", "{8B3DDBD2-9338-4F01-A461-514B581078A6}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DeepSwarmBasics", "DeepSwarmBasics\DeepSwarmBasics.csproj", "{BD551BFF-4C59-4746-9FC1-D6B6BFEFD392}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -41,6 +43,10 @@ Global
 		{8B3DDBD2-9338-4F01-A461-514B581078A6}.Debug|x64.Build.0 = Debug|x64
 		{8B3DDBD2-9338-4F01-A461-514B581078A6}.Release|x64.ActiveCfg = Release|x64
 		{8B3DDBD2-9338-4F01-A461-514B581078A6}.Release|x64.Build.0 = Release|x64
+		{BD551BFF-4C59-4746-9FC1-D6B6BFEFD392}.Debug|x64.ActiveCfg = Debug|x64
+		{BD551BFF-4C59-4746-9FC1-D6B6BFEFD392}.Debug|x64.Build.0 = Debug|x64
+		{BD551BFF-4C59-4746-9FC1-D6B6BFEFD392}.Release|x64.ActiveCfg = Release|x64
+		{BD551BFF-4C59-4746-9FC1-D6B6BFEFD392}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
