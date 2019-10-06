@@ -71,7 +71,7 @@ namespace DeepSwarmClient.Interface
             if (Engine.State.ErrorMessage != null)
             {
                 _errorLabel.IsVisible = true;
-                _errorLabel.Text = Engine.State.ErrorMessage;
+                _errorLabel.Text = Engine.State.ErrorMessage + (Engine.State.KickReason != null ? $" Reason: {Engine.State.KickReason}" : "");
             }
             else
             {

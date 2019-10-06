@@ -42,6 +42,10 @@ namespace DeepSwarmClient
 
                     switch (packetType)
                     {
+                        case ServerPacketType.Kick:
+                            KickReason = _packetReader.ReadByteSizeString();
+                            break;
+
                         case ServerPacketType.Welcome:
                             if (!EnsureStage(ClientStage.Loading)) break;
 

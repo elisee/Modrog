@@ -23,6 +23,7 @@ namespace DeepSwarmClient
         public string SavedServerAddress = "localhost"; // TODO: Save and load from settings
 
         public string ErrorMessage { get; private set; }
+        public string KickReason { get; private set; }
 
         // Self
         public Guid SelfGuid;
@@ -67,6 +68,8 @@ namespace DeepSwarmClient
         public void Connect(string address)
         {
             _isSelfReady = false;
+            ErrorMessage = null;
+            KickReason = null;
 
             _socket = new Socket(SocketType.Stream, ProtocolType.Tcp) { NoDelay = true, LingerState = new LingerOption(true, seconds: 1) };
 
