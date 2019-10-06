@@ -7,12 +7,12 @@ namespace DeepSwarmServer
     {
         void StartPlaying()
         {
-            var peers = new Peer[_peersBySocket.Count];
-            _peersBySocket.Values.CopyTo(peers, 0);
-
+            var peers = new Peer[_identifiedPeerSockets.Count];
             var players = new Game.Player[peers.Length];
+
             for (var i = 0; i < peers.Length; i++)
             {
+                peers[i] = _peersBySocket[_identifiedPeerSockets[i]];
                 peers[i].Identity.PlayerId = i;
                 players[i] = new Game.Player { Id = i, Name = peers[i].Identity.Name };
             }
@@ -27,8 +27,9 @@ namespace DeepSwarmServer
         {
             _universe.Tick();
 
-            foreach (var peer in _peersBySocket.Values)
+            foreach (var socket in _identifiedPeerSockets)
             {
+                var peer = _peersBySocket[socket];
                 var player = _universe.PlayersById[peer.Identity.PlayerId];
 
                 _packetWriter.WriteByte((byte)Protocol.ServerPacketType.Tick);
