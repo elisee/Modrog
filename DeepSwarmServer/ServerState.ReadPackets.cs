@@ -230,25 +230,18 @@ namespace DeepSwarmServer
                 return;
             }
 
-            /*
-            var moveCount = reader.ReadShort();
+            var player = _universe.Players[peer.Identity.PlayerIndex];
+
+            var moveCount = _packetReader.ReadShort();
             for (var i = 0; i < moveCount; i++)
             {
-                var entityId = reader.ReadInt();
-                var move = (Entity.EntityMove)reader.ReadByte();
-                if (!map.EntitiesById.TryGetValue(entityId, out var entity))
-                {
-                    throw new PacketException($"Invalid entity id in {nameof(Protocol.ClientPacketType.PlanMoves)} packet.");
-                }
+                var entityId = _packetReader.ReadInt();
+                var move = (DeepSwarmApi.Server.EntityMove)_packetReader.ReadByte();
 
-                if (entity.PlayerIndex != peer.Player.PlayerIndex)
-                {
-                    throw new PacketException($"Can't move entity not owned in {nameof(Protocol.ClientPacketType.PlanMoves)} packet.");
-                }
+                if (!player.OwnedEntitiesById.TryGetValue(entityId, out var entity)) throw new PacketException($"Invalid entity id in {nameof(Protocol.ClientPacketType.PlanMoves)} packet.");
 
                 entity.UpcomingMove = move;
             }
-            */
         }
         #endregion
     }

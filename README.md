@@ -9,24 +9,21 @@ You'll need .NET Core 3 and Visual Studio 2019. VS Code might work.
  * You can use `RunServer.bat` or `RunClient.bat` to start one and then you can debug the other from VS.
  * `RunServer.bat new` will overwrite the generated map.
 
-## Things to do
+## Tasks
 
-    - Server: Send message when kicking player so reason can be displayed in the UI
-    - UI: Implement scrolling + ChildLayout.Bottom / .Right
-    - UI: Possibly show focus outline only when using keyboard to avoid distracting players
-    - UI: Implement support for linebreaks in Label
-    - InGameView: Fix not being able to select an entity when HoveredTileX/HoveredTileY is negative
-    - UI: Copy / Paste in TextInput / TextEditor
-    - UI: Keyboard fast movement (Ctrl) in TextInput / TextEditor
-    - UI: Display script errors somewhere
-    - UI: Increase script window size?
-    - Server: Mark chunk as non-free if an entity enters it to prevent spawning people in it (or we need to track entities by chunk and check for that)
-    - Server: Generate and control enemies
-    - Implement Attack move
-    - Rendering: Add light checkerboard pattern on the floor?
-    - Design & implement more unit types: one that can fire from a distance but has less health, one that digs faster, etc.
-    - Design & implement more building types: turrets, refinery, etc.
-    - The Factory should be able to produce its own crystals very slowly so that you're never stuck (but it's so slow that it's not sustainable beyond building a couple workers)
+### Rendering
+
+    - Add light checkerboard pattern on the floor
+
+### UI
+
+    - Implement scrolling + ChildLayout.Bottom / .Right
+    - Possibly show focus outline only when using keyboard to avoid distracting players
+    - Implement support for linebreaks in Label
+    - Copy / Paste in TextInput / TextEditor
+    - Keyboard fast movement (Ctrl) in TextInput / TextEditor
+    - Display script errors somewhere
+    - Increase script window size?
 
 ## Design
 
@@ -43,4 +40,3 @@ Examples of scenarios:
 
 The scenarios are built with maps & scripts, so they might have some (or a lot of) randomization.
 Each scenario can have its own tech tree and even graphics, but we'll focus on one for now.
-

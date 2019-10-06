@@ -1,4 +1,5 @@
-﻿using DeepSwarmCommon;
+﻿using DeepSwarmBasics.Math;
+using DeepSwarmCommon;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -44,6 +45,8 @@ namespace DeepSwarmClient
         public bool IsCountingDown;
 
         // Playing
+        public Point WorldSize;
+        public short[] WorldTiles;
 
         // Scripts
         public readonly Dictionary<int, string> EntityScriptPaths = new Dictionary<int, string>();

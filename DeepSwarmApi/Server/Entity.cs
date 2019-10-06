@@ -1,6 +1,6 @@
 ﻿namespace DeepSwarmApi.Server
 {
-    public class Entity
+    public abstract class Entity
     {
     }
 }

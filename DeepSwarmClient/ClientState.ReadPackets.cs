@@ -1,4 +1,5 @@
-﻿using DeepSwarmCommon;
+﻿using DeepSwarmBasics.Math;
+using DeepSwarmCommon;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -195,7 +196,36 @@ namespace DeepSwarmClient
                 _engine.Interface.OnStageChanged();
             }
 
-            // TODO
+            TickIndex = _packetReader.ReadInt();
+
+            var wasTeleported = _packetReader.ReadByte() != 0;
+            if (wasTeleported)
+            {
+                WorldSize = new Point(_packetReader.ReadShort(), _packetReader.ReadShort());
+                WorldTiles = new short[WorldSize.X * WorldSize.Y];
+
+                var location = new Point(_packetReader.ReadShort(), _packetReader.ReadShort());
+                _engine.Interface.PlayingView.OnTeleported(location);
+            }
+
+            var entitiesCount = (int)_packetReader.ReadShort();
+            for (var i = 0; i < entitiesCount; i++)
+            {
+                var id = _packetReader.ReadInt();
+                var x = _packetReader.ReadShort();
+                var y = _packetReader.ReadShort();
+                var direction = _packetReader.ReadByte();
+                var playerIndex = _packetReader.ReadShort();
+            }
+
+            var tilesCount = (int)_packetReader.ReadShort();
+            for (var i = 0; i < tilesCount; i++)
+            {
+                var x = _packetReader.ReadShort();
+                var y = _packetReader.ReadShort();
+                var tile = _packetReader.ReadShort();
+                WorldTiles[y * WorldSize.X + x] = tile;
+            }
         }
         #endregion
     }

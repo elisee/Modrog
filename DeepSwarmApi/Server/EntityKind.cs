@@ -1,20 +1,9 @@
 ﻿namespace DeepSwarmApi.Server
 {
-    public class EntityKind
+    public abstract class EntityKind
     {
-        public void SetManualControlScheme(ManualControlScheme scheme)
-        {
-
-        }
-
-        public void SetScriptable(bool scriptable)
-        {
-
-        }
-
-        public void SetCapabilities(EntityCapabilities caps)
-        {
-
-        }
+        public abstract void SetManualControlScheme(ManualControlScheme scheme);
+        public abstract void SetScriptable(bool scriptable);
+        public abstract void SetCapabilities(EntityCapabilities caps);
     }
 }

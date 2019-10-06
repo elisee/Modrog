@@ -38,7 +38,7 @@ namespace DeepSwarmServer
 
         // Playing
         string _scenarioName;
-        Game.Universe _universe;
+        Game.InternalUniverse _universe;
         float _tickAccumulatedTime = 0f;
 
         public ServerState(Guid hostGuid)
@@ -238,7 +238,7 @@ namespace DeepSwarmServer
             {
                 _packetWriter.WriteByteSizeString(identity.Name);
                 _packetWriter.WriteByte((byte)((identity.IsHost ? 1 : 0) | (identity.IsOnline ? 2 : 0) | (identity.IsReady ? 4 : 0)));
-                _packetWriter.WriteByte((byte)identity.PlayerId);
+                _packetWriter.WriteByte((byte)identity.PlayerIndex);
             }
 
             Broadcast();

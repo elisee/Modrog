@@ -2,11 +2,9 @@
 
 namespace DeepSwarmApi.Server
 {
-    public class World
+    public abstract class World
     {
-        public Entity SpawnEntity(EntityKind kind, Point position, Player owner)
-        {
-            return null;
-        }
+        public abstract Entity SpawnEntity(EntityKind kind, Point position, EntityDirection direction, Player owner);
+        public abstract void SetTile(int x, int y, TileKind tileKind);
     }
 }

@@ -11,6 +11,6 @@ namespace DeepSwarmCommon
         public bool IsOnline;
         public bool IsReady;
 
-        public int PlayerId = -1;
+        public int PlayerIndex = -1;
     }
 }

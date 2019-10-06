@@ -1,6 +1,6 @@
 ﻿namespace DeepSwarmApi.Server
 {
-    public class Tile
+    public abstract class TileKind
     {
     }
 }
