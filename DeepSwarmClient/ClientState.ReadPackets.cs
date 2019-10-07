@@ -1,4 +1,5 @@
-﻿using DeepSwarmBasics.Math;
+﻿using DeepSwarmApi;
+using DeepSwarmBasics.Math;
 using DeepSwarmCommon;
 using System;
 using System.Collections.Generic;
@@ -197,6 +198,7 @@ namespace DeepSwarmClient
             }
 
             TickIndex = _packetReader.ReadInt();
+            SeenEntities.Clear();
 
             var wasTeleported = _packetReader.ReadByte() != 0;
             if (wasTeleported)
@@ -214,8 +216,10 @@ namespace DeepSwarmClient
                 var id = _packetReader.ReadInt();
                 var x = _packetReader.ReadShort();
                 var y = _packetReader.ReadShort();
-                var direction = _packetReader.ReadByte();
+                var direction = (EntityDirection)_packetReader.ReadByte();
                 var playerIndex = _packetReader.ReadShort();
+
+                SeenEntities.Add(new Game.ClientEntity(id) { Position = new Point(x, y), Direction = direction, PlayerIndex = playerIndex });
             }
 
             var tilesCount = (int)_packetReader.ReadShort();

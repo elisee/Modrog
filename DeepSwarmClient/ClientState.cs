@@ -47,6 +47,7 @@ namespace DeepSwarmClient
         // Playing
         public Point WorldSize;
         public short[] WorldTiles;
+        public readonly List<Game.ClientEntity> SeenEntities = new List<Game.ClientEntity>();
 
         // Scripts
         public readonly Dictionary<int, string> EntityScriptPaths = new Dictionary<int, string>();

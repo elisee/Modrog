@@ -151,18 +151,22 @@ namespace DeepSwarmClient.Interface.Playing
             {
                 for (var i = 0; i < state.WorldSize.X; i++)
                 {
-                    // Desktop.MonoFontStyle.DrawText(i * TileSize - viewportScrollX, j * TileSize - viewportScrollY, $"{i},{j}");
-
                     var tile = state.WorldTiles[j * state.WorldSize.X + i];
                     if (tile != 0)
                     {
                         new Color(0x880000ff).UseAsDrawColor(Engine.Renderer);
                         var rect = new SDL.SDL_Rect { x = i * TileSize - viewportScrollX, y = j * TileSize - viewportScrollY, w = TileSize, h = TileSize };
                         SDL.SDL_RenderFillRect(Engine.Renderer, ref rect);
-
-                        new Color(0xffffffff).UseAsDrawColor(Engine.Renderer);
                     }
                 }
+            }
+
+            foreach (var entity in state.SeenEntities)
+            {
+                var rect = new SDL.SDL_Rect { x = entity.Position.X * TileSize - viewportScrollX, y = entity.Position.Y * TileSize - viewportScrollY, w = TileSize, h = TileSize };
+
+                new Color(0x00ff00ff).UseAsDrawColor(Engine.Renderer);
+                SDL.SDL_RenderFillRect(Engine.Renderer, ref rect);
             }
         }
     }
