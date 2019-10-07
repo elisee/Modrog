@@ -123,7 +123,9 @@ namespace DeepSwarmClient
             }
             else
             {
-
+                WorldSize = Point.Zero;
+                WorldTiles = new short[0];
+                SeenEntities.Clear();
             }
 
             _engine.Interface.OnStageChanged();
@@ -230,6 +232,16 @@ namespace DeepSwarmClient
                 var tile = _packetReader.ReadShort();
                 WorldTiles[y * WorldSize.X + x] = tile;
             }
+
+            // Send update
+            var position = new Point(
+                (int)(_engine.Interface.PlayingView.ScrollingPixelsX / Interface.Playing.PlayingView.TileSize),
+                (int)(_engine.Interface.PlayingView.ScrollingPixelsY / Interface.Playing.PlayingView.TileSize));
+
+            _packetWriter.WriteByte((byte)ClientPacketType.SetPosition);
+            _packetWriter.WriteShort((short)position.X);
+            _packetWriter.WriteShort((short)position.Y);
+            SendPacket();
         }
         #endregion
     }

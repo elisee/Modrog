@@ -48,6 +48,7 @@ namespace DeepSwarmCommon
             StartGame,
 
             // Playing
+            SetPosition,
             PlanMoves,
         }
     }

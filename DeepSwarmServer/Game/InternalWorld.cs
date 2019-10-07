@@ -31,10 +31,10 @@ namespace DeepSwarmServer.Game
                 switch (entity.UpcomingMove)
                 {
                     case DeepSwarmApi.Server.EntityMove.RotateCW:
-                        entity.Direction = (DeepSwarmApi.Server.EntityDirection)((int)(entity.Direction + 1) % 4);
+                        entity.Direction = (DeepSwarmApi.EntityDirection)((int)(entity.Direction + 1) % 4);
                         break;
                     case DeepSwarmApi.Server.EntityMove.RotateCCW:
-                        entity.Direction = (DeepSwarmApi.Server.EntityDirection)((int)(entity.Direction + 3) % 4);
+                        entity.Direction = (DeepSwarmApi.EntityDirection)((int)(entity.Direction + 3) % 4);
                         break;
 
                     case DeepSwarmApi.Server.EntityMove.Forward:
@@ -44,10 +44,10 @@ namespace DeepSwarmServer.Game
 
                             switch (entity.Direction)
                             {
-                                case DeepSwarmApi.Server.EntityDirection.Right: newX++; break;
-                                case DeepSwarmApi.Server.EntityDirection.Down: newY++; break;
-                                case DeepSwarmApi.Server.EntityDirection.Left: newX--; break;
-                                case DeepSwarmApi.Server.EntityDirection.Up: newY--; break;
+                                case DeepSwarmApi.EntityDirection.Right: newX++; break;
+                                case DeepSwarmApi.EntityDirection.Down: newY++; break;
+                                case DeepSwarmApi.EntityDirection.Left: newX--; break;
+                                case DeepSwarmApi.EntityDirection.Up: newY--; break;
                             }
 
                             var targetTileKind = Universe.TileKinds[PeekTile(newX, newY)];
@@ -71,7 +71,7 @@ namespace DeepSwarmServer.Game
             }
         }
 
-        public override DeepSwarmApi.Server.Entity SpawnEntity(DeepSwarmApi.Server.EntityKind kind, Point position, DeepSwarmApi.Server.EntityDirection direction, DeepSwarmApi.Server.Player owner)
+        public override DeepSwarmApi.Server.Entity SpawnEntity(DeepSwarmApi.Server.EntityKind kind, Point position, DeepSwarmApi.EntityDirection direction, DeepSwarmApi.Server.Player owner)
         {
             // TODO: Copy settings from kind
             // ((InternalEntityKind)kind).

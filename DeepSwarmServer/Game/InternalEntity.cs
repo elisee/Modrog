@@ -8,7 +8,7 @@ namespace DeepSwarmServer.Game
         internal readonly int Id;
         internal InternalWorld World;
         internal Point Position;
-        internal DeepSwarmApi.Server.EntityDirection Direction;
+        internal DeepSwarmApi.EntityDirection Direction;
         internal int PlayerIndex;
 
         internal DeepSwarmApi.Server.EntityMove UpcomingMove = DeepSwarmApi.Server.EntityMove.Idle;
@@ -17,7 +17,7 @@ namespace DeepSwarmServer.Game
         public int DirectionalViewRadius = 8;
         public float HalfFieldOfView = MathF.PI / 3f;
 
-        public InternalEntity(int id, InternalWorld world, Point position, DeepSwarmApi.Server.EntityDirection direction, int playerIndex)
+        public InternalEntity(int id, InternalWorld world, Point position, DeepSwarmApi.EntityDirection direction, int playerIndex)
         {
             Id = id;
             Position = position;
@@ -35,10 +35,10 @@ namespace DeepSwarmServer.Game
 
         internal float GetDirectionAngle() => Direction switch
         {
-            DeepSwarmApi.Server.EntityDirection.Right => 0f,
-            DeepSwarmApi.Server.EntityDirection.Down => MathF.PI / 2f,
-            DeepSwarmApi.Server.EntityDirection.Left => MathF.PI,
-            DeepSwarmApi.Server.EntityDirection.Up => MathF.PI * 3f / 2f,
+            DeepSwarmApi.EntityDirection.Right => 0f,
+            DeepSwarmApi.EntityDirection.Down => MathF.PI / 2f,
+            DeepSwarmApi.EntityDirection.Left => MathF.PI,
+            DeepSwarmApi.EntityDirection.Up => MathF.PI * 3f / 2f,
             _ => throw new NotSupportedException(),
         };
 

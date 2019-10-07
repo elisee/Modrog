@@ -1,4 +1,5 @@
-﻿using DeepSwarmCommon;
+﻿using DeepSwarmBasics.Math;
+using DeepSwarmCommon;
 using Microsoft.CodeAnalysis;
 using System;
 using System.Linq;
@@ -43,6 +44,7 @@ namespace DeepSwarmServer
                 case ServerStage.Playing:
                     switch (packetType)
                     {
+                        case Protocol.ClientPacketType.SetPosition: ReadPosition(peer); break;
                         case Protocol.ClientPacketType.PlanMoves: ReadPlanMoves(peer); break;
                     }
 
@@ -73,6 +75,7 @@ namespace DeepSwarmServer
             {
                 if (peer.Identity.IsOnline) throw new PacketException($"There is already someone connected with that player identity.");
                 peer.Identity.IsOnline = true;
+                _universe.Players[peer.Identity.PlayerIndex].WasJustTeleported = true;
 
                 if (_stage != ServerStage.Lobby)
                 {
@@ -221,6 +224,12 @@ namespace DeepSwarmServer
         #endregion
 
         #region Playing Stage
+        void ReadPosition(Peer peer)
+        {
+            var player = _universe.Players[peer.Identity.PlayerIndex];
+            player.Position = new Point(_packetReader.ReadShort(), _packetReader.ReadShort());
+        }
+
         void ReadPlanMoves(Peer peer)
         {
             var clientTickIndex = _packetReader.ReadInt();

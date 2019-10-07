@@ -12,8 +12,8 @@ namespace DeepSwarmClient.Interface.Playing
         public const int TileSize = 24;
 
         // TODO: Allow support 2 levels of zoom or more idk
-        float _scrollingPixelsX;
-        float _scrollingPixelsY;
+        public float ScrollingPixelsX { get; private set; }
+        public float ScrollingPixelsY { get; private set; }
 
         bool _isScrollingLeft;
         bool _isScrollingRight;
@@ -69,8 +69,8 @@ namespace DeepSwarmClient.Interface.Playing
         {
             if (_isDraggingScroll)
             {
-                _scrollingPixelsX = _dragScroll.X - Desktop.MouseX;
-                _scrollingPixelsY = _dragScroll.Y - Desktop.MouseY;
+                ScrollingPixelsX = _dragScroll.X - Desktop.MouseX;
+                ScrollingPixelsY = _dragScroll.Y - Desktop.MouseY;
             }
         }
 
@@ -84,8 +84,8 @@ namespace DeepSwarmClient.Interface.Playing
                 _isScrollingDown = false;
 
                 _isDraggingScroll = true;
-                _dragScroll.X = (int)_scrollingPixelsX + Desktop.MouseX;
-                _dragScroll.Y = (int)_scrollingPixelsY + Desktop.MouseY;
+                _dragScroll.X = (int)ScrollingPixelsX + Desktop.MouseX;
+                _dragScroll.Y = (int)ScrollingPixelsY + Desktop.MouseY;
             }
         }
 
@@ -99,8 +99,8 @@ namespace DeepSwarmClient.Interface.Playing
 
         public override void OnMouseWheel(int dx, int dy)
         {
-            _scrollingPixelsX += dx * 12;
-            _scrollingPixelsY -= dy * 12;
+            ScrollingPixelsX += dx * 12;
+            ScrollingPixelsY -= dy * 12;
         }
 
         public void OnPlayerListUpdated()
@@ -113,8 +113,8 @@ namespace DeepSwarmClient.Interface.Playing
 
         public void OnTeleported(Point position)
         {
-            _scrollingPixelsX = position.X * TileSize;
-            _scrollingPixelsY = position.Y * TileSize;
+            ScrollingPixelsX = position.X * TileSize;
+            ScrollingPixelsY = position.Y * TileSize;
         }
 
         public void Animate(float deltaTime)
@@ -131,8 +131,8 @@ namespace DeepSwarmClient.Interface.Playing
             if (dx != 0 || dy != 0)
             {
                 var angle = MathF.Atan2(dy, dx);
-                _scrollingPixelsX += MathF.Cos(angle) * ScrollingSpeed * deltaTime;
-                _scrollingPixelsY -= MathF.Sin(angle) * ScrollingSpeed * deltaTime;
+                ScrollingPixelsX += MathF.Cos(angle) * ScrollingSpeed * deltaTime;
+                ScrollingPixelsY -= MathF.Sin(angle) * ScrollingSpeed * deltaTime;
             }
         }
 
@@ -142,8 +142,8 @@ namespace DeepSwarmClient.Interface.Playing
 
             var state = Engine.State;
 
-            var viewportScrollX = -Engine.Interface.Viewport.Width / 2 + (int)_scrollingPixelsX;
-            var viewportScrollY = -Engine.Interface.Viewport.Height / 2 + (int)_scrollingPixelsY;
+            var viewportScrollX = -Engine.Interface.Viewport.Width / 2 + (int)ScrollingPixelsX;
+            var viewportScrollY = -Engine.Interface.Viewport.Height / 2 + (int)ScrollingPixelsY;
 
             new Color(0xffffffff).UseAsDrawColor(Engine.Renderer);
 

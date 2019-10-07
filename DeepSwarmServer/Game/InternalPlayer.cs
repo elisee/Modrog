@@ -9,9 +9,8 @@ namespace DeepSwarmServer.Game
         internal string Name;
 
         internal InternalWorld World;
-
-        // Will be cleared after having been sent to the player
-        public Point? TeleportPosition;
+        public Point Position;
+        public bool WasJustTeleported;
 
         internal readonly List<InternalEntity> OwnedEntities = new List<InternalEntity>();
         internal readonly Dictionary<int, InternalEntity> OwnedEntitiesById = new Dictionary<int, InternalEntity>();
@@ -21,7 +20,8 @@ namespace DeepSwarmServer.Game
         public override void Teleport(DeepSwarmApi.Server.World world, Point position)
         {
             World = (InternalWorld)world;
-            TeleportPosition = position;
+            Position = position;
+            WasJustTeleported = true;
         }
 
         public override void ShowTip(string tip)

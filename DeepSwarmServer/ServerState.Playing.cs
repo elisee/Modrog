@@ -85,16 +85,16 @@ namespace DeepSwarmServer
                 _packetWriter.WriteByte((byte)Protocol.ServerPacketType.Tick);
                 _packetWriter.WriteInt(_universe.TickIndex);
 
-                _packetWriter.WriteByte(player.TeleportPosition != null ? (byte)1 : (byte)0);
+                _packetWriter.WriteByte(player.WasJustTeleported ? (byte)1 : (byte)0);
 
-                if (player.TeleportPosition != null)
+                if (player.WasJustTeleported)
                 {
                     _packetWriter.WriteShort((short)player.World.Width);
                     _packetWriter.WriteShort((short)player.World.Height);
 
-                    _packetWriter.WriteShort((short)player.TeleportPosition.Value.X);
-                    _packetWriter.WriteShort((short)player.TeleportPosition.Value.Y);
-                    player.TeleportPosition = null;
+                    _packetWriter.WriteShort((short)player.Position.X);
+                    _packetWriter.WriteShort((short)player.Position.Y);
+                    player.WasJustTeleported = false;
                 }
 
                 // TODO: Must count only owned entities that are in our world!!
