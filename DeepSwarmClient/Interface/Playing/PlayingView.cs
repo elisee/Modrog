@@ -141,21 +141,29 @@ namespace DeepSwarmClient.Interface.Playing
             base.DrawSelf();
 
             var state = Engine.State;
+            if (state.WorldSize.X == 0 || state.WorldSize.Y == 0) return;
 
             var viewportScrollX = -Engine.Interface.Viewport.Width / 2 + (int)ScrollingPixelsX;
             var viewportScrollY = -Engine.Interface.Viewport.Height / 2 + (int)ScrollingPixelsY;
 
+            var startTileX = Math.Max(0, (int)viewportScrollX / TileSize);
+            var startTileY = Math.Max(0, (int)viewportScrollY / TileSize);
+
+            var endTileX = Math.Min(state.WorldSize.X - 1, startTileX + (int)MathF.Ceiling((float)Engine.Interface.Viewport.Width / TileSize + 1));
+            var endTileY = Math.Min(state.WorldSize.Y - 1, startTileY + (int)MathF.Ceiling((float)Engine.Interface.Viewport.Height / TileSize + 1));
+
             new Color(0xffffffff).UseAsDrawColor(Engine.Renderer);
 
-            for (var j = 0; j < state.WorldSize.Y; j++)
+            for (var y = startTileY; y <= endTileY; y++)
             {
-                for (var i = 0; i < state.WorldSize.X; i++)
+                for (var x = startTileX; x <= endTileX; x++)
                 {
-                    var tile = state.WorldTiles[j * state.WorldSize.X + i];
+                    var tile = state.WorldTiles[y * state.WorldSize.X + x];
+
                     if (tile != 0)
                     {
                         new Color(0x880000ff).UseAsDrawColor(Engine.Renderer);
-                        var rect = new SDL.SDL_Rect { x = i * TileSize - viewportScrollX, y = j * TileSize - viewportScrollY, w = TileSize, h = TileSize };
+                        var rect = new SDL.SDL_Rect { x = x * TileSize - viewportScrollX, y = y * TileSize - viewportScrollY, w = TileSize, h = TileSize };
                         SDL.SDL_RenderFillRect(Engine.Renderer, ref rect);
                     }
                 }
@@ -163,11 +171,31 @@ namespace DeepSwarmClient.Interface.Playing
 
             foreach (var entity in state.SeenEntities)
             {
-                var rect = new SDL.SDL_Rect { x = entity.Position.X * TileSize - viewportScrollX, y = entity.Position.Y * TileSize - viewportScrollY, w = TileSize, h = TileSize };
+                if (entity.Position.X < startTileX || entity.Position.Y < startTileY || entity.Position.X > endTileX || entity.Position.Y > endTileY) continue;
 
+                var rect = new SDL.SDL_Rect { x = entity.Position.X * TileSize - viewportScrollX, y = entity.Position.Y * TileSize - viewportScrollY, w = TileSize, h = TileSize };
                 new Color(0x00ff00ff).UseAsDrawColor(Engine.Renderer);
                 SDL.SDL_RenderFillRect(Engine.Renderer, ref rect);
             }
+
+            var fog = Engine.State.WorldFog;
+            var fogColor = new Color(0x00000044);
+            fogColor.UseAsDrawColor(Engine.Renderer);
+            SDL.SDL_SetRenderDrawBlendMode(Engine.Renderer, SDL.SDL_BlendMode.SDL_BLENDMODE_BLEND);
+
+            for (var y = startTileY; y <= endTileY; y++)
+            {
+                for (var x = startTileX; x <= endTileX; x++)
+                {
+                    var tileIndex = y * state.WorldSize.X + x;
+                    if (fog[tileIndex] != 0) continue;
+
+                    var rect = new SDL.SDL_Rect { x = x * TileSize - viewportScrollX, y = y * TileSize - viewportScrollY, w = TileSize, h = TileSize };
+                    SDL.SDL_RenderFillRect(Engine.Renderer, ref rect);
+                }
+            }
+
+            SDL.SDL_SetRenderDrawBlendMode(Engine.Renderer, SDL.SDL_BlendMode.SDL_BLENDMODE_NONE);
         }
     }
 }

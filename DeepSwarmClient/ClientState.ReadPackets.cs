@@ -4,6 +4,7 @@ using DeepSwarmCommon;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using static DeepSwarmCommon.Protocol;
 
 
@@ -125,6 +126,7 @@ namespace DeepSwarmClient
             {
                 WorldSize = Point.Zero;
                 WorldTiles = new short[0];
+                WorldFog = new byte[0];
                 SeenEntities.Clear();
             }
 
@@ -207,10 +209,15 @@ namespace DeepSwarmClient
             {
                 WorldSize = new Point(_packetReader.ReadShort(), _packetReader.ReadShort());
                 WorldTiles = new short[WorldSize.X * WorldSize.Y];
+                WorldFog = new byte[WorldSize.X * WorldSize.Y];
 
                 var location = new Point(_packetReader.ReadShort(), _packetReader.ReadShort());
                 _engine.Interface.PlayingView.OnTeleported(location);
             }
+
+            if (WorldTiles == null) throw new Exception("Server didn't teleport client on first tick.");
+
+            Unsafe.InitBlock(ref WorldFog[0], 0, (uint)WorldFog.Length);
 
             var entitiesCount = (int)_packetReader.ReadShort();
             for (var i = 0; i < entitiesCount; i++)
@@ -231,6 +238,7 @@ namespace DeepSwarmClient
                 var y = _packetReader.ReadShort();
                 var tile = _packetReader.ReadShort();
                 WorldTiles[y * WorldSize.X + x] = tile;
+                WorldFog[y * WorldSize.X + x] = 1;
             }
 
             // Send update
