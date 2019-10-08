@@ -30,14 +30,14 @@ namespace DeepSwarmServer.Game
             {
                 switch (entity.UpcomingMove)
                 {
-                    case DeepSwarmApi.Server.EntityMove.RotateCW:
+                    case DeepSwarmApi.EntityMove.RotateCW:
                         entity.Direction = (DeepSwarmApi.EntityDirection)((int)(entity.Direction + 1) % 4);
                         break;
-                    case DeepSwarmApi.Server.EntityMove.RotateCCW:
+                    case DeepSwarmApi.EntityMove.RotateCCW:
                         entity.Direction = (DeepSwarmApi.EntityDirection)((int)(entity.Direction + 3) % 4);
                         break;
 
-                    case DeepSwarmApi.Server.EntityMove.Forward:
+                    case DeepSwarmApi.EntityMove.Forward:
                         {
                             var newX = entity.Position.X;
                             var newY = entity.Position.Y;
@@ -58,16 +58,18 @@ namespace DeepSwarmServer.Game
                                 break;
                             }
 
+                            entity.Position = new Point(newX, newY);
+
                             // TODO: Dig, push, collect, etc.
                             // TODO: Check for interactions with entities
                         }
                         break;
 
-                    case DeepSwarmApi.Server.EntityMove.Idle:
+                    case DeepSwarmApi.EntityMove.Idle:
                         break;
                 }
 
-                entity.UpcomingMove = DeepSwarmApi.Server.EntityMove.Idle;
+                entity.UpcomingMove = DeepSwarmApi.EntityMove.Idle;
             }
         }
 

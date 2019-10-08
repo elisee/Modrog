@@ -11,7 +11,7 @@ namespace DeepSwarmServer.Game
         internal DeepSwarmApi.EntityDirection Direction;
         internal int PlayerIndex;
 
-        internal DeepSwarmApi.Server.EntityMove UpcomingMove = DeepSwarmApi.Server.EntityMove.Idle;
+        internal DeepSwarmApi.EntityMove UpcomingMove = DeepSwarmApi.EntityMove.Idle;
 
         public int OmniViewRadius = 2;
         public int DirectionalViewRadius = 8;

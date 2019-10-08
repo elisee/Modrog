@@ -4,6 +4,7 @@ using DeepSwarmClient.Graphics;
 using DeepSwarmClient.UI;
 using SDL2;
 using System;
+using System.Collections.Generic;
 
 namespace DeepSwarmClient.Interface.Playing
 {
@@ -11,6 +12,7 @@ namespace DeepSwarmClient.Interface.Playing
     {
         public const int TileSize = 24;
 
+        // Scrolling
         // TODO: Allow support 2 levels of zoom or more idk
         public float ScrollingPixelsX { get; private set; }
         public float ScrollingPixelsY { get; private set; }
@@ -22,6 +24,10 @@ namespace DeepSwarmClient.Interface.Playing
 
         bool _isDraggingScroll;
         Point _dragScroll;
+
+        // Hovered tile
+        int _hoveredTileX;
+        int _hoveredTileY;
 
         public PlayingView(Interface @interface)
             : base(@interface, null)
@@ -55,6 +61,16 @@ namespace DeepSwarmClient.Interface.Playing
                 if (key == SDL.SDL_Keycode.SDLK_UP) _isScrollingUp = true;
                 if (key == SDL.SDL_Keycode.SDLK_DOWN) _isScrollingDown = true;
             }
+
+            var state = Engine.State;
+
+            if (state.SelectedEntity != null)
+            {
+                if (key == SDL.SDL_Keycode.SDLK_a || key == SDL.SDL_Keycode.SDLK_q) state.SetMoveTowards(DeepSwarmApi.EntityDirection.Left);
+                if (key == SDL.SDL_Keycode.SDLK_d) state.SetMoveTowards(DeepSwarmApi.EntityDirection.Right);
+                if (key == SDL.SDL_Keycode.SDLK_w || key == SDL.SDL_Keycode.SDLK_z) state.SetMoveTowards(DeepSwarmApi.EntityDirection.Up);
+                if (key == SDL.SDL_Keycode.SDLK_s) state.SetMoveTowards(DeepSwarmApi.EntityDirection.Down);
+            }
         }
 
         public override void OnKeyUp(SDL.SDL_Keycode key)
@@ -63,6 +79,11 @@ namespace DeepSwarmClient.Interface.Playing
             if (key == SDL.SDL_Keycode.SDLK_RIGHT) _isScrollingRight = false;
             if (key == SDL.SDL_Keycode.SDLK_UP) _isScrollingUp = false;
             if (key == SDL.SDL_Keycode.SDLK_DOWN) _isScrollingDown = false;
+
+            if (key == SDL.SDL_Keycode.SDLK_a || key == SDL.SDL_Keycode.SDLK_q) Engine.State.StopMovingTowards(DeepSwarmApi.EntityDirection.Left);
+            if (key == SDL.SDL_Keycode.SDLK_d) Engine.State.StopMovingTowards(DeepSwarmApi.EntityDirection.Right);
+            if (key == SDL.SDL_Keycode.SDLK_w || key == SDL.SDL_Keycode.SDLK_z) Engine.State.StopMovingTowards(DeepSwarmApi.EntityDirection.Up);
+            if (key == SDL.SDL_Keycode.SDLK_s) Engine.State.StopMovingTowards(DeepSwarmApi.EntityDirection.Down);
         }
 
         public override void OnMouseMove()
@@ -76,7 +97,34 @@ namespace DeepSwarmClient.Interface.Playing
 
         public override void OnMouseDown(int button)
         {
-            if (button == 2)
+            if (button == 1)
+            {
+                var startTileX = (int)ScrollingPixelsX / TileSize;
+                var startTileY = (int)ScrollingPixelsY / TileSize;
+
+                var hoveredEntities = new List<Game.ClientEntity>();
+
+                foreach (var entity in Engine.State.SeenEntities)
+                {
+                    if (entity.Position.X == _hoveredTileX && entity.Position.Y == _hoveredTileY) hoveredEntities.Add(entity);
+                }
+
+                if (hoveredEntities.Count > 0)
+                {
+                    if (Engine.State.SelectedEntity == null || hoveredEntities.Count == 1)
+                    {
+                        Engine.State.SelectEntity(hoveredEntities[0]);
+                    }
+                    else
+                    {
+                        var selectedEntityIndex = hoveredEntities.IndexOf(Engine.State.SelectedEntity);
+                        var newSelectedEntityIndex = selectedEntityIndex < hoveredEntities.Count - 1 ? selectedEntityIndex + 1 : 0;
+                        Engine.State.SelectEntity(hoveredEntities[newSelectedEntityIndex]);
+                    }
+                }
+                else Engine.State.SelectEntity(null);
+            }
+            else if (button == 2)
             {
                 _isScrollingLeft = false;
                 _isScrollingRight = false;
@@ -117,6 +165,11 @@ namespace DeepSwarmClient.Interface.Playing
             ScrollingPixelsY = position.Y * TileSize;
         }
 
+        public void OnSelectedEntityChanged()
+        {
+            // TODO
+        }
+
         public void Animate(float deltaTime)
         {
             const float ScrollingSpeed = 400;
@@ -134,6 +187,12 @@ namespace DeepSwarmClient.Interface.Playing
                 ScrollingPixelsX += MathF.Cos(angle) * ScrollingSpeed * deltaTime;
                 ScrollingPixelsY -= MathF.Sin(angle) * ScrollingSpeed * deltaTime;
             }
+
+            var viewportScrollX = -Engine.Interface.Viewport.Width / 2 + (int)ScrollingPixelsX;
+            var viewportScrollY = -Engine.Interface.Viewport.Height / 2 + (int)ScrollingPixelsY;
+
+            _hoveredTileX = ((int)viewportScrollX + Desktop.MouseX) / TileSize;
+            _hoveredTileY = ((int)viewportScrollY + Desktop.MouseY) / TileSize;
         }
 
         protected override void DrawSelf()
@@ -174,7 +233,7 @@ namespace DeepSwarmClient.Interface.Playing
                 if (entity.Position.X < startTileX || entity.Position.Y < startTileY || entity.Position.X > endTileX || entity.Position.Y > endTileY) continue;
 
                 var rect = new SDL.SDL_Rect { x = entity.Position.X * TileSize - viewportScrollX, y = entity.Position.Y * TileSize - viewportScrollY, w = TileSize, h = TileSize };
-                new Color(0x00ff00ff).UseAsDrawColor(Engine.Renderer);
+                new Color(0x008800ff).UseAsDrawColor(Engine.Renderer);
                 SDL.SDL_RenderFillRect(Engine.Renderer, ref rect);
             }
 
@@ -196,6 +255,27 @@ namespace DeepSwarmClient.Interface.Playing
             }
 
             SDL.SDL_SetRenderDrawBlendMode(Engine.Renderer, SDL.SDL_BlendMode.SDL_BLENDMODE_NONE);
+
+            if (state.SelectedEntity != null)
+            {
+                var color = new Color(0x00ff00ff);
+                color.UseAsDrawColor(Engine.Renderer);
+
+                var x = state.SelectedEntity.Position.X;
+                var y = state.SelectedEntity.Position.Y;
+                var w = 1;
+                var h = 1;
+
+                var renderX = x * TileSize - viewportScrollX;
+                var renderY = y * TileSize - viewportScrollY;
+
+                var rect = new Rectangle(renderX, renderY, w * TileSize, h * TileSize);
+
+                SDL.SDL_RenderDrawLine(Engine.Renderer, rect.X, rect.Y, rect.X + rect.Width, rect.Y);
+                SDL.SDL_RenderDrawLine(Engine.Renderer, rect.X + rect.Width, rect.Y, rect.X + rect.Width, rect.Y + rect.Height);
+                SDL.SDL_RenderDrawLine(Engine.Renderer, rect.X + rect.Width, rect.Y + rect.Height, rect.X, rect.Y + rect.Height);
+                SDL.SDL_RenderDrawLine(Engine.Renderer, rect.X, rect.Y + rect.Height, rect.X, rect.Y);
+            }
         }
     }
 }

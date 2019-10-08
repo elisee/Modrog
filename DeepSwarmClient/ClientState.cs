@@ -1,4 +1,5 @@
-﻿using DeepSwarmBasics.Math;
+﻿using DeepSwarmApi;
+using DeepSwarmBasics.Math;
 using DeepSwarmCommon;
 using System;
 using System.Collections.Generic;
@@ -49,6 +50,9 @@ namespace DeepSwarmClient
         public short[] WorldTiles;
         public byte[] WorldFog;
         public readonly List<Game.ClientEntity> SeenEntities = new List<Game.ClientEntity>();
+
+        public Game.ClientEntity SelectedEntity;
+        public EntityDirection? SelectedEntityMoveDirection;
 
         // Scripts
         public readonly Dictionary<int, string> EntityScriptPaths = new Dictionary<int, string>();
@@ -184,6 +188,33 @@ namespace DeepSwarmClient
         #endregion
 
         #region Playing Stage
+        public void SelectEntity(Game.ClientEntity entity)
+        {
+            SelectedEntity = entity;
+            SelectedEntityMoveDirection = null;
+            _engine.Interface.PlayingView.OnSelectedEntityChanged();
+        }
+
+        public void SetMoveTowards(EntityDirection direction)
+        {
+            PlanMove(SelectedEntity.GetMoveForTargetDirection(direction));
+            SelectedEntityMoveDirection = direction;
+        }
+
+        public void StopMovingTowards(EntityDirection direction)
+        {
+            if (SelectedEntityMoveDirection == direction) SelectedEntityMoveDirection = null;
+        }
+
+        public void PlanMove(DeepSwarmApi.EntityMove move)
+        {
+            _packetWriter.WriteByte((byte)Protocol.ClientPacketType.PlanMoves);
+            _packetWriter.WriteInt(TickIndex);
+            _packetWriter.WriteShort(1);
+            _packetWriter.WriteInt(SelectedEntity.Id);
+            _packetWriter.WriteByte((byte)move);
+            SendPacket();
+        }
         #endregion
 
         internal void Update(float deltaTime)

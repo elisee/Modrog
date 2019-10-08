@@ -219,6 +219,8 @@ namespace DeepSwarmClient
 
             Unsafe.InitBlock(ref WorldFog[0], 0, (uint)WorldFog.Length);
 
+            Game.ClientEntity newSelectedEntity = null;
+
             var entitiesCount = (int)_packetReader.ReadShort();
             for (var i = 0; i < entitiesCount; i++)
             {
@@ -228,8 +230,13 @@ namespace DeepSwarmClient
                 var direction = (EntityDirection)_packetReader.ReadByte();
                 var playerIndex = _packetReader.ReadShort();
 
-                SeenEntities.Add(new Game.ClientEntity(id) { Position = new Point(x, y), Direction = direction, PlayerIndex = playerIndex });
+                var entity = new Game.ClientEntity(id) { Position = new Point(x, y), Direction = direction, PlayerIndex = playerIndex };
+                SeenEntities.Add(entity);
+
+                if (SelectedEntity?.Id == entity.Id) newSelectedEntity = entity;
             }
+
+            SelectedEntity = newSelectedEntity;
 
             var tilesCount = (int)_packetReader.ReadShort();
             for (var i = 0; i < tilesCount; i++)
@@ -241,7 +248,7 @@ namespace DeepSwarmClient
                 WorldFog[y * WorldSize.X + x] = 1;
             }
 
-            // Send update
+            // Send scroll update
             var position = new Point(
                 (int)(_engine.Interface.PlayingView.ScrollingPixelsX / Interface.Playing.PlayingView.TileSize),
                 (int)(_engine.Interface.PlayingView.ScrollingPixelsY / Interface.Playing.PlayingView.TileSize));
@@ -249,6 +256,24 @@ namespace DeepSwarmClient
             _packetWriter.WriteByte((byte)ClientPacketType.SetPosition);
             _packetWriter.WriteShort((short)position.X);
             _packetWriter.WriteShort((short)position.Y);
+            SendPacket();
+
+            // Send planned moves
+            var plannedMoves = new Dictionary<int, EntityMove>();
+
+            if (SelectedEntity != null && SelectedEntityMoveDirection != null)
+            {
+                plannedMoves[SelectedEntity.Id] = SelectedEntity.GetMoveForTargetDirection(SelectedEntityMoveDirection.Value);
+            }
+
+            _packetWriter.WriteByte((byte)Protocol.ClientPacketType.PlanMoves);
+            _packetWriter.WriteInt(TickIndex);
+            _packetWriter.WriteShort((short)plannedMoves.Count);
+            foreach (var (entityId, move) in plannedMoves)
+            {
+                _packetWriter.WriteInt(entityId);
+                _packetWriter.WriteByte((byte)move);
+            }
             SendPacket();
         }
         #endregion

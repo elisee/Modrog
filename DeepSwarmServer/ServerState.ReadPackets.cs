@@ -245,7 +245,7 @@ namespace DeepSwarmServer
             for (var i = 0; i < moveCount; i++)
             {
                 var entityId = _packetReader.ReadInt();
-                var move = (DeepSwarmApi.Server.EntityMove)_packetReader.ReadByte();
+                var move = (DeepSwarmApi.EntityMove)_packetReader.ReadByte();
 
                 if (!player.OwnedEntitiesById.TryGetValue(entityId, out var entity)) throw new PacketException($"Invalid entity id in {nameof(Protocol.ClientPacketType.PlanMoves)} packet.");
 
