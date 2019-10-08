@@ -12,25 +12,27 @@ namespace DeepSwarmServer
             if (args.Length != 0 && !Guid.TryParse(args[0], out hostGuid)) throw new Exception("Failed to parse argument as host Guid.");
 
             var serverState = new ServerState(hostGuid);
-            serverState.Start();
 
-            var cancelTokenSource = new CancellationTokenSource();
-            Console.CancelKeyPress += (sender, e) => { e.Cancel = true; cancelTokenSource.Cancel(); };
-
-            var stopwatch = Stopwatch.StartNew();
-
-            while (!cancelTokenSource.IsCancellationRequested)
+            using (var cancelTokenSource = new CancellationTokenSource())
             {
-                var deltaTime = (float)stopwatch.Elapsed.TotalSeconds;
-                stopwatch.Restart();
+                serverState.Start();
 
-                serverState.Update(deltaTime);
+                Console.CancelKeyPress += (sender, e) => { e.Cancel = true; cancelTokenSource.Cancel(); };
 
-                Thread.Sleep(1);
+                var stopwatch = Stopwatch.StartNew();
+
+                while (!cancelTokenSource.IsCancellationRequested)
+                {
+                    var deltaTime = (float)stopwatch.Elapsed.TotalSeconds;
+                    stopwatch.Restart();
+
+                    serverState.Update(deltaTime);
+
+                    Thread.Sleep(1);
+                }
+
+                serverState.Stop();
             }
-
-            serverState.Stop();
-            cancelTokenSource.Dispose();
         }
     }
 }

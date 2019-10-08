@@ -68,6 +68,11 @@ namespace DeepSwarmClient
                             ReadSetupCountdown();
                             break;
 
+                        case ServerPacketType.Spritesheet:
+                            if (!EnsureStage(ClientStage.Lobby)) break;
+                            ReadSpritesheet();
+                            break;
+
                         case ServerPacketType.SetPeerOnline:
                             if (!EnsureStage(ClientStage.Playing)) break;
                             throw new NotImplementedException();
@@ -128,6 +133,8 @@ namespace DeepSwarmClient
                 WorldTiles = new short[0];
                 WorldFog = new byte[0];
                 SeenEntities.Clear();
+
+                ReadSpritesheet();
             }
 
             _engine.Interface.OnStageChanged();
@@ -189,6 +196,13 @@ namespace DeepSwarmClient
         {
             IsCountingDown = _packetReader.ReadByte() != 0;
             _engine.Interface.LobbyView.OnIsCountingDownChanged();
+        }
+
+        void ReadSpritesheet()
+        {
+            var size = _packetReader.ReadInt();
+            var image = _packetReader.ReadBytes(size);
+            _engine.Interface.PlayingView.OnSpritesheetReceived(image);
         }
         #endregion
 

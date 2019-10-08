@@ -8,6 +8,7 @@ namespace DeepSwarmServer
 {
     partial class ServerState
     {
+
         void StartPlaying()
         {
             var peers = new Peer[_identifiedPeerSockets.Count];
@@ -22,8 +23,16 @@ namespace DeepSwarmServer
 
             BroadcastPeerList();
 
-            _universe = new Game.InternalUniverse(players, Path.Combine(_scenariosPath, _scenarioName));
+            var scenarioPath = Path.Combine(_scenariosPath, _scenarioName);
+            _universe = new Game.InternalUniverse(players, scenarioPath);
             _stage = ServerStage.Playing;
+
+            _spritesheetBytes = File.ReadAllBytes(Path.Combine(scenarioPath, "Spritesheet.png"));
+
+            _packetWriter.WriteByte((byte)Protocol.ServerPacketType.Spritesheet);
+            _packetWriter.WriteInt(_spritesheetBytes.Length);
+            _packetWriter.WriteBytes(_spritesheetBytes);
+            Broadcast();
         }
 
         void Tick()

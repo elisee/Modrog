@@ -10,7 +10,9 @@ namespace DeepSwarmClient.Interface.Playing
 {
     class PlayingView : InterfaceElement
     {
-        public const int TileSize = 24;
+        public const int TileSize = 40;
+
+        IntPtr SpritesheetTexture;
 
         // Scrolling
         // TODO: Allow support 2 levels of zoom or more idk
@@ -47,6 +49,12 @@ namespace DeepSwarmClient.Interface.Playing
 
         public override void OnUnmounted()
         {
+            if (SpritesheetTexture != IntPtr.Zero)
+            {
+                SDL.SDL_DestroyTexture(SpritesheetTexture);
+                SpritesheetTexture = IntPtr.Zero;
+            }
+
             Desktop.UnregisterAnimation(Animate);
         }
 
@@ -159,6 +167,20 @@ namespace DeepSwarmClient.Interface.Playing
         {
         }
 
+        public void OnSpritesheetReceived(Span<byte> data)
+        {
+            if (SpritesheetTexture != IntPtr.Zero) SDL.SDL_DestroyTexture(SpritesheetTexture);
+
+            unsafe
+            {
+                fixed (byte* dataPointer = data)
+                {
+                    var rwOps = SDL.SDL_RWFromMem((IntPtr)dataPointer, data.Length);
+                    SpritesheetTexture = SDL_image.IMG_LoadTexture_RW(Engine.Renderer, rwOps, freesrc: 1);
+                }
+            }
+        }
+
         public void OnTeleported(Point position)
         {
             ScrollingPixelsX = position.X * TileSize;
@@ -222,8 +244,9 @@ namespace DeepSwarmClient.Interface.Playing
                     if (tile != 0)
                     {
                         new Color(0x880000ff).UseAsDrawColor(Engine.Renderer);
-                        var rect = new SDL.SDL_Rect { x = x * TileSize - viewportScrollX, y = y * TileSize - viewportScrollY, w = TileSize, h = TileSize };
-                        SDL.SDL_RenderFillRect(Engine.Renderer, ref rect);
+                        var sourceRect = new SDL.SDL_Rect { x = tile * TileSize, y = 0, w = TileSize, h = TileSize };
+                        var destRect = new SDL.SDL_Rect { x = x * TileSize - viewportScrollX, y = y * TileSize - viewportScrollY, w = TileSize, h = TileSize };
+                        SDL.SDL_RenderCopy(Engine.Renderer, SpritesheetTexture, ref sourceRect, ref destRect);
                     }
                 }
             }

@@ -38,6 +38,7 @@ namespace DeepSwarmServer
 
         // Playing
         string _scenarioName;
+        byte[] _spritesheetBytes;
         Game.InternalUniverse _universe;
         float _tickAccumulatedTime = 0f;
 
