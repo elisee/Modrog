@@ -52,6 +52,8 @@ namespace DeepSwarmServer
                     var world = ownedEntity.World;
                     if (world != player.World) continue;
 
+                    seenEntities.Add(ownedEntity);
+
                     var squaredOmniViewRadius = ownedEntity.OmniViewRadius * ownedEntity.OmniViewRadius;
                     var squaredDirectionalViewRadius = ownedEntity.DirectionalViewRadius * ownedEntity.DirectionalViewRadius;
                     var directionAngle = ownedEntity.GetDirectionAngle();
@@ -85,7 +87,7 @@ namespace DeepSwarmServer
 
                             seenTiles.TryAdd(target, world.PeekTile(target.X, target.Y));
                             var targetEntity = world.PeekEntity(target.X, target.Y);
-                            if (targetEntity != null && targetEntity.PlayerIndex != player.Index) seenEntities.Add(targetEntity);
+                            if (targetEntity != null) seenEntities.Add(targetEntity);
                         }
                     }
                 }
@@ -106,19 +108,7 @@ namespace DeepSwarmServer
                     player.WasJustTeleported = false;
                 }
 
-                // TODO: Must count only owned entities that are in our world!!
-                _packetWriter.WriteShort((short)(player.OwnedEntities.Count + seenEntities.Count));
-
-                foreach (var entity in player.OwnedEntities)
-                {
-                    if (entity.World != player.World) continue;
-
-                    _packetWriter.WriteInt(entity.Id);
-                    _packetWriter.WriteShort((short)entity.Position.X);
-                    _packetWriter.WriteShort((short)entity.Position.Y);
-                    _packetWriter.WriteByte((byte)entity.Direction);
-                    _packetWriter.WriteShort((byte)entity.PlayerIndex);
-                }
+                _packetWriter.WriteShort((short)seenEntities.Count);
 
                 foreach (var entity in seenEntities)
                 {
