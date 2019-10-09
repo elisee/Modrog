@@ -99,41 +99,42 @@ namespace DeepSwarmClient
             var isPlaying = _packetReader.ReadByte() != 0;
             Stage = isPlaying ? ClientStage.Playing : ClientStage.Lobby;
 
+            var scenarioCount = _packetReader.ReadByte();
+            ScenarioEntries.Clear();
+            for (var i = 0; i < scenarioCount; i++)
+            {
+                ScenarioEntries.Add(new ScenarioEntry
+                {
+                    Name = _packetReader.ReadByteSizeString(),
+                    Title = _packetReader.ReadByteSizeString(),
+                    MinPlayers = _packetReader.ReadByte(),
+                    MaxPlayers = _packetReader.ReadByte(),
+                    SupportsCoop = _packetReader.ReadByte() != 0,
+                    SupportsVersus = _packetReader.ReadByte() != 0,
+                    Description = _packetReader.ReadShortSizeString()
+                });
+            }
+
+
+            /*
+            var savedGamesCount = _packetReader.ReadByte();
+            SavedGameEntries.Clear();
+            for (var i = 0; i < savedGamesCount; i++)
+            {
+                throw new NotImplementedException();
+            }
+            */
+
+            ReadSetScenario();
+
             if (!isPlaying)
             {
-                var scenarioCount = _packetReader.ReadByte();
-                ScenarioEntries.Clear();
-                for (var i = 0; i < scenarioCount; i++)
-                {
-                    ScenarioEntries.Add(new ScenarioEntry
-                    {
-                        Name = _packetReader.ReadByteSizeString(),
-                        Title = _packetReader.ReadByteSizeString(),
-                        MinPlayers = _packetReader.ReadByte(),
-                        MaxPlayers = _packetReader.ReadByte(),
-                        SupportsCoop = _packetReader.ReadByte() != 0,
-                        SupportsVersus = _packetReader.ReadByte() != 0,
-                        Description = _packetReader.ReadShortSizeString()
-                    });
-                }
-
                 if (_preselectedScenario != null && ScenarioEntries.Any(x => x.Name == _preselectedScenario))
                 {
                     SetScenario(_preselectedScenario);
                     ToggleReady();
                     StartGame(skipCountdown: true);
                 }
-
-                /*
-                var savedGamesCount = _packetReader.ReadByte();
-                SavedGameEntries.Clear();
-                for (var i = 0; i < savedGamesCount; i++)
-                {
-                    throw new NotImplementedException();
-                }
-                */
-
-                ReadSetScenario();
             }
             else
             {

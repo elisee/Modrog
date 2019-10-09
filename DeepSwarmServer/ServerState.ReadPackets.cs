@@ -110,31 +110,32 @@ namespace DeepSwarmServer
             _packetWriter.WriteByte((byte)Protocol.ServerPacketType.Welcome);
             _packetWriter.WriteByte((byte)_stage);
 
+            _packetWriter.WriteByte((byte)_scenarioEntries.Count);
+            foreach (var entry in _scenarioEntries)
+            {
+                _packetWriter.WriteByteSizeString(entry.Name);
+                _packetWriter.WriteByteSizeString(entry.Title);
+                _packetWriter.WriteByte((byte)entry.MinPlayers);
+                _packetWriter.WriteByte((byte)entry.MaxPlayers);
+                _packetWriter.WriteByte((byte)(entry.SupportsCoop ? 1 : 0));
+                _packetWriter.WriteByte((byte)(entry.SupportsVersus ? 1 : 0));
+                _packetWriter.WriteShortSizeString(entry.Description);
+            }
+
+            /*
+            _packetWriter.WriteByte((byte)_savedGameEntries.Count);
+
+            foreach (var entry in _savedGameEntries)
+            {
+                throw new NotImplementedException();
+            }
+            */
+
+            _packetWriter.WriteByteSizeString(_scenarioName ?? "");
+
             switch (_stage)
             {
                 case ServerStage.Lobby:
-                    _packetWriter.WriteByte((byte)_scenarioEntries.Count);
-                    foreach (var entry in _scenarioEntries)
-                    {
-                        _packetWriter.WriteByteSizeString(entry.Name);
-                        _packetWriter.WriteByteSizeString(entry.Title);
-                        _packetWriter.WriteByte((byte)entry.MinPlayers);
-                        _packetWriter.WriteByte((byte)entry.MaxPlayers);
-                        _packetWriter.WriteByte((byte)(entry.SupportsCoop ? 1 : 0));
-                        _packetWriter.WriteByte((byte)(entry.SupportsVersus ? 1 : 0));
-                        _packetWriter.WriteShortSizeString(entry.Description);
-                    }
-
-                    /*
-                    _packetWriter.WriteByte((byte)_savedGameEntries.Count);
-
-                    foreach (var entry in _savedGameEntries)
-                    {
-                        throw new NotImplementedException();
-                    }
-                    */
-
-                    _packetWriter.WriteByteSizeString(_scenarioName ?? "");
                     break;
 
                 case ServerStage.Playing:

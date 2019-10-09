@@ -31,9 +31,28 @@ namespace DeepSwarmClient.Interface.Playing
         int _hoveredTileX;
         int _hoveredTileY;
 
+        // Player list
+        readonly Element _sidebarPanel;
+        readonly Label _serverNameLabel;
+        readonly Label _scenarioNameLabel;
+        readonly Panel _playerListContainer;
+
         public PlayingView(Interface @interface)
             : base(@interface, null)
         {
+            _sidebarPanel = new Panel(Desktop, this)
+            {
+                IsVisible = false,
+                BackgroundPatch = new TexturePatch(0x123456ff),
+                Left = 0,
+                Width = 300,
+                Height = 720,
+                ChildLayout = ChildLayoutMode.Top,
+            };
+
+            _serverNameLabel = new Label(_sidebarPanel) { Ellipsize = true, Padding = 8, BackgroundPatch = new TexturePatch(0x113311ff) };
+            _scenarioNameLabel = new Label(_sidebarPanel) { FontStyle = @interface.HeaderFontStyle, Wrap = true, Padding = 8, BackgroundPatch = new TexturePatch(0x331111ff) };
+            _playerListContainer = new Panel(_sidebarPanel) { LayoutWeight = 1, ChildLayout = ChildLayoutMode.Top, Padding = 8 };
         }
 
         public override Element HitTest(int x, int y)
@@ -45,6 +64,11 @@ namespace DeepSwarmClient.Interface.Playing
         {
             Desktop.RegisterAnimation(Animate);
             Desktop.SetFocusedElement(this);
+
+            _serverNameLabel.Text = $"{Engine.State.SavedServerHostname}:{Engine.State.SavedServerPort}";
+            _scenarioNameLabel.Text = Engine.State.ActiveScenario.Title;
+
+            OnPlayerListUpdated();
         }
 
         public override void OnUnmounted()
@@ -79,6 +103,12 @@ namespace DeepSwarmClient.Interface.Playing
                 if (key == SDL.SDL_Keycode.SDLK_w || key == SDL.SDL_Keycode.SDLK_z) state.SetMoveTowards(DeepSwarmApi.EntityDirection.Up);
                 if (key == SDL.SDL_Keycode.SDLK_s) state.SetMoveTowards(DeepSwarmApi.EntityDirection.Down);
             }
+
+            if (key == SDL.SDL_Keycode.SDLK_TAB)
+            {
+                _sidebarPanel.IsVisible = true;
+                _sidebarPanel.Layout(RectangleAfterPadding);
+            }
         }
 
         public override void OnKeyUp(SDL.SDL_Keycode key)
@@ -92,6 +122,8 @@ namespace DeepSwarmClient.Interface.Playing
             if (key == SDL.SDL_Keycode.SDLK_d) Engine.State.StopMovingTowards(DeepSwarmApi.EntityDirection.Right);
             if (key == SDL.SDL_Keycode.SDLK_w || key == SDL.SDL_Keycode.SDLK_z) Engine.State.StopMovingTowards(DeepSwarmApi.EntityDirection.Up);
             if (key == SDL.SDL_Keycode.SDLK_s) Engine.State.StopMovingTowards(DeepSwarmApi.EntityDirection.Down);
+
+            if (key == SDL.SDL_Keycode.SDLK_TAB) _sidebarPanel.IsVisible = false;
         }
 
         public override void OnMouseMove()
@@ -161,6 +193,20 @@ namespace DeepSwarmClient.Interface.Playing
 
         public void OnPlayerListUpdated()
         {
+            _playerListContainer.Clear();
+
+            foreach (var player in Engine.State.PlayerList)
+            {
+                var panel = new Panel(_playerListContainer) { ChildLayout = ChildLayoutMode.Left };
+
+                new Element(panel) { Width = 12, Height = 12, Right = 8, BackgroundPatch = new TexturePatch(player.IsOnline ? 0x44ff44ff : 0xff4444ff) };
+
+                // TODO: Icon for host/not host
+
+                new Label(panel) { LayoutWeight = 1, Text = player.Name };
+            }
+
+            _playerListContainer.Layout();
         }
 
         public void OnChatMessageReceived(string author, string message)
