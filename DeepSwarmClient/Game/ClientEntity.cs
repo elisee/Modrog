@@ -6,6 +6,8 @@ namespace DeepSwarmClient.Game
     public class ClientEntity
     {
         public readonly int Id;
+
+        public Point SpriteLocation;
         public Point Position;
         public EntityDirection Direction;
         public int PlayerIndex;

@@ -289,8 +289,8 @@ namespace DeepSwarmClient.Interface.Playing
 
                     if (tile != 0)
                     {
-                        new Color(0x880000ff).UseAsDrawColor(Engine.Renderer);
-                        var sourceRect = new SDL.SDL_Rect { x = tile * TileSize, y = 0, w = TileSize, h = TileSize };
+                        var spriteLocation = state.TileKinds[tile].SpriteLocation;
+                        var sourceRect = new SDL.SDL_Rect { x = spriteLocation.X * TileSize, y = spriteLocation.Y * TileSize, w = TileSize, h = TileSize };
                         var destRect = new SDL.SDL_Rect { x = x * TileSize - viewportScrollX, y = y * TileSize - viewportScrollY, w = TileSize, h = TileSize };
                         SDL.SDL_RenderCopy(Engine.Renderer, SpritesheetTexture, ref sourceRect, ref destRect);
                     }
@@ -301,9 +301,9 @@ namespace DeepSwarmClient.Interface.Playing
             {
                 if (entity.Position.X < startTileX || entity.Position.Y < startTileY || entity.Position.X > endTileX || entity.Position.Y > endTileY) continue;
 
-                var rect = new SDL.SDL_Rect { x = entity.Position.X * TileSize - viewportScrollX, y = entity.Position.Y * TileSize - viewportScrollY, w = TileSize, h = TileSize };
-                new Color(0x008800ff).UseAsDrawColor(Engine.Renderer);
-                SDL.SDL_RenderFillRect(Engine.Renderer, ref rect);
+                var sourceRect = new SDL.SDL_Rect { x = entity.SpriteLocation.X * TileSize, y = entity.SpriteLocation.Y * TileSize, w = TileSize, h = TileSize };
+                var destRect = new SDL.SDL_Rect { x = entity.Position.X * TileSize - viewportScrollX, y = entity.Position.Y * TileSize - viewportScrollY, w = TileSize, h = TileSize };
+                SDL.SDL_RenderCopy(Engine.Renderer, SpritesheetTexture, ref sourceRect, ref destRect);
             }
 
             var fog = Engine.State.WorldFog;

@@ -69,9 +69,9 @@ namespace DeepSwarmClient
                             ReadSetupCountdown();
                             break;
 
-                        case ServerPacketType.Spritesheet:
+                        case ServerPacketType.UniverseSetup:
                             if (!EnsureStage(ClientStage.Lobby)) break;
-                            ReadSpritesheet();
+                            ReadUniverseSetup();
                             break;
 
                         case ServerPacketType.SetPeerOnline:
@@ -143,7 +143,7 @@ namespace DeepSwarmClient
                 WorldFog = new byte[0];
                 SeenEntities.Clear();
 
-                ReadSpritesheet();
+                ReadUniverseSetup();
             }
 
             _engine.Interface.OnStageChanged();
@@ -207,11 +207,20 @@ namespace DeepSwarmClient
             _engine.Interface.LobbyView.OnIsCountingDownChanged();
         }
 
-        void ReadSpritesheet()
+        void ReadUniverseSetup()
         {
+            // Spritesheet
             var size = _packetReader.ReadInt();
             var image = _packetReader.ReadBytes(size);
             _engine.Interface.PlayingView.OnSpritesheetReceived(image);
+
+            // Tile kinds
+            var tileKindsCount = _packetReader.ReadInt();
+            for (var i = 0; i < tileKindsCount; i++)
+            {
+                var spriteLocation = new Point(_packetReader.ReadShort(), _packetReader.ReadShort());
+                TileKinds.Add(new Game.ClientTileKind(spriteLocation));
+            }
         }
         #endregion
 
@@ -248,12 +257,12 @@ namespace DeepSwarmClient
             for (var i = 0; i < entitiesCount; i++)
             {
                 var id = _packetReader.ReadInt();
-                var x = _packetReader.ReadShort();
-                var y = _packetReader.ReadShort();
+                var spriteLocation = new Point(_packetReader.ReadShort(), _packetReader.ReadShort());
+                var position = new Point(_packetReader.ReadShort(), _packetReader.ReadShort());
                 var direction = (EntityDirection)_packetReader.ReadByte();
                 var playerIndex = _packetReader.ReadShort();
 
-                var entity = new Game.ClientEntity(id) { Position = new Point(x, y), Direction = direction, PlayerIndex = playerIndex };
+                var entity = new Game.ClientEntity(id) { SpriteLocation = spriteLocation, Position = position, Direction = direction, PlayerIndex = playerIndex };
                 SeenEntities.Add(entity);
 
                 if (SelectedEntity?.Id == entity.Id) newSelectedEntity = entity;
@@ -272,13 +281,13 @@ namespace DeepSwarmClient
             }
 
             // Send scroll update
-            var position = new Point(
+            var scrollPosition = new Point(
                 (int)(_engine.Interface.PlayingView.ScrollingPixelsX / Interface.Playing.PlayingView.TileSize),
                 (int)(_engine.Interface.PlayingView.ScrollingPixelsY / Interface.Playing.PlayingView.TileSize));
 
             _packetWriter.WriteByte((byte)ClientPacketType.SetPosition);
-            _packetWriter.WriteShort((short)position.X);
-            _packetWriter.WriteShort((short)position.Y);
+            _packetWriter.WriteShort((short)scrollPosition.X);
+            _packetWriter.WriteShort((short)scrollPosition.Y);
             SendPacket();
 
             // Send planned moves

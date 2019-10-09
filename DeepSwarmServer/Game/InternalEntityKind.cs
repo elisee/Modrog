@@ -4,8 +4,11 @@ namespace DeepSwarmServer.Game
 {
     public class InternalEntityKind : DeepSwarmApi.Server.EntityKind
     {
+        public readonly Point SpriteLocation;
+
         internal InternalEntityKind(Point spriteLocation)
         {
+            SpriteLocation = spriteLocation;
         }
 
         #region API

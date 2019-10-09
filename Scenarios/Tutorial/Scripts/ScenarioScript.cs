@@ -70,7 +70,7 @@ class ScenarioScript : IScenarioScript
         KnightEntityKind.SetManualControlScheme(ManualControlScheme.Default);
         KnightEntityKind.SetCapabilities(EntityCapabilities.Move);
 
-        HeavyEntityKind = Universe.CreateEntityKind(spriteLocation: new Point(0, 2));
+        HeavyEntityKind = Universe.CreateEntityKind(spriteLocation: new Point(1, 1));
         HeavyEntityKind.SetScriptable(true);
         HeavyEntityKind.SetCapabilities(EntityCapabilities.Move | EntityCapabilities.Attack | EntityCapabilities.Push);
 

@@ -48,6 +48,8 @@ namespace DeepSwarmClient
         public bool IsCountingDown;
 
         // Playing
+        public readonly List<Game.ClientTileKind> TileKinds = new List<Game.ClientTileKind>();
+
         public Point WorldSize;
         public short[] WorldTiles;
         public byte[] WorldFog;

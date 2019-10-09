@@ -34,10 +34,22 @@ namespace DeepSwarmServer
 
             _spritesheetBytes = File.ReadAllBytes(Path.Combine(scenarioPath, "Spritesheet.png"));
 
-            _packetWriter.WriteByte((byte)Protocol.ServerPacketType.Spritesheet);
+            _packetWriter.WriteByte((byte)Protocol.ServerPacketType.UniverseSetup);
+            WriteUniverseSetup();
+            Broadcast();
+        }
+
+        void WriteUniverseSetup()
+        {
             _packetWriter.WriteInt(_spritesheetBytes.Length);
             _packetWriter.WriteBytes(_spritesheetBytes);
-            Broadcast();
+
+            _packetWriter.WriteInt(_universe.TileKinds.Count);
+            foreach (var tileKind in _universe.TileKinds)
+            {
+                _packetWriter.WriteShort((short)tileKind.SpriteLocation.X);
+                _packetWriter.WriteShort((short)tileKind.SpriteLocation.Y);
+            }
         }
 
         void Tick()
@@ -120,6 +132,8 @@ namespace DeepSwarmServer
                     if (entity.World != player.World) continue;
 
                     _packetWriter.WriteInt(entity.Id);
+                    _packetWriter.WriteShort((short)entity.SpriteLocation.X);
+                    _packetWriter.WriteShort((short)entity.SpriteLocation.Y);
                     _packetWriter.WriteShort((short)entity.Position.X);
                     _packetWriter.WriteShort((short)entity.Position.Y);
                     _packetWriter.WriteByte((byte)entity.Direction);

@@ -139,8 +139,7 @@ namespace DeepSwarmServer
                     break;
 
                 case ServerStage.Playing:
-                    _packetWriter.WriteInt(_spritesheetBytes.Length);
-                    _packetWriter.WriteBytes(_spritesheetBytes);
+                    WriteUniverseSetup();
                     break;
             }
 

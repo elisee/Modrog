@@ -75,10 +75,7 @@ namespace DeepSwarmServer.Game
 
         public override DeepSwarmApi.Server.Entity SpawnEntity(DeepSwarmApi.Server.EntityKind kind, Point position, DeepSwarmApi.EntityDirection direction, DeepSwarmApi.Server.Player owner)
         {
-            // TODO: Copy settings from kind
-            // ((InternalEntityKind)kind).
-
-            return new InternalEntity(Universe.GetNextEntityId(), this, position, direction, ((InternalPlayer)owner).Index);
+            return new InternalEntity(Universe.GetNextEntityId(), this, ((InternalEntityKind)kind).SpriteLocation, position, direction, ((InternalPlayer)owner).Index);
         }
 
         internal void Add(InternalEntity entity)

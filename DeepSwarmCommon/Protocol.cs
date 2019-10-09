@@ -30,7 +30,7 @@ namespace DeepSwarmCommon
 
             // Playing
             SetPeerOnline,
-            Spritesheet,
+            UniverseSetup,
             Tick,
         }
 

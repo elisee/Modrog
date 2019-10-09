@@ -9,6 +9,7 @@ namespace DeepSwarmServer.Game
     {
         internal readonly int Id;
         internal InternalWorld World;
+        public Point SpriteLocation;
         internal Point Position;
         internal EntityDirection Direction;
         internal int PlayerIndex;
@@ -19,9 +20,10 @@ namespace DeepSwarmServer.Game
         public int DirectionalViewRadius = 8;
         public float HalfFieldOfView = MathF.PI / 3f;
 
-        public InternalEntity(int id, InternalWorld world, Point position, EntityDirection direction, int playerIndex)
+        public InternalEntity(int id, InternalWorld world, Point spriteLocation, Point position, EntityDirection direction, int playerIndex)
         {
             Id = id;
+            SpriteLocation = spriteLocation;
             Position = position;
             Direction = direction;
 
