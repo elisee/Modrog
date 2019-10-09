@@ -32,6 +32,13 @@ namespace DeepSwarmClient.UI
             Value = value;
             _cursorX = _selectionAnchorX = value.Length;
         }
+
+
+        public void SelectAll()
+        {
+            _selectionAnchorX = 0;
+            _cursorX = Value.Length;
+        }
         #endregion
 
         #region Internals
