@@ -16,6 +16,7 @@ namespace DeepSwarmClient
         // Rendering
         static readonly Point MinimumWindowSize = new Point(1280, 720);
         public readonly IntPtr Window;
+
         public readonly IntPtr Renderer;
 
         // State
@@ -32,7 +33,7 @@ namespace DeepSwarmClient
         // Interface
         public readonly Interface.Interface Interface;
 
-        public Engine(bool newIdentity)
+        public Engine()
         {
             _actionQueue = new ThreadActionQueue(Thread.CurrentThread.ManagedThreadId);
 
@@ -49,7 +50,7 @@ namespace DeepSwarmClient
             // Identity
             var identityPath = Path.Combine(AppContext.BaseDirectory, "Identity.dat");
 
-            if (!newIdentity && File.Exists(identityPath))
+            if (File.Exists(identityPath))
             {
                 try { State.SelfGuid = new Guid(File.ReadAllBytes(identityPath)); } catch { }
             }
@@ -85,6 +86,12 @@ namespace DeepSwarmClient
 
         public void Start()
         {
+            Run();
+        }
+
+        public void StartWithConnection(string address, int? port, string scenario = null)
+        {
+            State.Connect(address, port ?? Protocol.Port, scenario);
             Run();
         }
 

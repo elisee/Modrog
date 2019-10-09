@@ -40,6 +40,7 @@ namespace DeepSwarmClient
 
         // Lobby
         bool _isSelfReady;
+        string _preselectedScenario;
 
         public readonly List<ScenarioEntry> ScenarioEntries = new List<ScenarioEntry>();
         // public readonly List<SavedGameEntry> SavedGameEntries = new List<SavedGameEntry>();
@@ -75,10 +76,11 @@ namespace DeepSwarmClient
             Stage = ClientStage.Exited;
         }
 
-        public void Connect(string hostname, int port)
+        public void Connect(string hostname, int port, string preselectedScenario = null)
         {
             SavedServerHostname = hostname;
             SavedServerPort = port;
+            _preselectedScenario = preselectedScenario;
 
             _isSelfReady = false;
             ErrorMessage = null;
@@ -157,7 +159,6 @@ namespace DeepSwarmClient
                     SendPacket();
                 });
             });
-
         }
 
         public void Disconnect(string error = null)

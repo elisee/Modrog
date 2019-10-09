@@ -4,6 +4,7 @@ using DeepSwarmCommon;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using static DeepSwarmCommon.Protocol;
 
@@ -114,6 +115,13 @@ namespace DeepSwarmClient
                         SupportsVersus = _packetReader.ReadByte() != 0,
                         Description = _packetReader.ReadShortSizeString()
                     });
+                }
+
+                if (_preselectedScenario != null && ScenarioEntries.Any(x => x.Name == _preselectedScenario))
+                {
+                    SetScenario(_preselectedScenario);
+                    ToggleReady();
+                    StartGame();
                 }
 
                 /*
