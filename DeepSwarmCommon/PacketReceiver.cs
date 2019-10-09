@@ -8,7 +8,7 @@ namespace DeepSwarmCommon
     {
         public Socket _socket;
 
-        byte[] _buffer = new byte[8192];
+        byte[] _buffer = new byte[ushort.MaxValue];
         int _offset;
 
         public PacketReceiver(Socket socket)
