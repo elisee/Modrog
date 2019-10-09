@@ -1,13 +1,15 @@
 ﻿using DeepSwarmClient.Graphics;
 using DeepSwarmClient.UI;
 using DeepSwarmCommon;
+using System.Globalization;
 
 namespace DeepSwarmClient.Interface
 {
     class HomeView : InterfaceElement
     {
         readonly TextInput _nameInput;
-        readonly TextInput _serverAddressInput;
+        readonly TextInput _serverHostnameInput;
+        readonly TextInput _serverPortInput;
 
         readonly Label _errorLabel;
 
@@ -40,13 +42,27 @@ namespace DeepSwarmClient.Interface
                 MaxLength = Protocol.MaxPlayerNameLength
             };
 
-            new Label(mainPanel) { Text = "Server address:", Bottom = 8 };
-
-            _serverAddressInput = new TextInput(mainPanel)
             {
-                Padding = 8,
-                BackgroundPatch = new TexturePatch(0x004400ff)
-            };
+                var serverAddressContainer = new Panel(mainPanel) { ChildLayout = ChildLayoutMode.Left, Bottom = 8 };
+
+                new Label(serverAddressContainer) { Text = "Hostname:", VerticalFlow = Flow.Shrink, RightPadding = 8 };
+
+                _serverHostnameInput = new TextInput(serverAddressContainer)
+                {
+                    Padding = 8,
+                    LayoutWeight = 1,
+                    BackgroundPatch = new TexturePatch(0x004400ff)
+                };
+
+                new Label(serverAddressContainer) { Text = "Port:", VerticalFlow = Flow.Shrink, HorizontalPadding = 8 };
+
+                _serverPortInput = new TextInput(serverAddressContainer)
+                {
+                    Padding = 8,
+                    Width = 100,
+                    BackgroundPatch = new TexturePatch(0x004400ff)
+                };
+            }
 
             _errorLabel = new Label(mainPanel)
             {
@@ -79,7 +95,8 @@ namespace DeepSwarmClient.Interface
             }
 
             _nameInput.SetValue(Engine.State.SelfPlayerName ?? "");
-            _serverAddressInput.SetValue(Engine.State.SavedServerAddress ?? "localhost");
+            _serverHostnameInput.SetValue(Engine.State.SavedServerHostname ?? "localhost");
+            _serverPortInput.SetValue(Engine.State.SavedServerPort.ToString(CultureInfo.InvariantCulture));
 
             Desktop.SetFocusedElement(_nameInput);
         }
@@ -89,11 +106,30 @@ namespace DeepSwarmClient.Interface
             var name = _nameInput.Value.Trim();
             if (name.Length == 0) return;
 
-            var address = _serverAddressInput.Value.Trim();
-            if (address.Length == 0) return;
+            var hostname = _serverHostnameInput.Value.Trim();
+            if (hostname.Length == 0)
+            {
+                // TODO: Set error state
+                Desktop.SetFocusedElement(_serverHostnameInput);
+                _serverHostnameInput.SelectAll();
+                return;
+            }
+
+            if (_serverPortInput.Value.Trim() == string.Empty)
+            {
+                _serverPortInput.SetValue(Protocol.Port.ToString(CultureInfo.InvariantCulture));
+            }
+
+            if (!int.TryParse(_serverPortInput.Value.Trim(), NumberStyles.None, CultureInfo.InvariantCulture, out var port) || port > ushort.MaxValue)
+            {
+                // TODO: Set error state
+                Desktop.SetFocusedElement(_serverPortInput);
+                _serverPortInput.SelectAll();
+                return;
+            }
 
             Engine.State.SetName(name);
-            Engine.State.Connect(address);
+            Engine.State.Connect(hostname, port);
         }
     }
 }

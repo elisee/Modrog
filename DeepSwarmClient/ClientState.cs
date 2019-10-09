@@ -22,7 +22,8 @@ namespace DeepSwarmClient
         readonly PacketWriter _packetWriter = new PacketWriter();
         readonly PacketReader _packetReader = new PacketReader();
 
-        public string SavedServerAddress = "localhost"; // TODO: Save and load from settings
+        public string SavedServerHostname = "localhost"; // TODO: Save and load from settings
+        public int SavedServerPort = Protocol.Port;
 
         public string ErrorMessage { get; private set; }
         public string KickReason { get; private set; }
@@ -74,9 +75,10 @@ namespace DeepSwarmClient
             Stage = ClientStage.Exited;
         }
 
-        public void Connect(string address)
+        public void Connect(string hostname, int port)
         {
-            SavedServerAddress = address;
+            SavedServerHostname = hostname;
+            SavedServerPort = port;
 
             _isSelfReady = false;
             ErrorMessage = null;
@@ -88,29 +90,21 @@ namespace DeepSwarmClient
 
             Task.Run(() =>
             {
-                var hostname = address;
-                var port = Protocol.Port;
-
-                var portSeparator = address.IndexOf(":");
-                if (portSeparator != -1)
-                {
-                    hostname = address[..portSeparator];
-
-                    if (!int.TryParse(address[(portSeparator + 1)..], out port))
-                    {
-                        _engine.RunOnEngineThread(() =>
-                        {
-                            ErrorMessage = $"Failed to parse address.";
-                            Stage = ClientStage.Home;
-                            _engine.Interface.OnStageChanged();
-                        });
-                        return;
-                    }
-                }
-
                 _socket = new Socket(SocketType.Stream, ProtocolType.Tcp) { NoDelay = true, LingerState = new LingerOption(true, seconds: 1) };
 
-                var hostAddresses = Dns.GetHostAddresses(hostname);
+                IPAddress[] hostAddresses;
+                try { hostAddresses = Dns.GetHostAddresses(hostname); }
+                catch (Exception exception)
+                {
+                    _engine.RunOnEngineThread(() =>
+                    {
+                        ErrorMessage = $"Could not resolve hostname: {exception.Message}";
+                        Stage = ClientStage.Home;
+                        _engine.Interface.OnStageChanged();
+                    });
+                    return;
+                }
+
                 if (hostAddresses.Length == 0)
                 {
                     _engine.RunOnEngineThread(() =>
@@ -145,7 +139,6 @@ namespace DeepSwarmClient
                             Stage = ClientStage.Home;
                             _engine.Interface.OnStageChanged();
                         });
-
                         return;
                     }
                 }
