@@ -126,15 +126,7 @@ namespace DeepSwarmServer
                         Broadcast();
                     }
 
-                    if (_startCountdownTimer >= Protocol.StartCountdownDuration)
-                    {
-                        _packetWriter.WriteByte((byte)Protocol.ServerPacketType.Chat);
-                        _packetWriter.WriteByteSizeString("");
-                        _packetWriter.WriteByteSizeString($"Loading scenario...");
-                        Broadcast();
-
-                        StartPlaying();
-                    }
+                    if (_startCountdownTimer >= Protocol.StartCountdownDuration) StartPlaying();
                     break;
                 case ServerStage.Playing:
                     _tickAccumulatedTime += deltaTime;

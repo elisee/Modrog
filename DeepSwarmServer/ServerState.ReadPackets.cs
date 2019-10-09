@@ -181,6 +181,8 @@ namespace DeepSwarmServer
         {
             if (!peer.Identity.IsHost) throw new PacketException("Can't start game if not host.");
 
+            var skipCountdown = _packetReader.ReadByte() != 0;
+
             void SendChatError(string message)
             {
                 _packetWriter.WriteByte((byte)Protocol.ServerPacketType.Chat);
@@ -197,6 +199,12 @@ namespace DeepSwarmServer
             if (_peerIdentities.Any(x => !x.IsReady)) { SendChatError("Cannot start game, not all players are ready."); return; }
 
             // TODO: Check if team configurations are okay once that is implemented
+
+            if (skipCountdown)
+            {
+                StartPlaying();
+                return;
+            }
 
             _stage = ServerStage.CountingDown;
             _startCountdownTimer = 0f;

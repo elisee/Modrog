@@ -11,6 +11,11 @@ namespace DeepSwarmServer
 
         void StartPlaying()
         {
+            _packetWriter.WriteByte((byte)Protocol.ServerPacketType.Chat);
+            _packetWriter.WriteByteSizeString("");
+            _packetWriter.WriteByteSizeString($"Loading scenario...");
+            Broadcast();
+
             var peers = new Peer[_identifiedPeerSockets.Count];
             var players = new Game.InternalPlayer[peers.Length];
 

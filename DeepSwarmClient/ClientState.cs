@@ -218,9 +218,10 @@ namespace DeepSwarmClient
             SendPacket();
         }
 
-        public void StartGame()
+        public void StartGame(bool skipCountdown = false)
         {
             _packetWriter.WriteByte((byte)Protocol.ClientPacketType.StartGame);
+            _packetWriter.WriteByte(skipCountdown ? (byte)1 : (byte)0);
             SendPacket();
         }
         #endregion

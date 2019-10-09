@@ -121,7 +121,7 @@ namespace DeepSwarmClient
                 {
                     SetScenario(_preselectedScenario);
                     ToggleReady();
-                    StartGame();
+                    StartGame(skipCountdown: true);
                 }
 
                 /*
