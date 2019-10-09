@@ -76,11 +76,11 @@ namespace DeepSwarmClient
 
         public void Connect(string address)
         {
+            SavedServerAddress = address;
+
             _isSelfReady = false;
             ErrorMessage = null;
             KickReason = null;
-
-            _socket = new Socket(SocketType.Stream, ProtocolType.Tcp) { NoDelay = true, LingerState = new LingerOption(true, seconds: 1) };
 
             LoadingProgressText = "Connecting...";
             Stage = ClientStage.Loading;
@@ -88,22 +88,66 @@ namespace DeepSwarmClient
 
             Task.Run(() =>
             {
-                try
+                var hostname = address;
+                var port = Protocol.Port;
+
+                var portSeparator = address.IndexOf(":");
+                if (portSeparator != -1)
                 {
-                    _socket.Connect(new IPEndPoint(IPAddress.Loopback, Protocol.Port));
+                    hostname = address[..portSeparator];
+
+                    if (!int.TryParse(address[(portSeparator + 1)..], out port))
+                    {
+                        _engine.RunOnEngineThread(() =>
+                        {
+                            ErrorMessage = $"Failed to parse address.";
+                            Stage = ClientStage.Home;
+                            _engine.Interface.OnStageChanged();
+                        });
+                        return;
+                    }
                 }
-                catch (Exception exception)
+
+                _socket = new Socket(SocketType.Stream, ProtocolType.Tcp) { NoDelay = true, LingerState = new LingerOption(true, seconds: 1) };
+
+                var hostAddresses = Dns.GetHostAddresses(hostname);
+                if (hostAddresses.Length == 0)
                 {
                     _engine.RunOnEngineThread(() =>
                     {
-                        if (exception is SocketException socketException) ErrorMessage = $"Could not connect: {socketException.SocketErrorCode}.";
-                        else ErrorMessage = $"Could not connect: {exception.Message}";
-
+                        ErrorMessage = $"Could not resolve hostname.";
                         Stage = ClientStage.Home;
                         _engine.Interface.OnStageChanged();
                     });
-
                     return;
+                }
+
+                var connectionErrors = new List<string>();
+
+                for (var i = 0; i < hostAddresses.Length; i++)
+                {
+                    var hostAddress = hostAddresses[i];
+
+                    try
+                    {
+                        _socket.Connect(new IPEndPoint(hostAddress, port));
+                    }
+                    catch (Exception exception)
+                    {
+                        connectionErrors.Add(exception.Message);
+
+                        if (i < hostAddresses.Length - 1) continue;
+
+                        _engine.RunOnEngineThread(() =>
+                        {
+                            if (connectionErrors.Count > 1) ErrorMessage = $"Could not connect after trying {connectionErrors.Count} addresses.\n{string.Join("\n", connectionErrors)}";
+                            else ErrorMessage = $"Could not connect: {connectionErrors[0]}";
+                            Stage = ClientStage.Home;
+                            _engine.Interface.OnStageChanged();
+                        });
+
+                        return;
+                    }
                 }
 
                 _engine.RunOnEngineThread(() =>
