@@ -88,6 +88,13 @@ namespace DeepSwarmServer.Game
             entity.World = this;
         }
 
+        internal void Remove(InternalEntity entity)
+        {
+            Debug.Assert(entity.World == this);
+            _entities.Remove(entity);
+            entity.World = null;
+        }
+
         internal short PeekTile(int x, int y)
         {
             if (x < 0 || x >= Width || y < 0 || y >= Height) return 0;

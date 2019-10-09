@@ -9,7 +9,7 @@ class ScenarioScript : IScenarioScript
 
     public readonly TileKind FloorTileKind;
     public readonly TileKind DirtTileKind;
-    public readonly TileKind StoneTileKind;
+    public readonly TileKind DoorTileKind;
 
     // Knight can fight enemies
     public readonly EntityKind KnightEntityKind;
@@ -39,11 +39,10 @@ class ScenarioScript : IScenarioScript
 
         FloorTileKind = Universe.CreateTileKind(spriteLocation: new Point(0, 0), TileFlags.None);
         DirtTileKind = Universe.CreateTileKind(spriteLocation: new Point(1, 0), TileFlags.Solid | TileFlags.Opaque);
-        StoneTileKind = Universe.CreateTileKind(spriteLocation: new Point(2, 0), TileFlags.Solid | TileFlags.Opaque);
+        DoorTileKind = Universe.CreateTileKind(spriteLocation: new Point(2, 0), TileFlags.None);
 
         // TODO: Build the map or load it from a file, whatever
         OutsideWorld = Universe.CreateWorld(16, 16);
-        CryptWorld = Universe.CreateWorld(64, 64);
 
         for (var j = 0; j < 16; j++)
         {
@@ -54,7 +53,18 @@ class ScenarioScript : IScenarioScript
             }
         }
 
-        // world.Map.SetTile(i, j, DirtTileKind); ...
+        OutsideWorld.SetTile(12, 12, DoorTileKind);
+
+        CryptWorld = Universe.CreateWorld(64, 64);
+
+        for (var j = 0; j < 64; j++)
+        {
+            for (var i = 0; i < 64; i++)
+            {
+                if (i == 0 || j == 0 || i == 63 || j == 63) CryptWorld.SetTile(i, j, DirtTileKind);
+                else CryptWorld.SetTile(i, j, FloorTileKind);
+            }
+        }
 
         KnightEntityKind = Universe.CreateEntityKind(spriteLocation: new Point(0, 1));
         KnightEntityKind.SetManualControlScheme(ManualControlScheme.Default);
@@ -66,6 +76,7 @@ class ScenarioScript : IScenarioScript
 
         Player = Universe.GetPlayers()[0];
         Knight = OutsideWorld.SpawnEntity(KnightEntityKind, new Point(8, 8), EntityDirection.Down, owner: Player);
+        Heavy = OutsideWorld.SpawnEntity(HeavyEntityKind, new Point(10, 8), EntityDirection.Right, owner: Player);
 
         // TODO: Build an API that allows taking control of player cameras for cutscenes?
         Player.Teleport(OutsideWorld, new Point(8, 8));
@@ -74,11 +85,13 @@ class ScenarioScript : IScenarioScript
 
     public void Tick()
     {
-        /*if (Player.World == OutsideWorld)
+        if (Knight.GetWorld() == OutsideWorld)
         {
-            if (Player.Position == new Point(12, 12))
+            if (Knight.GetPosition() == new Point(12, 12))
             {
-                // Player has reached the crypt entrance
+                // Knight has reached the crypt entrance
+                // Teleport the knight and the player
+                Knight.Teleport(CryptWorld, new Point(16, 16), EntityDirection.Up);
                 Player.Teleport(CryptWorld, new Point(16, 16));
 
                 // TODO: Spawn other entities I suppose?
@@ -87,6 +100,6 @@ class ScenarioScript : IScenarioScript
         else
         {
             // TODO: Detect when puzzles are being completed and trigger doors being open / enemies spawning, etc.
-        }*/
+        }
     }
 }
