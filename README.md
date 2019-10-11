@@ -7,7 +7,7 @@ You'll need .NET Core 3 and Visual Studio 2019. VS Code might work.
 ## Running
 
  * You can use `RunServer.bat` or `RunClient.bat` to start one and then you can debug the other from VS.
- * `RunServer.bat new` will overwrite the generated map.
+ * `RunClient.bat localhost Tutorial` will autoconnect to the local server and start the `Tutorial` scenario.
 
 ## Tasks
 
