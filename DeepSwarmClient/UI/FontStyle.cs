@@ -12,6 +12,7 @@
             Font = font;
         }
 
+        public int GetAdvanceWithKerning(char charIndex, int previousCharIndex) => Font.GetAdvanceWithKerning(charIndex, previousCharIndex, Scale, LetterSpacing);
         public int MeasureText(string text) => Font.MeasureText(text, Scale, LetterSpacing);
         public void DrawText(int x, int y, string text) => Font.DrawText(x, y + Size, text, Scale, LetterSpacing);
         public int Ascent => Font.Metrics.Ascent * Scale;

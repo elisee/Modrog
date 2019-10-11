@@ -30,19 +30,35 @@ namespace DeepSwarmClient.UI
             Metrics = metrics;
         }
 
+        public int GetAdvanceWithKerning(char charIndex, int previousCharIndex = -1, int scale = 1, int letterSpacing = 0)
+        {
+            var width = 0;
+
+            if (!Metrics.Characters.TryGetValue(charIndex, out var charData)) charData = Metrics.Characters['?'];
+            charData.Kerning.TryGetValue(previousCharIndex, out var kerning);
+
+            if (previousCharIndex != -1) width += letterSpacing;
+            width += charData.Advance + kerning;
+
+            return width * scale;
+        }
+
         public int MeasureText(string text, int scale = 1, int letterSpacing = 0)
         {
             var width = 0;
-            var previousAsciiIndex = -1;
+            var previousCharIndex = -1;
 
             for (var i = 0; i < text.Length; i++)
             {
-                var asciiIndex = text[i];
-                if (!Metrics.Characters.TryGetValue(asciiIndex, out var data)) data = Metrics.Characters['?'];
+                var charIndex = text[i];
 
-                data.Kerning.TryGetValue(previousAsciiIndex, out var kerning);
-                if (width > 0) width += letterSpacing;
-                width += data.Advance + kerning;
+                if (!Metrics.Characters.TryGetValue(charIndex, out var charData)) charData = Metrics.Characters['?'];
+                charData.Kerning.TryGetValue(previousCharIndex, out var kerning);
+
+                if (i > 0) width += letterSpacing;
+                width += charData.Advance + kerning;
+
+                previousCharIndex = charIndex;
             }
 
             return width * scale;
@@ -50,15 +66,14 @@ namespace DeepSwarmClient.UI
 
         public void DrawText(int x, int y, string text, int scale = 1, int letterSpacing = 0)
         {
-            var previousAsciiIndex = -1;
+            var previousCharIndex = -1;
             var globalAdvance = 0;
 
             for (var i = 0; i < text.Length; i++)
             {
-                var asciiIndex = text[i];
-                if (!Metrics.Characters.TryGetValue(asciiIndex, out var charData)) charData = Metrics.Characters['?'];
-
-                charData.Kerning.TryGetValue(previousAsciiIndex, out var kerning);
+                var charIndex = text[i];
+                if (!Metrics.Characters.TryGetValue(charIndex, out var charData)) charData = Metrics.Characters['?'];
+                charData.Kerning.TryGetValue(previousCharIndex, out var kerning);
 
                 var sourceRect = new SDL.SDL_Rect
                 {
@@ -79,7 +94,7 @@ namespace DeepSwarmClient.UI
                 SDL.SDL_RenderCopy(_renderer, _textureArea.Texture, ref sourceRect, ref destRect);
 
                 globalAdvance += charData.Advance + letterSpacing + kerning;
-                previousAsciiIndex = asciiIndex;
+                previousCharIndex = charIndex;
             }
         }
     }

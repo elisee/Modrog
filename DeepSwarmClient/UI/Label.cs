@@ -31,9 +31,11 @@ namespace DeepSwarmClient.UI
         {
             var size = Point.Zero;
 
-            // TODO: Support line breaks
-            var textWidth = FontStyle.MeasureText(_text);
-            if (Width == null) size.X = textWidth;
+            var lines = _text.Split('\n');
+            var maxLineWidth = 0;
+
+            foreach (var line in lines) maxLineWidth = Math.Max(maxLineWidth, FontStyle.MeasureText(line));
+            if (Width == null) size.X = maxLineWidth;
             if (Height == null) size.Y = FontStyle.LineHeight;
 
             var actualMaxWidth = Width ?? maxWidth;
@@ -44,34 +46,44 @@ namespace DeepSwarmClient.UI
                 {
                     var lineCount = 0;
 
-                    var segmentStart = 0;
-                    var segmentEnd = 0;
-                    var segmentCursor = 0;
-                    var segmentWidth = 0;
-
-                    while (segmentCursor < _text.Length)
+                    foreach (var line in lines)
                     {
-                        // TODO: Could just pass the current and previous character
-                        var newSegmentWidth = FontStyle.MeasureText(_text[segmentStart..(segmentCursor + 1)]);
-
-                        if (segmentCursor != segmentStart && _text[segmentCursor] == ' ') segmentEnd = segmentCursor;
-
-                        if (newSegmentWidth >= actualMaxWidth.Value && segmentStart != segmentEnd)
+                        if (line.Length == 0)
                         {
                             lineCount++;
-                            segmentWidth = 0;
-
-                            while (_text[segmentEnd] == ' ') segmentEnd++;
-                            segmentCursor = segmentStart = segmentEnd;
+                            continue;
                         }
-                        else
+
+                        var segmentStart = 0;
+                        var segmentEnd = 0;
+                        var segmentCursor = 0;
+                        var segmentWidth = 0;
+                        var newSegmentWidth = FontStyle.GetAdvanceWithKerning(line[0], -1);
+
+                        while (segmentCursor < line.Length)
                         {
-                            segmentWidth = newSegmentWidth;
-                            segmentCursor++;
-                        }
-                    }
+                            newSegmentWidth += FontStyle.GetAdvanceWithKerning(line[segmentCursor], segmentCursor > 0 ? line[segmentCursor - 1] : -1);
 
-                    if (_text.Length != segmentStart) lineCount++;
+                            if (segmentCursor != segmentStart && line[segmentCursor] == ' ') segmentEnd = segmentCursor;
+
+                            if (newSegmentWidth >= actualMaxWidth.Value && segmentStart != segmentEnd)
+                            {
+                                lineCount++;
+                                segmentWidth = 0;
+
+                                while (line[segmentEnd] == ' ') segmentEnd++;
+                                segmentCursor = segmentStart = segmentEnd;
+                                newSegmentWidth = FontStyle.GetAdvanceWithKerning(line[segmentCursor], -1);
+                            }
+                            else
+                            {
+                                segmentWidth = newSegmentWidth;
+                                segmentCursor++;
+                            }
+                        }
+
+                        if (line.Length != segmentStart) lineCount++;
+                    }
 
                     size.X = actualMaxWidth.Value;
                     size.Y = lineCount * FontStyle.LineHeight;
@@ -92,43 +104,55 @@ namespace DeepSwarmClient.UI
 
             if (Wrap)
             {
-                var segmentStart = 0;
-                var segmentEnd = 0;
-                var segmentCursor = 0;
-                var segmentWidth = 0;
+                var lines = _text.Split('\n');
 
-                while (segmentCursor < _text.Length)
+                foreach (var line in lines)
                 {
-                    // TODO: Compute just pass the current and previous character
-                    var newSegmentWidth = FontStyle.MeasureText(_text[segmentStart..(segmentCursor + 1)]);
-
-                    if (segmentCursor != segmentStart && _text[segmentCursor] == ' ') segmentEnd = segmentCursor;
-
-                    if (Wrap && newSegmentWidth >= RectangleAfterPadding.Width && segmentStart != segmentEnd)
+                    if (line.Length == 0)
                     {
-                        if (Ellipsize && (_segments.Count + 1) * FontStyle.LineHeight >= RectangleAfterPadding.Height)
+                        _segments.Add("");
+                        continue;
+                    }
+
+                    var segmentStart = 0;
+                    var segmentEnd = 0;
+                    var segmentCursor = 0;
+                    var segmentWidth = 0;
+                    var newSegmentWidth = FontStyle.GetAdvanceWithKerning(line[0], -1);
+
+                    while (segmentCursor < line.Length)
+                    {
+                        newSegmentWidth += FontStyle.GetAdvanceWithKerning(line[segmentCursor], segmentCursor > 0 ? line[segmentCursor - 1] : -1);
+
+                        if (segmentCursor != segmentStart && line[segmentCursor] == ' ') segmentEnd = segmentCursor;
+
+                        if (Wrap && newSegmentWidth >= RectangleAfterPadding.Width && segmentStart != segmentEnd)
                         {
-                            var ellipsizedSegmentWidth = FontStyle.MeasureText(_text[segmentStart..segmentCursor] + EllipsisText);
+                            if (Ellipsize && (_segments.Count + 1) * FontStyle.LineHeight >= RectangleAfterPadding.Height)
+                            {
+                                var ellipsizedSegmentWidth = FontStyle.MeasureText(line[segmentStart..segmentCursor] + EllipsisText);
 
-                            if (ellipsizedSegmentWidth > RectangleAfterPadding.Width) segmentCursor--;
-                            _segments.Add(_text[segmentStart..segmentCursor] + EllipsisText);
-                            return;
+                                if (ellipsizedSegmentWidth > RectangleAfterPadding.Width) segmentCursor--;
+                                _segments.Add(line[segmentStart..segmentCursor] + EllipsisText);
+                                return;
+                            }
+                            else _segments.Add(line[segmentStart..segmentEnd]);
+
+                            segmentWidth = 0;
+
+                            while (line[segmentEnd] == ' ') segmentEnd++;
+                            segmentCursor = segmentStart = segmentEnd;
+                            newSegmentWidth = FontStyle.GetAdvanceWithKerning(line[segmentCursor], -1);
                         }
-                        else _segments.Add(_text[segmentStart..segmentEnd]);
-
-                        segmentWidth = 0;
-
-                        while (_text[segmentEnd] == ' ') segmentEnd++;
-                        segmentCursor = segmentStart = segmentEnd;
+                        else
+                        {
+                            segmentWidth = newSegmentWidth;
+                            segmentCursor++;
+                        }
                     }
-                    else
-                    {
-                        segmentWidth = newSegmentWidth;
-                        segmentCursor++;
-                    }
+
+                    if (line.Length != segmentStart) _segments.Add(line[segmentStart..line.Length]);
                 }
-
-                if (_text.Length != segmentStart) _segments.Add(_text[segmentStart.._text.Length]);
             }
             else
             {
