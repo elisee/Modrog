@@ -50,7 +50,6 @@ namespace DeepSwarmClient.Interface.Playing
                 BackgroundPatch = new TexturePatch(0x123456ff),
                 Left = 0,
                 Width = 300,
-                Height = 720,
                 ChildLayout = ChildLayoutMode.Top,
             };
 
