@@ -25,6 +25,7 @@ namespace DeepSwarmClient.Interface.Playing
         bool _isScrollingDown;
 
         bool _isDraggingScroll;
+
         Point _dragScroll;
 
         // Hovered tile
@@ -36,6 +37,9 @@ namespace DeepSwarmClient.Interface.Playing
         readonly Label _serverNameLabel;
         readonly Label _scenarioNameLabel;
         readonly Panel _playerListContainer;
+
+        // Menu
+        readonly PlayingMenu _menu;
 
         public PlayingView(Interface @interface)
             : base(@interface, null)
@@ -53,8 +57,11 @@ namespace DeepSwarmClient.Interface.Playing
             _serverNameLabel = new Label(_sidebarPanel) { Ellipsize = true, Padding = 8, BackgroundPatch = new TexturePatch(0x113311ff) };
             _scenarioNameLabel = new Label(_sidebarPanel) { FontStyle = @interface.HeaderFontStyle, Wrap = true, Padding = 8, BackgroundPatch = new TexturePatch(0x331111ff) };
             _playerListContainer = new Panel(_sidebarPanel) { LayoutWeight = 1, ChildLayout = ChildLayoutMode.Top, Padding = 8 };
+
+            _menu = new PlayingMenu(@interface, this) { IsVisible = false };
         }
 
+        #region Internals
         public override Element HitTest(int x, int y)
         {
             return base.HitTest(x, y) ?? (LayoutRectangle.Contains(x, y) ? this : null);
@@ -88,6 +95,8 @@ namespace DeepSwarmClient.Interface.Playing
 
             if (!_isDraggingScroll)
             {
+                if (key == SDL.SDL_Keycode.SDLK_ESCAPE) Engine.State.SetPlayingMenuOpen(true);
+
                 if (key == SDL.SDL_Keycode.SDLK_LEFT) _isScrollingLeft = true;
                 if (key == SDL.SDL_Keycode.SDLK_RIGHT) _isScrollingRight = true;
                 if (key == SDL.SDL_Keycode.SDLK_UP) _isScrollingUp = true;
@@ -191,6 +200,41 @@ namespace DeepSwarmClient.Interface.Playing
             ScrollingPixelsY -= dy * 12;
         }
 
+        void Animate(float deltaTime)
+        {
+            const float ScrollingSpeed = 400;
+            var dx = 0;
+            var dy = 0;
+
+            if (_isScrollingLeft) dx--;
+            if (_isScrollingRight) dx++;
+            if (_isScrollingDown) dy--;
+            if (_isScrollingUp) dy++;
+
+            if (dx != 0 || dy != 0)
+            {
+                var angle = MathF.Atan2(dy, dx);
+                ScrollingPixelsX += MathF.Cos(angle) * ScrollingSpeed * deltaTime;
+                ScrollingPixelsY -= MathF.Sin(angle) * ScrollingSpeed * deltaTime;
+            }
+
+            var viewportScrollX = -Engine.Interface.Viewport.Width / 2 + (int)ScrollingPixelsX;
+            var viewportScrollY = -Engine.Interface.Viewport.Height / 2 + (int)ScrollingPixelsY;
+
+            _hoveredTileX = ((int)viewportScrollX + Desktop.MouseX) / TileSize;
+            _hoveredTileY = ((int)viewportScrollY + Desktop.MouseY) / TileSize;
+        }
+        #endregion
+
+        #region Events
+        public void OnMenuStateUpdated()
+        {
+            _menu.IsVisible = Engine.State.PlayingMenuOpen;
+            _menu.Layout(RectangleAfterPadding);
+
+            if (!Engine.State.PlayingMenuOpen) Desktop.SetFocusedElement(this);
+        }
+
         public void OnPlayerListUpdated()
         {
             _playerListContainer.Clear();
@@ -237,32 +281,9 @@ namespace DeepSwarmClient.Interface.Playing
         {
             // TODO
         }
+        #endregion
 
-        public void Animate(float deltaTime)
-        {
-            const float ScrollingSpeed = 400;
-            var dx = 0;
-            var dy = 0;
-
-            if (_isScrollingLeft) dx--;
-            if (_isScrollingRight) dx++;
-            if (_isScrollingDown) dy--;
-            if (_isScrollingUp) dy++;
-
-            if (dx != 0 || dy != 0)
-            {
-                var angle = MathF.Atan2(dy, dx);
-                ScrollingPixelsX += MathF.Cos(angle) * ScrollingSpeed * deltaTime;
-                ScrollingPixelsY -= MathF.Sin(angle) * ScrollingSpeed * deltaTime;
-            }
-
-            var viewportScrollX = -Engine.Interface.Viewport.Width / 2 + (int)ScrollingPixelsX;
-            var viewportScrollY = -Engine.Interface.Viewport.Height / 2 + (int)ScrollingPixelsY;
-
-            _hoveredTileX = ((int)viewportScrollX + Desktop.MouseX) / TileSize;
-            _hoveredTileY = ((int)viewportScrollY + Desktop.MouseY) / TileSize;
-        }
-
+        #region Drawing
         protected override void DrawSelf()
         {
             base.DrawSelf();
@@ -346,5 +367,6 @@ namespace DeepSwarmClient.Interface.Playing
                 SDL.SDL_RenderDrawLine(Engine.Renderer, rect.X, rect.Y + rect.Height, rect.X, rect.Y);
             }
         }
+        #endregion
     }
 }

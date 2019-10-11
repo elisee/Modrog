@@ -48,6 +48,8 @@ namespace DeepSwarmClient
         public bool IsCountingDown;
 
         // Playing
+        public bool PlayingMenuOpen { get; private set; }
+
         public readonly List<Game.ClientTileKind> TileKinds = new List<Game.ClientTileKind>();
 
         public Point WorldSize;
@@ -163,12 +165,20 @@ namespace DeepSwarmClient
             });
         }
 
+        public void SetPlayingMenuOpen(bool isOpen)
+        {
+            PlayingMenuOpen = isOpen;
+            _engine.Interface.PlayingView.OnMenuStateUpdated();
+        }
+
         public void Disconnect(string error = null)
         {
             ErrorMessage = error;
 
             _socket?.Close();
             _socket = null;
+
+            if (PlayingMenuOpen) SetPlayingMenuOpen(false);
 
             Stage = ClientStage.Home;
             _engine.Interface.OnStageChanged();
