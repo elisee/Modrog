@@ -34,7 +34,7 @@ namespace DeepSwarmScenarioEditor
             // Rendering
             SDL.SDL_Init(SDL.SDL_INIT_VIDEO);
             SDL.SDL_CreateWindowAndRenderer(MinimumWindowSize.X, MinimumWindowSize.Y, 0, out Window, out Renderer);
-            SDL.SDL_SetWindowTitle(Window, "DeepSwarm");
+            SDL.SDL_SetWindowTitle(Window, "DeepSwarm - Editor");
             SDL.SDL_SetWindowResizable(Window, SDL.SDL_bool.SDL_TRUE);
             SDL.SDL_SetWindowMinimumSize(Window, MinimumWindowSize.X, MinimumWindowSize.Y);
 
