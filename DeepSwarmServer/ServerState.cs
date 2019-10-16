@@ -1,8 +1,6 @@
 ﻿using DeepSwarmCommon;
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Json;
 using System.Net;
 using System.Net.Sockets;
 
@@ -47,24 +45,7 @@ namespace DeepSwarmServer
             _hostGuid = hostGuid;
 
             _scenariosPath = FileHelper.FindAppFolder("Scenarios");
-
-            foreach (var folder in Directory.GetDirectories(_scenariosPath, "*.*", SearchOption.TopDirectoryOnly))
-            {
-                var manifestJson = JsonValue.Parse(File.ReadAllText(Path.Combine(folder, "Manifest.json")));
-
-                var entry = new ScenarioEntry
-                {
-                    Name = folder[(_scenariosPath.Length + 1)..],
-                    Title = manifestJson["title"],
-                    MinPlayers = manifestJson["minMaxPlayers"][0],
-                    MaxPlayers = manifestJson["minMaxPlayers"][1],
-                    SupportsCoop = manifestJson.ContainsKey("supportsCoop") && manifestJson["supportsCoop"],
-                    SupportsVersus = manifestJson.ContainsKey("supportsVersus") && manifestJson["supportsVersus"],
-                    Description = File.ReadAllText(Path.Combine(folder, "Description.txt")).Replace("\r", "")
-                };
-
-                _scenarioEntries.Add(entry);
-            }
+            _scenarioEntries = ScenarioEntry.ReadScenarioEntries(_scenariosPath);
         }
 
         public void Start()
