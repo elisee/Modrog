@@ -47,12 +47,19 @@ namespace DeepSwarmScenarioEditor
             {
                 foreach (var filePath in Directory.GetFiles(folderPath, "*.*", SearchOption.TopDirectoryOnly))
                 {
-                    siblings.Add(new AssetEntry
+                    var entry = new AssetEntry
                     {
                         Name = filePath[(folderPath.Length + 1)..],
                         Path = filePath[(scenarioPath.Length + 1)..],
-                        AssetType = AssetType.Script
-                    });
+                    };
+
+                    if (entry.Path == "Manifest.json") entry.AssetType = AssetType.Manifest;
+                    else if (entry.Name.EndsWith(".png")) entry.AssetType = AssetType.Image;
+                    else if (entry.Name.EndsWith(".tileset")) entry.AssetType = AssetType.TileSet;
+                    else if (entry.Name.EndsWith(".map")) entry.AssetType = AssetType.Map;
+                    else if (entry.Name.EndsWith(".cs")) entry.AssetType = AssetType.Script;
+
+                    siblings.Add(entry);
                 }
 
                 foreach (var childFolderPath in Directory.GetDirectories(folderPath))

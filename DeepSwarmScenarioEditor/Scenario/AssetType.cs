@@ -2,6 +2,7 @@
 {
     enum AssetType
     {
+        Unknown,
         Folder,
         Manifest,
         Image,
