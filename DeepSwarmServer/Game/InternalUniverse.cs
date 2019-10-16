@@ -13,6 +13,8 @@ namespace DeepSwarmServer.Game
         internal readonly List<InternalTileKind> TileKinds = new List<InternalTileKind>();
         internal readonly List<InternalWorld> _worlds = new List<InternalWorld>();
 
+        internal string SpritesheetPath { get; private set; } = "Spritesheet.png";
+
         ScriptContext _scriptContext;
         DeepSwarmApi.Server.IScenarioScript _script;
 
@@ -86,6 +88,8 @@ namespace DeepSwarmServer.Game
         }
 
         #region API
+        public override void SetSpritesheet(string path) { SpritesheetPath = path; }
+
         public override DeepSwarmApi.Server.Player[] GetPlayers() => Players;
 
         public override DeepSwarmApi.Server.EntityKind CreateEntityKind(Point spriteLocation)

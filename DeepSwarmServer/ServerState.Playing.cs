@@ -32,7 +32,7 @@ namespace DeepSwarmServer
             _universe = new Game.InternalUniverse(players, scenarioPath);
             _stage = ServerStage.Playing;
 
-            _spritesheetBytes = File.ReadAllBytes(Path.Combine(scenarioPath, "Spritesheet.png"));
+            _spritesheetBytes = File.ReadAllBytes(Path.Combine(scenarioPath, _universe.SpritesheetPath));
 
             _packetWriter.WriteByte((byte)Protocol.ServerPacketType.UniverseSetup);
             WriteUniverseSetup();
