@@ -1,10 +1,10 @@
 ﻿using DeepSwarmBasics;
 using DeepSwarmBasics.Math;
-using DeepSwarmClient.Graphics;
+using DeepSwarmPlatform.Graphics;
 using SDL2;
 using System;
 
-namespace DeepSwarmClient.UI
+namespace DeepSwarmPlatform.UI
 {
     public class TextInput : Element
     {

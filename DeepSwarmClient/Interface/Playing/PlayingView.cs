@@ -1,7 +1,7 @@
 ﻿using DeepSwarmBasics;
 using DeepSwarmBasics.Math;
-using DeepSwarmClient.Graphics;
-using DeepSwarmClient.UI;
+using DeepSwarmPlatform.Graphics;
+using DeepSwarmPlatform.UI;
 using SDL2;
 using System;
 using System.Collections.Generic;

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Json;
 
-namespace DeepSwarmClient.UI
+namespace DeepSwarmPlatform.UI
 {
     public class FontMetrics
     {

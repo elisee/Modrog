@@ -17,6 +17,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DeepSwarmBasics", "DeepSwar
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DeepSwarmApi", "DeepSwarmApi\DeepSwarmApi.csproj", "{D6A758B8-9313-470D-BF1A-3B896C0405B9}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DeepSwarmPlatform", "DeepSwarmPlatform\DeepSwarmPlatform.csproj", "{24F581FD-22C9-4A42-B1B5-58FE4143C8B2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -47,6 +49,10 @@ Global
 		{D6A758B8-9313-470D-BF1A-3B896C0405B9}.Debug|x64.Build.0 = Debug|x64
 		{D6A758B8-9313-470D-BF1A-3B896C0405B9}.Release|x64.ActiveCfg = Release|x64
 		{D6A758B8-9313-470D-BF1A-3B896C0405B9}.Release|x64.Build.0 = Release|x64
+		{24F581FD-22C9-4A42-B1B5-58FE4143C8B2}.Debug|x64.ActiveCfg = Debug|x64
+		{24F581FD-22C9-4A42-B1B5-58FE4143C8B2}.Debug|x64.Build.0 = Debug|x64
+		{24F581FD-22C9-4A42-B1B5-58FE4143C8B2}.Release|x64.ActiveCfg = Release|x64
+		{24F581FD-22C9-4A42-B1B5-58FE4143C8B2}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

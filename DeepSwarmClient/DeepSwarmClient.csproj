@@ -32,6 +32,7 @@
   <ItemGroup>
     <ProjectReference Include="..\DeepSwarmApi\DeepSwarmApi.csproj" />
     <ProjectReference Include="..\DeepSwarmCommon\DeepSwarmCommon.csproj" />
+    <ProjectReference Include="..\DeepSwarmPlatform\DeepSwarmPlatform.csproj" />
     <ProjectReference Include="..\ThirdParty\SDL2-CS\SDL2-CS.Core.csproj" />
   </ItemGroup>
 

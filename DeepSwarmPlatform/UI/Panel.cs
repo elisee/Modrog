@@ -1,6 +1,6 @@
-﻿using DeepSwarmClient.Graphics;
+﻿using DeepSwarmPlatform.Graphics;
 
-namespace DeepSwarmClient.UI
+namespace DeepSwarmPlatform.UI
 {
     public class Panel : Element
     {

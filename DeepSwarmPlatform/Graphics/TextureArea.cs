@@ -1,7 +1,7 @@
 ﻿using DeepSwarmBasics.Math;
 using System;
 
-namespace DeepSwarmClient.Graphics
+namespace DeepSwarmPlatform.Graphics
 {
     public class TextureArea
     {

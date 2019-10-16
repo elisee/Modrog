@@ -1,4 +1,4 @@
-﻿namespace DeepSwarmClient.UI
+﻿namespace DeepSwarmPlatform.UI
 {
     public class FontStyle
     {

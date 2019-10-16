@@ -1,4 +1,4 @@
-﻿using DeepSwarmClient.UI;
+﻿using DeepSwarmPlatform.UI;
 
 namespace DeepSwarmClient.Interface
 {

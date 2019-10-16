@@ -1,7 +1,7 @@
 ﻿using SDL2;
 using System;
 
-namespace DeepSwarmClient.Graphics
+namespace DeepSwarmPlatform.Graphics
 {
     public static class Cursors
     {

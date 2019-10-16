@@ -1,6 +1,6 @@
 ﻿using DeepSwarmBasics.Math;
-using DeepSwarmClient.Graphics;
-using DeepSwarmClient.UI;
+using DeepSwarmPlatform.Graphics;
+using DeepSwarmPlatform.UI;
 using System.IO;
 
 namespace DeepSwarmClient.Interface

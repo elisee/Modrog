@@ -1,5 +1,5 @@
-﻿using DeepSwarmClient.Graphics;
-using DeepSwarmClient.UI;
+﻿using DeepSwarmPlatform.Graphics;
+using DeepSwarmPlatform.UI;
 
 namespace DeepSwarmClient.Interface.Playing
 {

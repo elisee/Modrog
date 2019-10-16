@@ -3,7 +3,7 @@ using DeepSwarmBasics.Math;
 using SDL2;
 using System;
 
-namespace DeepSwarmClient.Graphics
+namespace DeepSwarmPlatform.Graphics
 {
     public class TexturePatch
     {

@@ -1,11 +1,11 @@
 ﻿using DeepSwarmBasics;
 using DeepSwarmBasics.Math;
-using DeepSwarmClient.Graphics;
+using DeepSwarmPlatform.Graphics;
 using SDL2;
 using System;
 using System.Collections.Generic;
 
-namespace DeepSwarmClient.UI
+namespace DeepSwarmPlatform.UI
 {
     public class TextEditor : Element
     {

@@ -1,9 +1,9 @@
 ﻿using DeepSwarmBasics;
 using DeepSwarmBasics.Math;
-using DeepSwarmClient.Graphics;
+using DeepSwarmPlatform.Graphics;
 using System;
 
-namespace DeepSwarmClient.UI
+namespace DeepSwarmPlatform.UI
 {
     public class Button : Element
     {

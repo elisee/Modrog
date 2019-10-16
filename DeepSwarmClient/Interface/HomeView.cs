@@ -1,6 +1,6 @@
-﻿using DeepSwarmClient.Graphics;
-using DeepSwarmClient.UI;
-using DeepSwarmCommon;
+﻿using DeepSwarmCommon;
+using DeepSwarmPlatform.Graphics;
+using DeepSwarmPlatform.UI;
 using System.Globalization;
 
 namespace DeepSwarmClient.Interface
