@@ -1,7 +1,7 @@
 ﻿using DeepSwarmPlatform.Graphics;
 using DeepSwarmPlatform.UI;
 
-namespace DeepSwarmClient.Interface
+namespace DeepSwarmPlatform.Interface
 {
     public class StyledTextButton : TextButton
     {
