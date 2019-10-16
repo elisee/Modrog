@@ -373,7 +373,7 @@ namespace DeepSwarmPlatform.UI
         {
             if (dy != 0)
             {
-                _scrollingPixels.Y -= dy * 16;
+                _scrollingPixels.Y -= dy * CellSize.Y * 3;
                 ClampScrolling();
             }
         }
