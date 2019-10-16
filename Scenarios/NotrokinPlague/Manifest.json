@@ -1,5 +1,6 @@
 {
   "title": "The Plague of Notrokin",
+  "description": "The planet system of Ganal is in danger. A demon by the name of Notrokin has risen from the depths of the cosmos and his minions are quickly taking over. Build an army to push the plague back and go find the demon's lair, before he destroys us all.",
   "minMaxPlayers": [ 1, 4 ],
   "supportsCoop": true
 }

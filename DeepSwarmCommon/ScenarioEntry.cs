@@ -31,7 +31,7 @@ namespace DeepSwarmCommon
                     MaxPlayers = manifestJson["minMaxPlayers"][1],
                     SupportsCoop = manifestJson.ContainsKey("supportsCoop") && manifestJson["supportsCoop"],
                     SupportsVersus = manifestJson.ContainsKey("supportsVersus") && manifestJson["supportsVersus"],
-                    Description = File.ReadAllText(Path.Combine(folder, "Description.txt")).Replace("\r", "")
+                    Description = manifestJson["description"]
                 };
 
                 entries.Add(entry);

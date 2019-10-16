@@ -1,5 +1,6 @@
 {
   "title": "Castle Grundmog",
+  "description": "You arrive at the entrance of Castle Grundmog where the cruel baron is holding a group of villagers hostage. Find your way to the dungeon and save them at all costs.",
   "minMaxPlayers": [ 1, 4 ],
   "supportsCoop": true
 }

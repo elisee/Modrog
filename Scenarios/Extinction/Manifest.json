@@ -1,5 +1,6 @@
 {
   "title": "Extinction",
+  "description": "The powerful magic that kept the world alive for millenia is running out. Thankfully, our scientists have built plans for a time machine that will save us all. As the king's trusted chief minister, you have been sent to gather the necessary resources and build the machine before time runs out.",
   "minMaxPlayers": [ 1, 6 ],
   "supportsCoop": true,
   "supportsVersus": true
