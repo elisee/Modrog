@@ -1,11 +1,12 @@
 ﻿using DeepSwarmPlatform.Graphics;
-using DeepSwarmPlatform.Interface;
 using DeepSwarmPlatform.UI;
 
 namespace DeepSwarmScenarioEditor.Interface
 {
     class HomeView : InterfaceElement
     {
+        readonly Panel _scenarioListPanel;
+
         public HomeView(Interface @interface)
             : base(@interface, null)
         {
@@ -27,17 +28,29 @@ namespace DeepSwarmScenarioEditor.Interface
 
             new Label(mainPanel) { Text = "Choose a scenario:", Bottom = 8 };
 
-            var actionsContainer = new Element(mainPanel) { ChildLayout = ChildLayoutMode.Left, Top = 16 };
-
-            new StyledTextButton(actionsContainer)
+            _scenarioListPanel = new Panel(mainPanel)
             {
-                Text = "Edit",
-                OnActivate = Validate
+                BackgroundPatch = new TexturePatch(0x001234ff),
+                LayoutWeight = 1,
+                ChildLayout = ChildLayoutMode.Top,
+                VerticalFlow = Flow.Scroll
             };
         }
 
         public override void OnMounted()
         {
+            _scenarioListPanel.Clear();
+
+            foreach (var entry in Engine.State.ScenarioEntries)
+            {
+                new TextButton(_scenarioListPanel)
+                {
+                    Padding = 8,
+                    Text = entry.Title,
+                    OnActivate = () => { Engine.State.OpenScenario(entry); }
+                }.Label.Ellipsize = true;
+            }
+
             Desktop.SetFocusedElement(this);
         }
     }

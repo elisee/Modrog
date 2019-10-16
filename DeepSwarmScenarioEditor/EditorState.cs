@@ -1,4 +1,7 @@
-﻿namespace DeepSwarmScenarioEditor
+﻿using DeepSwarmCommon;
+using System.Collections.Generic;
+
+namespace DeepSwarmScenarioEditor
 {
     enum EditorStage { Home, Editing, Exited }
 
@@ -8,7 +11,17 @@
 
         readonly Engine _engine;
 
-        public EditorState(Engine engine) { _engine = engine; }
+        readonly string _scenariosPath;
+        public readonly List<ScenarioEntry> ScenarioEntries = new List<ScenarioEntry>();
+        public ScenarioEntry ActiveScenarioEntry { get; private set; }
+
+        public EditorState(Engine engine)
+        {
+            _engine = engine;
+
+            _scenariosPath = FileHelper.FindAppFolder("Scenarios");
+            ScenarioEntries = ScenarioEntry.ReadScenarioEntries(_scenariosPath);
+        }
 
         public void Stop()
         {
@@ -17,6 +30,13 @@
 
         internal void Update(float deltaTime)
         {
+        }
+
+        internal void OpenScenario(ScenarioEntry entry)
+        {
+            ActiveScenarioEntry = entry;
+            Stage = EditorStage.Editing;
+            _engine.Interface.OnStageChanged();
         }
     }
 }
