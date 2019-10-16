@@ -69,18 +69,37 @@ namespace DeepSwarmScenarioEditor.Interface.Editing
         {
             _mainPanel.Clear();
 
-            if (Engine.State.ActiveAssetEntry.AssetType == AssetType.Folder) return;
+            var entry = Engine.State.ActiveAssetEntry;
+            var fullPath = Path.Combine(Engine.State.ScenariosPath, Engine.State.ActiveScenarioEntry.Name, entry.Path);
 
-            var editor = new TextEditor(_mainPanel)
+            switch (entry.AssetType)
             {
-                Padding = 8
-            };
+                case AssetType.Unknown:
+                case AssetType.Folder:
+                    break;
 
-            var fullPath = Path.Combine(Engine.State.ScenariosPath, Engine.State.ActiveScenarioEntry.Name, Engine.State.ActiveAssetEntry.Path);
-            editor.SetText(File.ReadAllText(fullPath));
+                case AssetType.Manifest:
+                case AssetType.TileSet:
+                case AssetType.Script:
+                    {
+                        var editor = new TextEditor(_mainPanel) { Padding = 8 };
+                        editor.SetText(File.ReadAllText(fullPath));
+                        Desktop.SetFocusedElement(editor);
+                        break;
+                    }
+
+                case AssetType.Image:
+                    {
+                        var editor = new ImageEditor(Engine.Interface, _mainPanel, fullPath);
+                        Desktop.SetFocusedElement(editor);
+                        break;
+                    }
+
+                case AssetType.Map:
+                    break;
+            }
+
             _mainPanel.Layout();
-
-            Desktop.SetFocusedElement(editor);
         }
     }
 }
