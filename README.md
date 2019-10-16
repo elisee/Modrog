@@ -1,5 +1,7 @@
 # DeepSwarm
 
+Multiplayer real-time chess adventure & strategy game
+
 ## Building
 
 You'll need .NET Core 3 and Visual Studio 2019. VS Code might work.
@@ -11,6 +13,12 @@ You'll need .NET Core 3 and Visual Studio 2019. VS Code might work.
 
 ## Tasks
 
+### Scenario building
+
+    - Add a simple editor so we can build maps for scenarios
+
+### Gameplay
+
 ### Rendering
 
     - Add light checkerboard pattern on the floor
@@ -19,7 +27,6 @@ You'll need .NET Core 3 and Visual Studio 2019. VS Code might work.
 
     - Implement scrolling + ChildLayout.Bottom / .Right
     - Possibly show focus outline only when using keyboard to avoid distracting players
-    - Implement support for linebreaks in Label
     - Copy / Paste in TextInput / TextEditor
     - Keyboard fast movement (Ctrl) in TextInput / TextEditor
     - Display script errors somewhere
