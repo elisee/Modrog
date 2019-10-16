@@ -27,9 +27,6 @@ namespace DeepSwarmClient
         public readonly string AssetsPath;
         public readonly string ScriptsPath;
 
-        // Assets
-        public readonly IntPtr SpritesheetTexture;
-
         // Interface
         public readonly Interface.Interface Interface;
 
@@ -78,7 +75,6 @@ namespace DeepSwarmClient
             // Assets
             AssetsPath = FileHelper.FindAppFolder("Assets");
             if (SDL_image.IMG_Init(SDL_image.IMG_InitFlags.IMG_INIT_PNG) != (int)SDL_image.IMG_InitFlags.IMG_INIT_PNG) throw new Exception();
-            SpritesheetTexture = SDL_image.IMG_LoadTexture(Renderer, Path.Combine(AssetsPath, "Spritesheet.png"));
 
             // Interface
             Interface = new Interface.Interface(this, new Rectangle(0, 0, MinimumWindowSize.X, MinimumWindowSize.Y));
