@@ -36,6 +36,7 @@ namespace DeepSwarmScenarioEditor.Interface.Editing
             {
                 BackgroundPatch = new TexturePatch(0x001234ff),
                 LayoutWeight = 1,
+                VerticalFlow = Flow.Scroll,
                 Padding = 8,
                 OnActivate = (entry) => Engine.State.OpenAsset(entry)
             };
