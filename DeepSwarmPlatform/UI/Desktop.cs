@@ -289,10 +289,17 @@ namespace DeepSwarmPlatform.UI
 
             if (FocusedElement != null && FocusedElement.OutlineColor.A != 0)
             {
+
+                var clipAncestor = FocusedElement;
+                while (clipAncestor != null && clipAncestor.HorizontalFlow != Flow.Scroll && clipAncestor.VerticalFlow != Flow.Scroll) clipAncestor = clipAncestor.Parent;
+                if (clipAncestor != null) PushClipRect(clipAncestor.ViewRectangle);
+
                 SDL.SDL_SetRenderDrawBlendMode(Renderer, SDL.SDL_BlendMode.SDL_BLENDMODE_BLEND);
                 FocusedElement.OutlineColor.UseAsDrawColor(Renderer);
                 FocusedElement.DrawOutline();
                 SDL.SDL_SetRenderDrawBlendMode(Renderer, SDL.SDL_BlendMode.SDL_BLENDMODE_NONE);
+
+                if (clipAncestor != null) PopClipRect();
             }
 
             Debug.Assert(_clipStack.Count == 0);

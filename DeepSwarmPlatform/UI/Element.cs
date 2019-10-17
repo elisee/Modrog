@@ -57,7 +57,7 @@ namespace DeepSwarmPlatform.UI
 
         Rectangle _containerRectangle;
         public Rectangle LayoutRectangle { get; private set; }
-        protected Rectangle _viewRectangle { get; private set; }
+        public Rectangle ViewRectangle { get; private set; }
 
         protected Rectangle _contentRectangle { get; private set; }
         Point _contentScroll;
@@ -248,7 +248,7 @@ namespace DeepSwarmPlatform.UI
 
             LayoutRectangle = layoutRectangle;
 
-            _viewRectangle = new Rectangle(LayoutRectangle.X + LeftPadding, LayoutRectangle.Y + TopPadding,
+            ViewRectangle = new Rectangle(LayoutRectangle.X + LeftPadding, LayoutRectangle.Y + TopPadding,
                 LayoutRectangle.Width - LeftPadding - RightPadding,
                 LayoutRectangle.Height - TopPadding - BottomPadding);
 
@@ -412,7 +412,7 @@ namespace DeepSwarmPlatform.UI
         public virtual void OnMouseUp(int button) { }
         public virtual void OnMouseWheel(int dx, int dy)
         {
-            var scrollArea = new Point(_contentRectangle.Width - _viewRectangle.Width, _contentRectangle.Height - _viewRectangle.Height);
+            var scrollArea = new Point(_contentRectangle.Width - ViewRectangle.Width, _contentRectangle.Height - ViewRectangle.Height);
 
             var newContentScroll = new Point(
                 Math.Clamp(_contentScroll.X - dx * ScrollMultiplier, 0, scrollArea.X),
@@ -435,7 +435,7 @@ namespace DeepSwarmPlatform.UI
 
         public void ScrollToBottom()
         {
-            var newContentScrollY = _contentRectangle.Height - _viewRectangle.Height;
+            var newContentScrollY = _contentRectangle.Height - ViewRectangle.Height;
 
             var scrollOffset = new Point(0, newContentScrollY - _contentScroll.Y);
             if (scrollOffset == Point.Zero) return;
@@ -447,7 +447,7 @@ namespace DeepSwarmPlatform.UI
         protected void ApplyParentScroll(Point offset)
         {
             LayoutRectangle -= offset;
-            _viewRectangle -= offset;
+            ViewRectangle -= offset;
             _contentRectangle -= offset;
 
             foreach (var child in Children) child.ApplyParentScroll(offset);
@@ -459,7 +459,7 @@ namespace DeepSwarmPlatform.UI
 
             DrawSelf();
 
-            if (HorizontalFlow == Flow.Scroll || VerticalFlow == Flow.Scroll) Desktop.PushClipRect(_viewRectangle);
+            if (HorizontalFlow == Flow.Scroll || VerticalFlow == Flow.Scroll) Desktop.PushClipRect(ViewRectangle);
 
             foreach (var child in Children) if (child.IsMounted) child.Draw();
 
@@ -470,10 +470,10 @@ namespace DeepSwarmPlatform.UI
         {
             Debug.Assert(IsMounted);
 
-            SDL.SDL_RenderDrawLine(Desktop.Renderer, LayoutRectangle.Left, LayoutRectangle.Top, LayoutRectangle.Right, LayoutRectangle.Top);
-            SDL.SDL_RenderDrawLine(Desktop.Renderer, LayoutRectangle.Right, LayoutRectangle.Top, LayoutRectangle.Right, LayoutRectangle.Bottom);
-            SDL.SDL_RenderDrawLine(Desktop.Renderer, LayoutRectangle.Right, LayoutRectangle.Bottom, LayoutRectangle.Left, LayoutRectangle.Bottom);
-            SDL.SDL_RenderDrawLine(Desktop.Renderer, LayoutRectangle.Left, LayoutRectangle.Bottom, LayoutRectangle.Left, LayoutRectangle.Top);
+            SDL.SDL_RenderDrawLine(Desktop.Renderer, LayoutRectangle.Left, LayoutRectangle.Top, LayoutRectangle.Right - 1, LayoutRectangle.Top);
+            SDL.SDL_RenderDrawLine(Desktop.Renderer, LayoutRectangle.Right - 1, LayoutRectangle.Top, LayoutRectangle.Right - 1, LayoutRectangle.Bottom - 1);
+            SDL.SDL_RenderDrawLine(Desktop.Renderer, LayoutRectangle.Right - 1, LayoutRectangle.Bottom - 1, LayoutRectangle.Left, LayoutRectangle.Bottom - 1);
+            SDL.SDL_RenderDrawLine(Desktop.Renderer, LayoutRectangle.Left, LayoutRectangle.Bottom - 1, LayoutRectangle.Left, LayoutRectangle.Top);
         }
 
         protected virtual void DrawSelf()
