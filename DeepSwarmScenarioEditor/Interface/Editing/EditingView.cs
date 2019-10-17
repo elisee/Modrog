@@ -2,6 +2,7 @@
 using DeepSwarmPlatform.UI;
 using DeepSwarmScenarioEditor.Scenario;
 using System.Collections.Generic;
+using System.IO;
 
 namespace DeepSwarmScenarioEditor.Interface.Editing
 {
@@ -73,6 +74,7 @@ namespace DeepSwarmScenarioEditor.Interface.Editing
             _mainPanel.Clear();
 
             var entry = Engine.State.ActiveAssetEntry;
+            var fullAssetPath = Path.Combine(Engine.State.ScenariosPath, Engine.State.ActiveScenarioEntry.Name, entry.Path);
             Element editor = null;
 
             switch (entry.AssetType)
@@ -81,14 +83,19 @@ namespace DeepSwarmScenarioEditor.Interface.Editing
                 case AssetType.Folder:
                     break;
 
-                case AssetType.Manifest: editor = new Manifest.ManifestEditor(Engine.Interface, _mainPanel); break;
-                case AssetType.TileSet: editor = new TileSet.TileSetEditor(Engine.Interface, _mainPanel); break;
-                case AssetType.Script: editor = new Script.ScriptEditor(Engine.Interface, _mainPanel); break;
-                case AssetType.Image: editor = new Image.ImageEditor(Engine.Interface, _mainPanel); break;
-                case AssetType.Map: editor = new Map.MapEditor(Engine.Interface, _mainPanel); break;
+                case AssetType.Manifest: editor = new Manifest.ManifestEditor(Engine.Interface, fullAssetPath); break;
+                case AssetType.TileSet: editor = new TileSet.TileSetEditor(Engine.Interface, fullAssetPath); break;
+                case AssetType.Script: editor = new Script.ScriptEditor(Engine.Interface, fullAssetPath); break;
+                case AssetType.Image: editor = new Image.ImageEditor(Engine.Interface, fullAssetPath); break;
+                case AssetType.Map: editor = new Map.MapEditor(Engine.Interface, fullAssetPath); break;
             }
 
-            if (editor != null) Desktop.SetFocusedElement(editor);
+            if (editor != null)
+            {
+                _mainPanel.Add(editor);
+                Desktop.SetFocusedElement(editor);
+            }
+
             _mainPanel.Layout();
         }
     }

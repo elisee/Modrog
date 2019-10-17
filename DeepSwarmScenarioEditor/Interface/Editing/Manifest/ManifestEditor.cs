@@ -1,16 +1,18 @@
 ﻿using DeepSwarmPlatform.Graphics;
 using DeepSwarmPlatform.UI;
+using System.IO;
+using System.Json;
 
 namespace DeepSwarmScenarioEditor.Interface.Editing.Manifest
 {
-    class ManifestEditor : InterfaceElement
+    class ManifestEditor : BaseAssetEditor
     {
         readonly Label _nameLabel;
         readonly TextInput _titleInput;
         readonly TextEditor _descriptionEditor;
 
-        public ManifestEditor(Interface @interface, Element parent)
-            : base(@interface, null)
+        public ManifestEditor(Interface @interface, string fullAssetPath)
+            : base(@interface, fullAssetPath)
         {
             ChildLayout = ChildLayoutMode.Top;
             Padding = 8;
@@ -41,8 +43,6 @@ namespace DeepSwarmScenarioEditor.Interface.Editing.Manifest
                 Padding = 8,
                 BackgroundPatch = new TexturePatch(0x004400ff),
             };
-
-            parent?.Add(this);
         }
 
         public override void OnMounted()
@@ -52,6 +52,21 @@ namespace DeepSwarmScenarioEditor.Interface.Editing.Manifest
             _nameLabel.Text = scenarioEntry.Name;
             _titleInput.SetValue(scenarioEntry.Title);
             _descriptionEditor.SetText(scenarioEntry.Description);
+        }
+
+        public override void OnUnmounted()
+        {
+            Save();
+        }
+
+        void Save()
+        {
+            var json = new JsonObject();
+            json["title"] = _titleInput.Value;
+            json["description"] = _descriptionEditor.GetText();
+            json["minMaxPlayers"] = new JsonArray(1, 1);
+
+            File.WriteAllText(FullAssetPath, json.ToString());
         }
     }
 }

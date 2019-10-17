@@ -6,6 +6,7 @@ namespace DeepSwarmScenarioEditor.Interface.Editing.Map
 {
     class MapSettingsLayer : Panel
     {
+        readonly MapEditor _mapEditor;
         readonly TextInput _tilesetInput;
 
         /*
@@ -13,8 +14,10 @@ namespace DeepSwarmScenarioEditor.Interface.Editing.Map
         readonly TextInput _mapHeightInput;
         */
 
-        public MapSettingsLayer(Element parent) : base(parent)
+        public MapSettingsLayer(MapEditor mapEditor) : base(mapEditor)
         {
+            _mapEditor = mapEditor;
+
             BackgroundPatch = new TexturePatch(0x00000088);
 
             var windowPanel = new Panel(this)
@@ -77,8 +80,15 @@ namespace DeepSwarmScenarioEditor.Interface.Editing.Map
             };
         }
 
+        public override void OnMounted()
+        {
+            _tilesetInput.SetValue(_mapEditor.TileSetPath);
+        }
+
         public override void Validate()
         {
+            _mapEditor.TileSetPath = _tilesetInput.Value.Trim();
+
             IsVisible = false;
         }
     }

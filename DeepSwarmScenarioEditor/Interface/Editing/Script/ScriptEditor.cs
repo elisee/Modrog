@@ -5,12 +5,12 @@ using System.IO;
 
 namespace DeepSwarmScenarioEditor.Interface.Editing.Script
 {
-    class ScriptEditor : InterfaceElement
+    class ScriptEditor : BaseAssetEditor
     {
         TextEditor _textEditor;
 
-        public ScriptEditor(Interface @interface, Element parent)
-            : base(@interface, null)
+        public ScriptEditor(Interface @interface, string fullAssetPath)
+            : base(@interface, fullAssetPath)
         {
             var mainLayer = new Panel(this)
             {
@@ -28,24 +28,25 @@ namespace DeepSwarmScenarioEditor.Interface.Editing.Script
             {
                 Text = "Save",
                 Right = 8,
-                OnActivate = () =>
-                {
-                    File.WriteAllText(Engine.State.GetActiveAssetFullPath(), _textEditor.GetText());
-                }
+                OnActivate = Save
             };
 
             _textEditor = new TextEditor(mainLayer) { Padding = 8, LayoutWeight = 1 };
-
-            parent?.Add(this);
         }
 
         public override void OnMounted()
         {
-            _textEditor.SetText(File.ReadAllText(Engine.State.GetActiveAssetFullPath()));
+            _textEditor.SetText(File.ReadAllText(FullAssetPath));
         }
 
         public override void OnUnmounted()
         {
+            Save();
+        }
+
+        void Save()
+        {
+            File.WriteAllText(FullAssetPath, _textEditor.GetText());
         }
     }
 }

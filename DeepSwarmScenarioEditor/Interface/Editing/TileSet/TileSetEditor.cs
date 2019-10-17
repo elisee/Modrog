@@ -1,26 +1,52 @@
-﻿using DeepSwarmPlatform.UI;
+﻿using DeepSwarmPlatform.Graphics;
+using DeepSwarmPlatform.Interface;
+using DeepSwarmPlatform.UI;
 using System.IO;
 
 namespace DeepSwarmScenarioEditor.Interface.Editing.TileSet
 {
-    class TileSetEditor : InterfaceElement
+    class TileSetEditor : BaseAssetEditor
     {
         TextEditor _textEditor;
 
-        public TileSetEditor(Interface @interface, Element parent = null) : base(@interface, null)
+        public TileSetEditor(Interface @interface, string fullAssetPath)
+            : base(@interface, fullAssetPath)
         {
-            _textEditor = new TextEditor(this) { Padding = 8 };
+            var mainLayer = new Panel(this)
+            {
+                ChildLayout = ChildLayoutMode.Top
+            };
 
-            parent?.Add(this);
+            var topBar = new Panel(mainLayer)
+            {
+                BackgroundPatch = new TexturePatch(0x123456ff),
+                ChildLayout = ChildLayoutMode.Left,
+                VerticalPadding = 8
+            };
+
+            new StyledTextButton(topBar)
+            {
+                Text = "Save",
+                Right = 8,
+                OnActivate = Save
+            };
+
+            _textEditor = new TextEditor(mainLayer) { Padding = 8, LayoutWeight = 1 };
         }
 
         public override void OnMounted()
         {
-            _textEditor.SetText(File.ReadAllText(Engine.State.GetActiveAssetFullPath()));
+            _textEditor.SetText(File.ReadAllText(FullAssetPath));
         }
 
         public override void OnUnmounted()
         {
+            Save();
+        }
+
+        void Save()
+        {
+            File.WriteAllText(FullAssetPath, _textEditor.GetText());
         }
     }
 }

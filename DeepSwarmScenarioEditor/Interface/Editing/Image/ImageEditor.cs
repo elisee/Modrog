@@ -1,22 +1,21 @@
 ﻿using DeepSwarmBasics.Math;
 using DeepSwarmPlatform.Graphics;
-using DeepSwarmPlatform.UI;
 using SDL2;
 
 namespace DeepSwarmScenarioEditor.Interface.Editing.Image
 {
-    class ImageEditor : InterfaceElement
+    class ImageEditor : BaseAssetEditor
     {
         TextureArea _textureArea;
 
-        public ImageEditor(Interface @interface, Element parent)
-            : base(@interface, parent)
+        public ImageEditor(Interface @interface, string fullAssetPath)
+            : base(@interface, fullAssetPath)
         {
         }
 
         public override void OnMounted()
         {
-            var texture = SDL_image.IMG_LoadTexture(Engine.Renderer, Engine.State.GetActiveAssetFullPath());
+            var texture = SDL_image.IMG_LoadTexture(Engine.Renderer, FullAssetPath);
             SDL.SDL_QueryTexture(texture, out _, out _, out var textureWidth, out var textureHeight);
 
             _textureArea = new TextureArea(texture, new Rectangle(0, 0, textureWidth, textureHeight));
