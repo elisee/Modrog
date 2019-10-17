@@ -27,10 +27,12 @@ You'll need .NET Core 3 and Visual Studio 2019. VS Code might work.
 
 ### UI Framework
 
-    - Implement scrolling + ChildLayout.Bottom / .Right
-    - Possibly show focus outline only when using keyboard to avoid distracting players
-    - Copy / Paste in TextInput / TextEditor
-    - Keyboard fast movement (Ctrl) in TextInput / TextEditor
+    - Element: Implement scrollbars
+    - TextEditor: Fix scrolling, building on Element scrolling
+    - TextInput / TextEditor: Support Cut, Copy, Paste
+    - Element: Implement ChildLayout.Bottom, .Right
+    - TextInput / TextEditor: Keyboard fast movement (Ctrl)
+    - Desktop: Show focus outline only after navigating with keyboard once to avoid distracting players and hide after clicking with mouse
 
 ## Design
 
