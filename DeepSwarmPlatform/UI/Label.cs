@@ -126,7 +126,7 @@ namespace DeepSwarmPlatform.UI
 
                         if (segmentCursor != segmentStart && line[segmentCursor] == ' ') segmentEnd = segmentCursor;
 
-                        if (Wrap && newSegmentWidth >= RectangleAfterPadding.Width && segmentStart != segmentEnd)
+                        if (newSegmentWidth >= RectangleAfterPadding.Width && segmentStart != segmentEnd && (segmentCursor + 1 < line.Length || newSegmentWidth > RectangleAfterPadding.Width))
                         {
                             if (Ellipsize && (_segments.Count + 1) * FontStyle.LineHeight >= RectangleAfterPadding.Height)
                             {
