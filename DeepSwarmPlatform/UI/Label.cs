@@ -33,7 +33,7 @@ namespace DeepSwarmPlatform.UI
 
             var contentSize = Point.Zero;
 
-            if (Width == null)
+            if (Width == null && !Ellipsize)
             {
                 var maxLineWidth = 0;
                 foreach (var line in _text.Split('\n')) maxLineWidth = Math.Max(maxLineWidth, FontStyle.MeasureText(line));
