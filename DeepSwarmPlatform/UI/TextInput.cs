@@ -45,7 +45,7 @@ namespace DeepSwarmPlatform.UI
         public override Point ComputeSize(int? maxWidth, int? maxHeight)
         {
             var size = Point.Zero;
-            if (Height == null) size.Y = FontStyle.Size;
+            if (Height == null) size.Y = FontStyle.LineHeight;
             return size + base.ComputeSize(maxWidth, maxHeight);
         }
 
@@ -294,12 +294,12 @@ namespace DeepSwarmPlatform.UI
 
                 var selectionRect = new Rectangle(
                     RectangleAfterPadding.X + firstPixelsX - _scrollingPixelsX, RectangleAfterPadding.Y,
-                    lastPixelsX - firstPixelsX, FontStyle.Ascent).ToSDL_Rect();
+                    lastPixelsX - firstPixelsX, FontStyle.LineHeight).ToSDL_Rect();
                 SDL.SDL_RenderFillRect(Desktop.Renderer, ref selectionRect);
             }
 
             TextColor.UseAsDrawColor(Desktop.Renderer);
-            FontStyle.DrawText(RectangleAfterPadding.X - _scrollingPixelsX, RectangleAfterPadding.Y, Value);
+            FontStyle.DrawText(RectangleAfterPadding.X - _scrollingPixelsX, RectangleAfterPadding.Y + RectangleAfterPadding.Height / 2 - FontStyle.Size / 2, Value);
 
             SDL.SDL_RenderSetClipRect(Desktop.Renderer, IntPtr.Zero);
 
