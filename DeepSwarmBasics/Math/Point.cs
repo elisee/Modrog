@@ -25,6 +25,8 @@ namespace DeepSwarmBasics.Math
         public static Point operator +(Point left, Point right) => new Point(left.X + right.X, left.Y + right.Y);
         public static Point operator -(Point left, Point right) => new Point(left.X - right.X, left.Y - right.Y);
 
+        public static Point operator -(Point point) => new Point(-point.X, -point.Y);
+
         internal string DebugDisplay => $"{X} {Y}";
     }
 }
