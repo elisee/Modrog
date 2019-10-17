@@ -50,7 +50,7 @@ namespace DeepSwarmScenarioEditor
                     var entry = new AssetEntry
                     {
                         Name = filePath[(folderPath.Length + 1)..],
-                        Path = filePath[(scenarioPath.Length + 1)..],
+                        Path = filePath[(scenarioPath.Length + 1)..].Replace('\\', '/'),
                     };
 
                     if (entry.Path == "Manifest.json") entry.AssetType = AssetType.Manifest;
@@ -67,7 +67,7 @@ namespace DeepSwarmScenarioEditor
                     var folderEntry = new AssetEntry
                     {
                         Name = childFolderPath[(folderPath.Length + 1)..],
-                        Path = childFolderPath[(scenarioPath.Length + 1)..],
+                        Path = childFolderPath[(scenarioPath.Length + 1)..].Replace('\\', '/'),
                         AssetType = AssetType.Folder
                     };
 
