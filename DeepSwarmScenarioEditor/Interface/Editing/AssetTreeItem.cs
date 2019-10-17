@@ -47,7 +47,9 @@ namespace DeepSwarmScenarioEditor.Interface.Editing
 
             _label = new Label(button)
             {
+                LayoutWeight = 1,
                 Text = entry.Name,
+                Ellipsize = true,
             };
 
             ChildrenPanel = new Panel(this)
