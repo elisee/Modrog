@@ -62,8 +62,8 @@ namespace DeepSwarmScenarioEditor.Interface.Editing.Manifest
         void Save()
         {
             var json = new JsonObject();
-            json["title"] = _titleInput.Value;
-            json["description"] = _descriptionEditor.GetText();
+            json["title"] = Engine.State.ActiveScenarioEntry.Title = _titleInput.Value.Trim();
+            json["description"] = Engine.State.ActiveScenarioEntry.Description = _descriptionEditor.GetText().Trim();
             json["minMaxPlayers"] = new JsonArray(1, 1);
 
             File.WriteAllText(FullAssetPath, json.ToString());
