@@ -15,5 +15,17 @@ namespace DeepSwarmScenarioEditor.Interface.Editing
         {
             ChildLayout = ChildLayoutMode.Top;
         }
+
+        internal void Internal_ActivateItem(AssetTreeItem item)
+        {
+            if (item.Entry.AssetType == AssetType.Folder)
+            {
+                item.ToggleChildren();
+                Layout();
+                return;
+            }
+
+            OnActivate(item.Entry);
+        }
     }
 }
