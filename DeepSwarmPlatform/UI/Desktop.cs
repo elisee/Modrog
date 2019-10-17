@@ -1,5 +1,4 @@
-﻿using DeepSwarmBasics.Math;
-using DeepSwarmPlatform.Graphics;
+﻿using DeepSwarmPlatform.Graphics;
 using SDL2;
 using System;
 using System.Collections.Generic;
@@ -43,10 +42,6 @@ namespace DeepSwarmPlatform.UI
             RootElement = new Element(this, null);
             RootElement.Mount();
         }
-
-        #region Helpers
-        public static SDL.SDL_Rect ToSDL_Rect(Rectangle rect) => new SDL.SDL_Rect { x = rect.X, y = rect.Y, w = rect.Width, h = rect.Height };
-        #endregion
 
         #region Configuration
         public void SetFocusedElement(Element element)

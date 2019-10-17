@@ -387,7 +387,7 @@ namespace DeepSwarmPlatform.UI
             var startY = _scrollingPixels.Y / CellSize.Y;
             var endY = Math.Min(Lines.Count - 1, (_scrollingPixels.Y + RectangleAfterPadding.Height) / CellSize.Y);
 
-            var clipRect = Desktop.ToSDL_Rect(RectangleAfterPadding);
+            var clipRect = RectangleAfterPadding.ToSDL_Rect();
             SDL.SDL_RenderSetClipRect(Desktop.Renderer, ref clipRect);
 
             // Draw selection
@@ -398,32 +398,32 @@ namespace DeepSwarmPlatform.UI
 
                 if (firstPosition.Y == lastPosition.Y)
                 {
-                    var selectionRect = Desktop.ToSDL_Rect(new Rectangle(
+                    var selectionRect = new Rectangle(
                     RectangleAfterPadding.X + firstPosition.X * CellSize.X - _scrollingPixels.X,
                     RectangleAfterPadding.Y + firstPosition.Y * CellSize.Y - _scrollingPixels.Y,
-                    (lastPosition.X - firstPosition.X) * CellSize.X, CellSize.Y));
+                    (lastPosition.X - firstPosition.X) * CellSize.X, CellSize.Y).ToSDL_Rect();
                     SDL.SDL_RenderFillRect(Desktop.Renderer, ref selectionRect);
                 }
                 else
                 {
-                    var firstLineSelectionRect = Desktop.ToSDL_Rect(new Rectangle(
+                    var firstLineSelectionRect = new Rectangle(
                     RectangleAfterPadding.X + firstPosition.X * CellSize.X - _scrollingPixels.X,
                     RectangleAfterPadding.Y + firstPosition.Y * CellSize.Y - _scrollingPixels.Y,
-                    (Lines[firstPosition.Y][firstPosition.X..].Length) * CellSize.X, CellSize.Y));
+                    (Lines[firstPosition.Y][firstPosition.X..].Length) * CellSize.X, CellSize.Y).ToSDL_Rect();
 
                     for (int i = firstPosition.Y + 1; i < lastPosition.Y; i++)
                     {
-                        var midSelectionRect = Desktop.ToSDL_Rect(new Rectangle(
+                        var midSelectionRect = new Rectangle(
                             RectangleAfterPadding.X + 0 - _scrollingPixels.X,
                             RectangleAfterPadding.Y + i * CellSize.Y - _scrollingPixels.Y,
-                            (Lines[i].Length) * CellSize.X, CellSize.Y));
+                            (Lines[i].Length) * CellSize.X, CellSize.Y).ToSDL_Rect();
                         SDL.SDL_RenderFillRect(Desktop.Renderer, ref midSelectionRect);
                     }
 
-                    var lastLineSelectionRect = Desktop.ToSDL_Rect(new Rectangle(
+                    var lastLineSelectionRect = new Rectangle(
                     RectangleAfterPadding.X + 0 - _scrollingPixels.X,
                     RectangleAfterPadding.Y + lastPosition.Y * CellSize.Y - _scrollingPixels.Y,
-                    (Lines[lastPosition.Y][..lastPosition.X].Length) * CellSize.X, CellSize.Y));
+                    (Lines[lastPosition.Y][..lastPosition.X].Length) * CellSize.X, CellSize.Y).ToSDL_Rect();
 
                     SDL.SDL_RenderFillRect(Desktop.Renderer, ref firstLineSelectionRect);
                     SDL.SDL_RenderFillRect(Desktop.Renderer, ref lastLineSelectionRect);
@@ -447,10 +447,10 @@ namespace DeepSwarmPlatform.UI
             {
                 new Color(0xffffffff).UseAsDrawColor(Desktop.Renderer);
 
-                var cursorRect = Desktop.ToSDL_Rect(new Rectangle(
+                var cursorRect = new Rectangle(
                     RectangleAfterPadding.X + _cursor.X * CellSize.X - _scrollingPixels.X,
                     RectangleAfterPadding.Y + _cursor.Y * CellSize.Y - _scrollingPixels.Y,
-                    2, CellSize.Y));
+                    2, CellSize.Y).ToSDL_Rect();
                 SDL.SDL_RenderDrawRect(Desktop.Renderer, ref cursorRect);
             }
         }

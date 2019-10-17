@@ -280,7 +280,7 @@ namespace DeepSwarmPlatform.UI
         {
             base.DrawSelf();
 
-            var clipRect = Desktop.ToSDL_Rect(RectangleAfterPadding);
+            var clipRect = RectangleAfterPadding.ToSDL_Rect();
             SDL.SDL_RenderSetClipRect(Desktop.Renderer, ref clipRect);
 
             // Draw selection
@@ -292,9 +292,9 @@ namespace DeepSwarmPlatform.UI
                 var firstPixelsX = FontStyle.MeasureText(Value[0..firstX]);
                 var lastPixelsX = FontStyle.MeasureText(Value[0..lastX]);
 
-                var selectionRect = Desktop.ToSDL_Rect(new Rectangle(
+                var selectionRect = new Rectangle(
                     RectangleAfterPadding.X + firstPixelsX - _scrollingPixelsX, RectangleAfterPadding.Y,
-                    lastPixelsX - firstPixelsX, FontStyle.Ascent));
+                    lastPixelsX - firstPixelsX, FontStyle.Ascent).ToSDL_Rect();
                 SDL.SDL_RenderFillRect(Desktop.Renderer, ref selectionRect);
             }
 
@@ -308,10 +308,10 @@ namespace DeepSwarmPlatform.UI
             {
                 new Color(0xffffffff).UseAsDrawColor(Desktop.Renderer);
 
-                var cursorRect = Desktop.ToSDL_Rect(new Rectangle(
+                var cursorRect = new Rectangle(
                     RectangleAfterPadding.X + FontStyle.MeasureText(Value[0.._cursorX]) - _scrollingPixelsX,
                     RectangleAfterPadding.Y,
-                    2, RectangleAfterPadding.Height));
+                    2, RectangleAfterPadding.Height).ToSDL_Rect();
                 SDL.SDL_RenderDrawRect(Desktop.Renderer, ref cursorRect);
             }
         }
