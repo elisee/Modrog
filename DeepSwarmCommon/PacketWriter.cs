@@ -6,15 +6,21 @@ namespace DeepSwarmCommon
     public class PacketWriter
     {
         public readonly byte[] Buffer;
-        int _cursor = 2;
+        int _cursor;
+        bool _useSizeHeader = false;
 
-        public PacketWriter(int size = 8192)
+        public PacketWriter(int capacity, bool useSizeHeader)
         {
-            Buffer = new byte[size];
+            Buffer = new byte[capacity];
+
+            _useSizeHeader = useSizeHeader;
+            if (useSizeHeader) _cursor = 2;
         }
 
         public int Finish()
         {
+            if (!_useSizeHeader) return _cursor;
+
             var length = _cursor - 2;
             _cursor = 0;
             WriteShort((short)length);

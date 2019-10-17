@@ -24,7 +24,7 @@ namespace DeepSwarmServer
 
         readonly List<Socket> _pollSockets = new List<Socket>();
 
-        readonly PacketWriter _packetWriter = new PacketWriter();
+        readonly PacketWriter _packetWriter = new PacketWriter(capacity: 8192, useSizeHeader: true);
         readonly PacketReader _packetReader = new PacketReader();
 
         // Lobby

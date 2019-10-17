@@ -19,7 +19,7 @@ namespace DeepSwarmClient
         // Networking
         Socket _socket;
         PacketReceiver _packetReceiver;
-        readonly PacketWriter _packetWriter = new PacketWriter();
+        readonly PacketWriter _packetWriter = new PacketWriter(capacity: 8192, useSizeHeader: true);
         readonly PacketReader _packetReader = new PacketReader();
 
         public string SavedServerHostname = "localhost"; // TODO: Save and load from settings
