@@ -340,6 +340,16 @@ namespace DeepSwarmPlatform.UI
                 default:
                     throw new NotSupportedException();
             }
+
+            // Clamp scroll
+            var scrollArea = new Point(_contentRectangle.Width - ViewRectangle.Width, _contentRectangle.Height - ViewRectangle.Height);
+            var overscroll = new Point(Math.Max(0, _contentScroll.X - scrollArea.X), Math.Max(0, _contentScroll.Y - scrollArea.Y));
+
+            if (overscroll != Point.Zero)
+            {
+                foreach (var child in Children) child.ApplyParentScroll(-overscroll);
+                _contentScroll -= overscroll;
+            }
         }
 
         public virtual void LayoutSelf() { }
