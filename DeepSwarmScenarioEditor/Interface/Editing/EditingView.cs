@@ -16,6 +16,7 @@ namespace DeepSwarmScenarioEditor.Interface.Editing
 
         readonly Panel _mainPanel;
         readonly Element _editorContainer;
+        readonly Label _assetTitleLabel;
 
         public EditingView(Interface @interface)
             : base(@interface, null)
@@ -60,8 +61,11 @@ namespace DeepSwarmScenarioEditor.Interface.Editing
 
             var tabsBar = new Element(topBar)
             {
-                LayoutWeight = 1
+                LayoutWeight = 1,
+                ChildLayout = ChildLayoutMode.Left
             };
+
+            _assetTitleLabel = new Label(tabsBar) { Flow = Flow.Shrink, Padding = 8 };
 
             new StyledTextButton(topBar)
             {
@@ -104,6 +108,8 @@ namespace DeepSwarmScenarioEditor.Interface.Editing
             var entry = Engine.State.ActiveAssetEntry;
             var fullAssetPath = Path.Combine(Engine.State.ScenariosPath, Engine.State.ActiveScenarioEntry.Name, entry.Path);
             Element editor = null;
+            _assetTitleLabel.Text = entry.Path;
+            _assetTitleLabel.Parent.Layout();
 
             switch (entry.AssetType)
             {
