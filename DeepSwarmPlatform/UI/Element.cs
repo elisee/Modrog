@@ -446,6 +446,8 @@ namespace DeepSwarmPlatform.UI
 
         protected void ApplyParentScroll(Point offset)
         {
+            if (!IsMounted) return;
+
             LayoutRectangle -= offset;
             ViewRectangle -= offset;
             _contentRectangle -= offset;
