@@ -13,9 +13,11 @@ You'll need .NET Core 3 and Visual Studio 2019. VS Code might work.
 
 ## Tasks
 
-### Scenario building
+### Interface
 
-    - Add a simple editor so we can build maps for scenarios
+    - Build a simple scenario editor so we can make maps
+    - Allow launching client from editor. Should pass a command-line argument that makes the client start its own server with the currently edited scenario
+    - Add back client-side script editing and display script errors somewhere
 
 ### Gameplay
 
@@ -23,14 +25,12 @@ You'll need .NET Core 3 and Visual Studio 2019. VS Code might work.
 
     - Add light checkerboard pattern on the floor
 
-### UI
+### UI Framework
 
     - Implement scrolling + ChildLayout.Bottom / .Right
     - Possibly show focus outline only when using keyboard to avoid distracting players
     - Copy / Paste in TextInput / TextEditor
     - Keyboard fast movement (Ctrl) in TextInput / TextEditor
-    - Display script errors somewhere
-    - Increase script window size?
 
 ## Design
 
