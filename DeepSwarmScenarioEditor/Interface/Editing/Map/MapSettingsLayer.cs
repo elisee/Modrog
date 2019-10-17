@@ -91,5 +91,10 @@ namespace DeepSwarmScenarioEditor.Interface.Editing.Map
 
             IsVisible = false;
         }
+
+        public override void Dismiss()
+        {
+            IsVisible = false;
+        }
     }
 }
