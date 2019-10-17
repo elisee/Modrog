@@ -91,6 +91,20 @@ namespace DeepSwarmClient
             Run();
         }
 
+        public void StartWithScenario(string scenario)
+        {
+            var serverExePath = Path.Combine(FileHelper.FindAppFolder("DeepSwarmServer-Debug"), "netcoreapp3.0", "DeepSwarmServer.exe");
+            var serverProcess = Process.Start(new ProcessStartInfo(serverExePath));
+
+            AppDomain.CurrentDomain.ProcessExit += (@event, args) =>
+            {
+                serverProcess.CloseMainWindow();
+            };
+
+            State.Connect("127.0.0.1", Protocol.Port, scenario);
+            Run();
+        }
+
         public void RunOnEngineThread(Action action) => _actionQueue.Run(action);
 
         void Run()
