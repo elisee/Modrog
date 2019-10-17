@@ -16,7 +16,6 @@ You'll need .NET Core 3 and Visual Studio 2019. VS Code might work.
 ### Interface
 
     - Build a simple scenario editor so we can make maps
-    - Allow launching client from editor. Should pass a command-line argument that makes the client start its own server with the currently edited scenario
     - Add back client-side script editing and display script errors somewhere
 
 ### Gameplay

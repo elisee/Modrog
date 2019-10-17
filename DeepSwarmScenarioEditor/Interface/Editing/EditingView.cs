@@ -1,7 +1,10 @@
-﻿using DeepSwarmPlatform.Graphics;
+﻿using DeepSwarmCommon;
+using DeepSwarmPlatform.Graphics;
+using DeepSwarmPlatform.Interface;
 using DeepSwarmPlatform.UI;
 using DeepSwarmScenarioEditor.Scenario;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 
 namespace DeepSwarmScenarioEditor.Interface.Editing
@@ -12,6 +15,7 @@ namespace DeepSwarmScenarioEditor.Interface.Editing
         readonly AssetTree _assetTree;
 
         readonly Panel _mainPanel;
+        readonly Element _editorContainer;
 
         public EditingView(Interface @interface)
             : base(@interface, null)
@@ -44,8 +48,32 @@ namespace DeepSwarmScenarioEditor.Interface.Editing
             _mainPanel = new Panel(this)
             {
                 LayoutWeight = 1,
+                ChildLayout = ChildLayoutMode.Top,
                 BackgroundPatch = new TexturePatch(0x000123ff)
             };
+
+            var topBar = new Panel(_mainPanel)
+            {
+                ChildLayout = ChildLayoutMode.Left,
+                BackgroundPatch = new TexturePatch(0x654321ff),
+            };
+
+            var tabsBar = new Element(topBar)
+            {
+                LayoutWeight = 1
+            };
+
+            new StyledTextButton(topBar)
+            {
+                Text = "Run",
+                OnActivate = () =>
+                {
+                    var clientExePath = Path.Combine(FileHelper.FindAppFolder("DeepSwarmClient-Debug"), "netcoreapp3.0", "DeepSwarmClient.exe");
+                    Process.Start(clientExePath, "--scenario " + Engine.State.ActiveScenarioEntry.Name);
+                }
+            };
+
+            _editorContainer = new Element(_mainPanel) { LayoutWeight = 1 };
         }
 
         public override void OnMounted()
@@ -71,7 +99,7 @@ namespace DeepSwarmScenarioEditor.Interface.Editing
 
         public void OnActiveAssetChanged()
         {
-            _mainPanel.Clear();
+            _editorContainer.Clear();
 
             var entry = Engine.State.ActiveAssetEntry;
             var fullAssetPath = Path.Combine(Engine.State.ScenariosPath, Engine.State.ActiveScenarioEntry.Name, entry.Path);
@@ -92,11 +120,11 @@ namespace DeepSwarmScenarioEditor.Interface.Editing
 
             if (editor != null)
             {
-                _mainPanel.Add(editor);
+                _editorContainer.Add(editor);
                 Desktop.SetFocusedElement(editor);
             }
 
-            _mainPanel.Layout();
+            _editorContainer.Layout();
         }
     }
 }
