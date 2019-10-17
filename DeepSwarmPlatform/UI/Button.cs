@@ -11,6 +11,8 @@ namespace DeepSwarmPlatform.UI
 
         public Action OnActivate;
 
+        public Button(Element parent) : this(parent.Desktop, parent) { }
+
         public Button(Desktop desktop, Element parent) : base(desktop, parent)
         {
             OutlineColor = new Color(0xff0000ff);
