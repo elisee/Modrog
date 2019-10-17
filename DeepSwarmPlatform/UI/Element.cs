@@ -370,7 +370,7 @@ namespace DeepSwarmPlatform.UI
         {
             if (!repeat)
             {
-                if (key == SDL.SDL_Keycode.SDLK_RETURN) Validate();
+                if (key == SDL.SDL_Keycode.SDLK_RETURN || key == SDL.SDL_Keycode.SDLK_KP_ENTER) Validate();
                 else if (key == SDL.SDL_Keycode.SDLK_ESCAPE) Dismiss();
                 else if (key == SDL.SDL_Keycode.SDLK_TAB) Desktop.MoveFocus(backwards: Desktop.IsShiftDown);
             }
