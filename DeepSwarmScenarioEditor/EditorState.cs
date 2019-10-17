@@ -87,5 +87,7 @@ namespace DeepSwarmScenarioEditor
             ActiveAssetEntry = entry;
             _engine.Interface.EditingView.OnActiveAssetChanged();
         }
+
+        public string GetActiveAssetFullPath() => Path.Combine(ScenariosPath, ActiveScenarioEntry.Name, ActiveAssetEntry.Path);
     }
 }

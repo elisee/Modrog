@@ -1,7 +1,7 @@
 ﻿using DeepSwarmPlatform.Graphics;
 using DeepSwarmPlatform.UI;
 
-namespace DeepSwarmScenarioEditor.Interface.Editing
+namespace DeepSwarmScenarioEditor.Interface.Editing.Manifest
 {
     class ManifestEditor : InterfaceElement
     {

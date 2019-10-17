@@ -3,30 +3,20 @@ using DeepSwarmPlatform.Graphics;
 using DeepSwarmPlatform.UI;
 using SDL2;
 
-namespace DeepSwarmScenarioEditor.Interface.Editing
+namespace DeepSwarmScenarioEditor.Interface.Editing.Image
 {
     class ImageEditor : InterfaceElement
     {
-        readonly string _filePath;
         TextureArea _textureArea;
 
-        public ImageEditor(Interface @interface, Element parent, string filePath)
+        public ImageEditor(Interface @interface, Element parent)
             : base(@interface, parent)
         {
-            _filePath = filePath;
-            if (_filePath != null) LoadTexture();
         }
 
         public override void OnMounted()
         {
-            if (_filePath != null) LoadTexture();
-        }
-
-        void LoadTexture()
-        {
-            if (_textureArea != null) SDL.SDL_DestroyTexture(_textureArea.Texture);
-
-            var texture = SDL_image.IMG_LoadTexture(Engine.Renderer, _filePath);
+            var texture = SDL_image.IMG_LoadTexture(Engine.Renderer, Engine.State.GetActiveAssetFullPath());
             SDL.SDL_QueryTexture(texture, out _, out _, out var textureWidth, out var textureHeight);
 
             _textureArea = new TextureArea(texture, new Rectangle(0, 0, textureWidth, textureHeight));
@@ -34,11 +24,8 @@ namespace DeepSwarmScenarioEditor.Interface.Editing
 
         public override void OnUnmounted()
         {
-            if (_textureArea != null)
-            {
-                SDL.SDL_DestroyTexture(_textureArea.Texture);
-                _textureArea = null;
-            }
+            SDL.SDL_DestroyTexture(_textureArea.Texture);
+            _textureArea = null;
         }
 
         protected override void DrawSelf()

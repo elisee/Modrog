@@ -11,7 +11,7 @@ namespace DeepSwarmScenarioEditor.Interface.Editing
 
         readonly Element _icon;
         readonly Label _label;
-        public readonly Panel ChildrenPanel;
+        readonly Panel _childrenPanel;
 
         public static readonly TexturePatch[] IconsByAssetType = new TexturePatch[] {
             new TexturePatch(0x222222ff), // Unknown
@@ -23,7 +23,7 @@ namespace DeepSwarmScenarioEditor.Interface.Editing
             new TexturePatch(0xffff22ff), // Script
         };
 
-        public AssetTreeItem(Element parent, AssetTree tree, AssetEntry entry) : base(parent.Desktop, parent)
+        public AssetTreeItem(AssetTree tree, AssetEntry entry) : base(tree.Desktop, null)
         {
             Tree = tree;
             Entry = entry;
@@ -48,21 +48,34 @@ namespace DeepSwarmScenarioEditor.Interface.Editing
             _label = new Label(button)
             {
                 LayoutWeight = 1,
-                Text = entry.Name,
                 Ellipsize = true,
             };
 
-            ChildrenPanel = new Panel(this)
+            _childrenPanel = new Panel(this)
             {
                 ChildLayout = ChildLayoutMode.Top,
-                Left = 24
+                Left = 24,
+                IsVisible = false
             };
+
+            UpdateLabel();
+        }
+
+        public void AddChildItem(AssetTreeItem item)
+        {
+            _childrenPanel.Add(item);
+            UpdateLabel();
         }
 
         public void ToggleChildren()
         {
-            ChildrenPanel.IsVisible = !ChildrenPanel.IsVisible;
-            _label.Text = Entry.Name + (ChildrenPanel.IsVisible ? "" : $" ({ChildrenPanel.Children.Count})");
+            _childrenPanel.IsVisible = !_childrenPanel.IsVisible;
+            UpdateLabel();
+        }
+
+        void UpdateLabel()
+        {
+            _label.Text = Entry.Name + (_childrenPanel.IsVisible || _childrenPanel.Children.Count == 0 ? "" : $" ({_childrenPanel.Children.Count})");
         }
     }
 }
