@@ -57,11 +57,11 @@ namespace DeepSwarmPlatform.UI
 
         Rectangle _containerRectangle;
         public Rectangle LayoutRectangle { get; private set; }
-        // public Rectangle RectangleAfterPadding { get; private set; }
+        protected Rectangle _viewRectangle { get; private set; }
 
-        protected Rectangle _contentRectangle;
-        protected Point _contentScroll;
-
+        protected Rectangle _contentRectangle { get; private set; }
+        Point _contentScroll;
+        public const int ScrollMultiplier = 30;
 
         // Child layout
         public enum ChildLayoutMode { Overlay, Left, Right, Top, Bottom }
@@ -114,65 +114,65 @@ namespace DeepSwarmPlatform.UI
 
         public virtual void ComputeSizes(int? maxWidth, int? maxHeight, out Point layoutSize, out Point paddedContentSize)
         {
-            var contentSize = Point.Zero;
-
             layoutSize = new Point(
                 (Width ?? 0) + (Left ?? 0) + (Right ?? 0),
                 (Height ?? 0) + (Top ?? 0) + (Bottom ?? 0));
 
-            if (Width == null || Height == null)
+            var contentSize = Point.Zero;
+
+            var contentMaxWidth = Width ?? maxWidth;
+            if (contentMaxWidth != null) contentMaxWidth -= LeftPadding + RightPadding;
+
+            var contentMaxHeight = Height ?? maxHeight;
+            if (contentMaxHeight != null) contentMaxHeight -= TopPadding + BottomPadding;
+
+            switch (ChildLayout)
             {
-                var contentMaxWidth = Width ?? maxWidth;
-                if (contentMaxWidth != null) contentMaxWidth -= LeftPadding + RightPadding;
+                case ChildLayoutMode.Overlay:
+                    foreach (var child in Children)
+                    {
+                        if (!child.IsMounted) continue;
+                        child.ComputeSizes(contentMaxWidth, contentMaxHeight, out var childLayoutSize, out _);
+                        if (Width == null || HorizontalFlow == Flow.Scroll) contentSize.X = Math.Max(contentSize.X, childLayoutSize.X);
+                        if (Height == null || VerticalFlow == Flow.Scroll) contentSize.Y = Math.Max(contentSize.Y, childLayoutSize.Y);
+                    }
+                    break;
 
-                var contentMaxHeight = Height ?? maxHeight;
-                if (contentMaxHeight != null) contentMaxHeight -= TopPadding + BottomPadding;
+                case ChildLayoutMode.Left:
+                case ChildLayoutMode.Right:
+                    foreach (var child in Children)
+                    {
+                        if (!child.IsMounted) continue;
+                        child.ComputeSizes(contentMaxWidth, contentMaxHeight, out var childLayoutSize, out _);
+                        if (Width == null || HorizontalFlow == Flow.Scroll) contentSize.X += childLayoutSize.X;
+                        if (Height == null || VerticalFlow == Flow.Scroll) contentSize.Y = Math.Max(contentSize.Y, childLayoutSize.Y);
+                    }
+                    break;
 
-                switch (ChildLayout)
-                {
-                    case ChildLayoutMode.Overlay:
-                        foreach (var child in Children)
-                        {
-                            if (!child.IsMounted) continue;
-                            child.ComputeSizes(contentMaxWidth, contentMaxHeight, out var childLayoutSize, out _);
-                            if (Width == null) contentSize.X = Math.Max(contentSize.X, childLayoutSize.X);
-                            if (Height == null) contentSize.Y = Math.Max(contentSize.Y, childLayoutSize.Y);
-                        }
-                        break;
+                case ChildLayoutMode.Top:
+                case ChildLayoutMode.Bottom:
+                    foreach (var child in Children)
+                    {
+                        if (!child.IsMounted) continue;
+                        child.ComputeSizes(contentMaxWidth, contentMaxHeight, out var childLayoutSize, out _);
+                        if (Width == null || HorizontalFlow == Flow.Scroll) contentSize.X = Math.Max(contentSize.X, childLayoutSize.X);
+                        if (Height == null || VerticalFlow == Flow.Scroll) contentSize.Y += childLayoutSize.Y;
+                    }
+                    break;
 
-                    case ChildLayoutMode.Left:
-                    case ChildLayoutMode.Right:
-                        foreach (var child in Children)
-                        {
-                            if (!child.IsMounted) continue;
-                            child.ComputeSizes(contentMaxWidth, contentMaxHeight, out var childLayoutSize, out _);
-                            if (Width == null) contentSize.X += childLayoutSize.X;
-                            if (Height == null) contentSize.Y = Math.Max(contentSize.Y, childLayoutSize.Y);
-                        }
-                        break;
-
-                    case ChildLayoutMode.Top:
-                    case ChildLayoutMode.Bottom:
-                        foreach (var child in Children)
-                        {
-                            if (!child.IsMounted) continue;
-                            child.ComputeSizes(contentMaxWidth, contentMaxHeight, out var childLayoutSize, out _);
-                            if (Width == null) contentSize.X = Math.Max(contentSize.X, childLayoutSize.X);
-                            if (Height == null) contentSize.Y += childLayoutSize.Y;
-                        }
-                        break;
-
-                    default:
-                        throw new NotImplementedException();
-                }
+                default:
+                    throw new NotImplementedException();
             }
+
+            if (contentMaxWidth != null && contentSize.X > contentMaxWidth && HorizontalFlow != Flow.Scroll) contentSize.X = contentMaxWidth.Value;
+            if (contentMaxHeight != null && contentSize.Y > contentMaxHeight && VerticalFlow != Flow.Scroll) contentSize.Y = contentMaxHeight.Value;
 
             paddedContentSize = new Point(
                 contentSize.X + LeftPadding + RightPadding,
                 contentSize.Y + TopPadding + BottomPadding);
 
-            if (Width == null) layoutSize.X += paddedContentSize.X;
-            if (Height == null) layoutSize.Y += paddedContentSize.Y;
+            if (Width == null && HorizontalFlow != Flow.Scroll) layoutSize.X += paddedContentSize.X;
+            if (Height == null && VerticalFlow != Flow.Scroll) layoutSize.Y += paddedContentSize.Y;
         }
 
         public void Layout(Rectangle? containerRectangle = null)
@@ -180,6 +180,7 @@ namespace DeepSwarmPlatform.UI
             if (!IsMounted) return;
 
             if (containerRectangle != null) _containerRectangle = containerRectangle.Value;
+            else if (_containerRectangle == Rectangle.Zero) return;
 
             ComputeSizes(_containerRectangle.Width, _containerRectangle.Height, out var minLayoutSize, out var minPaddedContentSize);
 
@@ -247,13 +248,17 @@ namespace DeepSwarmPlatform.UI
 
             LayoutRectangle = layoutRectangle;
 
-            Debug.Assert(minPaddedContentSize.X <= LayoutRectangle.Width || HorizontalFlow == Flow.Scroll);
-            Debug.Assert(minPaddedContentSize.Y <= LayoutRectangle.Height || VerticalFlow == Flow.Scroll);
+            _viewRectangle = new Rectangle(LayoutRectangle.X + LeftPadding, LayoutRectangle.Y + TopPadding,
+                LayoutRectangle.Width - LeftPadding - RightPadding,
+                LayoutRectangle.Height - TopPadding - BottomPadding);
 
             _contentRectangle = new Rectangle(
                 LayoutRectangle.X + LeftPadding, LayoutRectangle.Y + TopPadding,
                 Math.Max(minPaddedContentSize.X, LayoutRectangle.Width) - LeftPadding - RightPadding,
-                Math.Max(minPaddedContentSize.Y, LayoutRectangle.Height) - TopPadding - BottomPadding);
+                Math.Max(minPaddedContentSize.Y, LayoutRectangle.Height) - TopPadding - BottomPadding) - _contentScroll;
+
+            Debug.Assert(minPaddedContentSize.X <= LayoutRectangle.Width || HorizontalFlow == Flow.Scroll);
+            Debug.Assert(minPaddedContentSize.Y <= LayoutRectangle.Height || VerticalFlow == Flow.Scroll);
 
             LayoutSelf();
 
@@ -405,10 +410,37 @@ namespace DeepSwarmPlatform.UI
 
         public virtual void OnMouseDown(int button) { }
         public virtual void OnMouseUp(int button) { }
-        public virtual void OnMouseWheel(int dx, int dy) { }
+        public virtual void OnMouseWheel(int dx, int dy)
+        {
+            var scrollArea = new Point(_contentRectangle.Width - _viewRectangle.Width, _contentRectangle.Height - _viewRectangle.Height);
+
+            var newContentScroll = new Point(
+                Math.Clamp(_contentScroll.X - dx * ScrollMultiplier, 0, scrollArea.X),
+                Math.Clamp(_contentScroll.Y - dy * ScrollMultiplier, 0, scrollArea.Y));
+
+            var scrollOffset = newContentScroll - _contentScroll;
+
+            if (scrollOffset == Point.Zero)
+            {
+                Parent?.OnMouseWheel(dx, dy);
+                return;
+            }
+
+            foreach (var child in Children) child.ApplyParentScroll(scrollOffset);
+            _contentScroll = newContentScroll;
+        }
 
         public virtual void Validate() => Parent?.Validate();
         public virtual void Dismiss() => Parent?.Dismiss();
+
+        protected void ApplyParentScroll(Point offset)
+        {
+            LayoutRectangle -= offset;
+            _viewRectangle -= offset;
+            _contentRectangle -= offset;
+
+            foreach (var child in Children) child.ApplyParentScroll(offset);
+        }
 
         public void Draw()
         {
@@ -416,7 +448,11 @@ namespace DeepSwarmPlatform.UI
 
             DrawSelf();
 
+            if (HorizontalFlow == Flow.Scroll || VerticalFlow == Flow.Scroll) Desktop.PushClipRect(_viewRectangle);
+
             foreach (var child in Children) if (child.IsMounted) child.Draw();
+
+            if (HorizontalFlow == Flow.Scroll || VerticalFlow == Flow.Scroll) Desktop.PopClipRect();
         }
 
         public void DrawOutline()

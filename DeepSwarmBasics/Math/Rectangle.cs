@@ -6,6 +6,8 @@ namespace DeepSwarmBasics.Math
     [DebuggerDisplay("{DebugDisplay,nq}")]
     public struct Rectangle : IEquatable<Rectangle>
     {
+        public static readonly Rectangle Zero = new Rectangle(0, 0, 0, 0);
+
         public int X;
         public int Y;
         public int Width;

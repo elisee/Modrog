@@ -1,4 +1,5 @@
-﻿using DeepSwarmPlatform.Graphics;
+﻿using DeepSwarmBasics.Math;
+using DeepSwarmPlatform.Graphics;
 using SDL2;
 using System;
 using System.Collections.Generic;
@@ -27,11 +28,15 @@ namespace DeepSwarmPlatform.UI
         readonly List<Action<float>> _newAnimationActions = new List<Action<float>>();
         readonly List<Action<float>> _removedAnimationActions = new List<Action<float>>();
 
+        // Input
         bool _leftShiftDown = false;
         bool _rightShiftDown = false;
 
         bool _leftCtrlDown = false;
         bool _rightCtrlDown = false;
+
+        // Drawing
+        readonly Stack<SDL.SDL_Rect> _clipStack = new Stack<SDL.SDL_Rect>();
 
         public Desktop(IntPtr renderer, FontStyle mainFontStyle, FontStyle monoFontStyle)
         {
@@ -290,6 +295,8 @@ namespace DeepSwarmPlatform.UI
                 SDL.SDL_SetRenderDrawBlendMode(Renderer, SDL.SDL_BlendMode.SDL_BLENDMODE_NONE);
             }
 
+            Debug.Assert(_clipStack.Count == 0);
+
 #if DEBUG && false
             SDL.SDL_SetRenderDrawBlendMode(Renderer, SDL.SDL_BlendMode.SDL_BLENDMODE_BLEND);
             new Color(0xff00ff44).UseAsDrawColor(Renderer);
@@ -309,6 +316,28 @@ namespace DeepSwarmPlatform.UI
             Color.White.UseAsDrawColor(Renderer);
             if (HoveredElement != null) MainFontStyle.DrawText(5, 5, $"{HoveredElement.GetType().Name} {HoveredElement.LayoutRectangle.X} {HoveredElement.LayoutRectangle.Y}");
 #endif
+        }
+
+        internal void PushClipRect(Rectangle clipRect)
+        {
+            var sdlRect = clipRect.ToSDL_Rect();
+            SDL.SDL_RenderSetClipRect(Renderer, ref sdlRect);
+            _clipStack.Push(sdlRect);
+        }
+
+        internal void PopClipRect()
+        {
+            _clipStack.Pop();
+
+            if (_clipStack.Count > 0)
+            {
+                var sdlRect = _clipStack.Peek();
+                SDL.SDL_RenderSetClipRect(Renderer, ref sdlRect);
+            }
+            else
+            {
+                SDL.SDL_RenderSetClipRect(Renderer, IntPtr.Zero);
+            }
         }
         #endregion
     }
