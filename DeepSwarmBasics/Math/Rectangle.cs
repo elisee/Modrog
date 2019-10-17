@@ -33,6 +33,9 @@ namespace DeepSwarmBasics.Math
         public static bool operator ==(Rectangle left, Rectangle right) => left.Equals(right);
         public static bool operator !=(Rectangle left, Rectangle right) => !(left == right);
 
+        public static Rectangle operator +(Rectangle rectangle, Point offset) => new Rectangle(rectangle.X + offset.X, rectangle.Y + offset.Y, rectangle.Width, rectangle.Height);
+        public static Rectangle operator -(Rectangle rectangle, Point offset) => new Rectangle(rectangle.X - offset.X, rectangle.Y - offset.Y, rectangle.Width, rectangle.Height);
+
         internal string DebugDisplay => $"{X} {Y} {Width} {Height}";
     }
 }
