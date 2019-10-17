@@ -117,6 +117,7 @@ namespace DeepSwarmClient.Interface
                         {
                             LayoutWeight = 1,
                             ChildLayout = ChildLayoutMode.Bottom,
+                            TopPadding = 8,
                             Flow = Flow.Scroll
                         };
 
@@ -225,17 +226,19 @@ namespace DeepSwarmClient.Interface
         {
             if (author.Length > 0) AppendToChatLog($"{author}: {message}");
             else AppendToChatLog($"[Server] {message}");
-            _chatLog.Layout();
         }
 
         void AppendToChatLog(string text)
         {
             new Label(_chatLog)
             {
-                TopPadding = 8,
+                BottomPadding = 8,
                 HorizontalPadding = 8,
                 Wrap = true
             }.Text = text;
+
+            _chatLog.Layout();
+            _chatLog.ScrollToBottom();
         }
 
         public void OnActiveScenarioChanged()
@@ -271,7 +274,6 @@ namespace DeepSwarmClient.Interface
 
             if (isCountingDown) AppendToChatLog("Game starts in a few seconds...");
             else AppendToChatLog("Countdown cancelled.");
-            _chatLog.Layout();
         }
 
     }

@@ -433,6 +433,17 @@ namespace DeepSwarmPlatform.UI
         public virtual void Validate() => Parent?.Validate();
         public virtual void Dismiss() => Parent?.Dismiss();
 
+        public void ScrollToBottom()
+        {
+            var newContentScrollY = _contentRectangle.Height - _viewRectangle.Height;
+
+            var scrollOffset = new Point(0, newContentScrollY - _contentScroll.Y);
+            if (scrollOffset == Point.Zero) return;
+
+            foreach (var child in Children) child.ApplyParentScroll(scrollOffset);
+            _contentScroll.Y = newContentScrollY;
+        }
+
         protected void ApplyParentScroll(Point offset)
         {
             LayoutRectangle -= offset;
