@@ -1,5 +1,4 @@
 ﻿using DeepSwarmBasics;
-using DeepSwarmBasics.Math;
 using DeepSwarmPlatform.Graphics;
 using System;
 
@@ -50,11 +49,6 @@ namespace DeepSwarmPlatform.UI
         }
 
         public override void Validate() => OnActivate?.Invoke();
-
-        public override Point ComputeSize(int? maxWidth, int? maxHeight)
-        {
-            return base.ComputeSize(maxWidth, maxHeight);
-        }
 
         protected override void DrawSelf()
         {

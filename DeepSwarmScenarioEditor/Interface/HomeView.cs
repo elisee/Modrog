@@ -33,7 +33,8 @@ namespace DeepSwarmScenarioEditor.Interface
                 BackgroundPatch = new TexturePatch(0x001234ff),
                 LayoutWeight = 1,
                 ChildLayout = ChildLayoutMode.Top,
-                VerticalFlow = Flow.Scroll
+                VerticalFlow = Flow.Scroll,
+                Height = 300
             };
         }
 

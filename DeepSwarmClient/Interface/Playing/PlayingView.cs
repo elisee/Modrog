@@ -115,7 +115,7 @@ namespace DeepSwarmClient.Interface.Playing
             if (key == SDL.SDL_Keycode.SDLK_TAB)
             {
                 _sidebarPanel.IsVisible = true;
-                _sidebarPanel.Layout(RectangleAfterPadding);
+                _sidebarPanel.Layout(_contentRectangle);
             }
         }
 
@@ -229,7 +229,7 @@ namespace DeepSwarmClient.Interface.Playing
         public void OnMenuStateUpdated()
         {
             _menu.IsVisible = Engine.State.PlayingMenuOpen;
-            _menu.Layout(RectangleAfterPadding);
+            _menu.Layout(_contentRectangle);
 
             if (!Engine.State.PlayingMenuOpen) Desktop.SetFocusedElement(this);
         }

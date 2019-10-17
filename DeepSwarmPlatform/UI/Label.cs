@@ -27,75 +27,82 @@ namespace DeepSwarmPlatform.UI
             FontStyle = Desktop.MainFontStyle;
         }
 
-        public override Point ComputeSize(int? maxWidth, int? maxHeight)
+        public override void ComputeSizes(int? maxWidth, int? maxHeight, out Point layoutSize, out Point paddedContentSize)
         {
-            var size = Point.Zero;
+            base.ComputeSizes(maxWidth, maxHeight, out layoutSize, out _);
 
-            var lines = _text.Split('\n');
-            var maxLineWidth = 0;
+            var contentSize = Point.Zero;
 
-            foreach (var line in lines) maxLineWidth = Math.Max(maxLineWidth, FontStyle.MeasureText(line));
-            if (Width == null) size.X = maxLineWidth;
-            if (Height == null) size.Y = FontStyle.LineHeight;
-
-            var actualMaxWidth = Width ?? maxWidth;
+            if (Width == null)
+            {
+                var maxLineWidth = 0;
+                foreach (var line in _text.Split('\n')) maxLineWidth = Math.Max(maxLineWidth, FontStyle.MeasureText(line));
+                contentSize.X = maxLineWidth;
+            }
 
             if (Wrap)
             {
-                if (actualMaxWidth != null)
+                if (Width != null || maxWidth != null)
                 {
+                    var actualMaxWidth = (Width ?? maxWidth).Value - LeftPadding - RightPadding;
                     var lineCount = 0;
 
-                    foreach (var line in lines)
+                    var segmentStart = 0;
+
+                    for (var cursor = 0; cursor < _text.Length; cursor++)
                     {
-                        if (line.Length == 0)
-                        {
-                            lineCount++;
-                            continue;
-                        }
-
-                        var segmentStart = 0;
-                        var segmentEnd = 0;
-                        var segmentCursor = 0;
+                        var segmentSplit = segmentStart = cursor;
                         var segmentWidth = 0;
-                        var newSegmentWidth = FontStyle.GetAdvanceWithKerning(line[0], -1);
 
-                        while (segmentCursor < line.Length)
+                        while (cursor < _text.Length)
                         {
-                            newSegmentWidth += FontStyle.GetAdvanceWithKerning(line[segmentCursor], segmentCursor > 0 ? line[segmentCursor - 1] : -1);
-
-                            if (segmentCursor != segmentStart && line[segmentCursor] == ' ') segmentEnd = segmentCursor;
-
-                            if (newSegmentWidth >= actualMaxWidth.Value && segmentStart != segmentEnd)
+                            if (_text[cursor] == '\n')
                             {
                                 lineCount++;
-                                segmentWidth = 0;
+                                break;
+                            }
 
-                                while (line[segmentEnd] == ' ') segmentEnd++;
-                                segmentCursor = segmentStart = segmentEnd;
-                                newSegmentWidth = FontStyle.GetAdvanceWithKerning(line[segmentCursor], -1);
+                            segmentWidth += FontStyle.GetAdvanceWithKerning(_text[cursor], cursor > segmentStart ? _text[cursor - 1] : -1);
+
+                            if (cursor != segmentStart && _text[cursor] == ' ') segmentSplit = cursor;
+
+                            if (segmentWidth >= actualMaxWidth && segmentStart != segmentSplit)
+                            {
+                                lineCount++;
+
+                                while (_text[segmentSplit] == ' ') segmentSplit++;
+                                cursor = segmentStart = segmentSplit;
+                                segmentWidth = FontStyle.GetAdvanceWithKerning(_text[cursor], -1);
                             }
                             else
                             {
-                                segmentWidth = newSegmentWidth;
-                                segmentCursor++;
+                                cursor++;
                             }
                         }
-
-                        if (line.Length != segmentStart) lineCount++;
                     }
 
-                    size.X = actualMaxWidth.Value;
-                    size.Y = lineCount * FontStyle.LineHeight;
+                    if (segmentStart != _text.Length) lineCount++;
+
+                    contentSize.X = actualMaxWidth;
+                    contentSize.Y = lineCount * FontStyle.LineHeight;
                 }
                 else
                 {
-                    // TODO: Compute length of all words and return longest length
+                    // TODO: Compute length of all words and return length of longest one
                     throw new NotImplementedException();
                 }
             }
+            else
+            {
+                contentSize.Y = FontStyle.LineHeight;
+            }
 
-            return size + base.ComputeSize(maxWidth, maxHeight);
+            if (Width == null) layoutSize.X += contentSize.X;
+            if (Height == null) layoutSize.Y += contentSize.Y;
+
+            paddedContentSize = new Point(
+                contentSize.X + LeftPadding + RightPadding,
+                contentSize.Y + TopPadding + BottomPadding);
         }
 
         public override void LayoutSelf()
@@ -104,55 +111,51 @@ namespace DeepSwarmPlatform.UI
 
             if (Wrap)
             {
-                var lines = _text.Split('\n');
+                var segmentStart = 0;
 
-                foreach (var line in lines)
+                for (var cursor = 0; cursor < _text.Length; cursor++)
                 {
-                    if (line.Length == 0)
-                    {
-                        _segments.Add("");
-                        continue;
-                    }
-
-                    var segmentStart = 0;
-                    var segmentEnd = 0;
-                    var segmentCursor = 0;
+                    var segmenSplit = segmentStart = cursor;
                     var segmentWidth = 0;
-                    var newSegmentWidth = FontStyle.GetAdvanceWithKerning(line[0], -1);
 
-                    while (segmentCursor < line.Length)
+                    while (cursor < _text.Length)
                     {
-                        newSegmentWidth += FontStyle.GetAdvanceWithKerning(line[segmentCursor], segmentCursor > 0 ? line[segmentCursor - 1] : -1);
-
-                        if (segmentCursor != segmentStart && line[segmentCursor] == ' ') segmentEnd = segmentCursor;
-
-                        if (newSegmentWidth >= RectangleAfterPadding.Width && segmentStart != segmentEnd && (segmentCursor + 1 < line.Length || newSegmentWidth > RectangleAfterPadding.Width))
+                        if (_text[cursor] == '\n')
                         {
-                            if (Ellipsize && (_segments.Count + 1) * FontStyle.LineHeight >= RectangleAfterPadding.Height)
-                            {
-                                var ellipsizedSegmentWidth = FontStyle.MeasureText(line[segmentStart..segmentCursor] + EllipsisText);
+                            _segments.Add(_text[segmentStart..cursor]);
+                            break;
+                        }
 
-                                if (ellipsizedSegmentWidth > RectangleAfterPadding.Width) segmentCursor--;
-                                _segments.Add(line[segmentStart..segmentCursor] + EllipsisText);
+                        segmentWidth += FontStyle.GetAdvanceWithKerning(_text[cursor], cursor > 0 ? _text[cursor - 1] : -1);
+
+                        if (cursor != segmentStart && _text[cursor] == ' ') segmenSplit = cursor;
+
+                        if (segmentWidth >= _contentRectangle.Width && segmentStart != segmenSplit && (cursor + 1 < _text.Length || segmentWidth > _contentRectangle.Width))
+                        {
+                            if (Ellipsize && (_segments.Count + 1) * FontStyle.LineHeight >= _contentRectangle.Height)
+                            {
+                                var ellipsizedSegmentWidth = FontStyle.MeasureText(_text[segmentStart..cursor] + EllipsisText);
+
+                                if (ellipsizedSegmentWidth > _contentRectangle.Width) cursor--;
+                                _segments.Add(_text[segmentStart..cursor] + EllipsisText);
                                 return;
                             }
-                            else _segments.Add(line[segmentStart..segmentEnd]);
+                            else _segments.Add(_text[segmentStart..segmenSplit]);
 
                             segmentWidth = 0;
 
-                            while (line[segmentEnd] == ' ') segmentEnd++;
-                            segmentCursor = segmentStart = segmentEnd;
-                            newSegmentWidth = FontStyle.GetAdvanceWithKerning(line[segmentCursor], -1);
+                            while (_text[segmenSplit] == ' ') segmenSplit++;
+                            cursor = segmentStart = segmenSplit;
+                            segmentWidth = FontStyle.GetAdvanceWithKerning(_text[cursor], -1);
                         }
                         else
                         {
-                            segmentWidth = newSegmentWidth;
-                            segmentCursor++;
+                            cursor++;
                         }
                     }
-
-                    if (line.Length != segmentStart) _segments.Add(line[segmentStart..line.Length]);
                 }
+
+                if (segmentStart != _text.Length) _segments.Add(_text[segmentStart..]);
             }
             else
             {
@@ -160,13 +163,13 @@ namespace DeepSwarmPlatform.UI
                 {
                     var textWidth = FontStyle.MeasureText(_text);
 
-                    if (textWidth > RectangleAfterPadding.Width)
+                    if (textWidth > _contentRectangle.Width)
                     {
                         for (var textCursor = 0; textCursor < _text.Length; textCursor++)
                         {
                             var newEllipsizedSegmentWidth = FontStyle.MeasureText(_text[0..(textCursor + 1)] + EllipsisText);
 
-                            if (newEllipsizedSegmentWidth > RectangleAfterPadding.Width)
+                            if (newEllipsizedSegmentWidth > _contentRectangle.Width)
                             {
                                 _segments.Add(_text[0..textCursor] + EllipsisText);
                                 return;
@@ -188,7 +191,7 @@ namespace DeepSwarmPlatform.UI
             for (var i = 0; i < _segments.Count; i++)
             {
                 TextColor.UseAsDrawColor(Desktop.Renderer);
-                FontStyle.DrawText(RectangleAfterPadding.X, RectangleAfterPadding.Y + i * FontStyle.LineHeight + FontStyle.LineSpacing / 2, _segments[i]);
+                FontStyle.DrawText(_contentRectangle.X, _contentRectangle.Y + i * FontStyle.LineHeight + FontStyle.LineSpacing / 2, _segments[i]);
             }
         }
     }

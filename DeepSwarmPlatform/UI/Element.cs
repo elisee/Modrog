@@ -33,7 +33,7 @@ namespace DeepSwarmPlatform.UI
 
         public int LayoutWeight = 0;
 
-        // Anchoring
+        // Self layout
         public int? Left;
         public int? Right;
         public int? Top;
@@ -57,7 +57,11 @@ namespace DeepSwarmPlatform.UI
 
         Rectangle _containerRectangle;
         public Rectangle LayoutRectangle { get; private set; }
-        public Rectangle RectangleAfterPadding { get; private set; }
+        // public Rectangle RectangleAfterPadding { get; private set; }
+
+        protected Rectangle _contentRectangle;
+        protected Point _contentScroll;
+
 
         // Child layout
         public enum ChildLayoutMode { Overlay, Left, Right, Top, Bottom }
@@ -108,17 +112,21 @@ namespace DeepSwarmPlatform.UI
             Children.Remove(child);
         }
 
-        public virtual Point ComputeSize(int? maxWidth, int? maxHeight)
+        public virtual void ComputeSizes(int? maxWidth, int? maxHeight, out Point layoutSize, out Point paddedContentSize)
         {
-            var size = new Point(
+            var contentSize = Point.Zero;
+
+            layoutSize = new Point(
                 (Width ?? 0) + (Left ?? 0) + (Right ?? 0),
                 (Height ?? 0) + (Top ?? 0) + (Bottom ?? 0));
 
             if (Width == null || Height == null)
             {
-                var contentSize = Point.Zero;
-                var childMaxWidth = Width ?? maxWidth;
-                var childMaxHeight = Height ?? maxHeight;
+                var contentMaxWidth = Width ?? maxWidth;
+                if (contentMaxWidth != null) contentMaxWidth -= LeftPadding + RightPadding;
+
+                var contentMaxHeight = Height ?? maxHeight;
+                if (contentMaxHeight != null) contentMaxHeight -= TopPadding + BottomPadding;
 
                 switch (ChildLayout)
                 {
@@ -126,9 +134,9 @@ namespace DeepSwarmPlatform.UI
                         foreach (var child in Children)
                         {
                             if (!child.IsMounted) continue;
-                            var childSize = child.ComputeSize(childMaxWidth, childMaxHeight);
-                            if (Width == null) contentSize.X = Math.Max(contentSize.X, childSize.X);
-                            if (Height == null) contentSize.Y = Math.Max(contentSize.Y, childSize.Y);
+                            child.ComputeSizes(contentMaxWidth, contentMaxHeight, out var childLayoutSize, out _);
+                            if (Width == null) contentSize.X = Math.Max(contentSize.X, childLayoutSize.X);
+                            if (Height == null) contentSize.Y = Math.Max(contentSize.Y, childLayoutSize.Y);
                         }
                         break;
 
@@ -137,9 +145,9 @@ namespace DeepSwarmPlatform.UI
                         foreach (var child in Children)
                         {
                             if (!child.IsMounted) continue;
-                            var childSize = child.ComputeSize(childMaxWidth, childMaxHeight);
-                            if (Width == null) contentSize.X += childSize.X;
-                            if (Height == null) contentSize.Y = Math.Max(contentSize.Y, childSize.Y);
+                            child.ComputeSizes(contentMaxWidth, contentMaxHeight, out var childLayoutSize, out _);
+                            if (Width == null) contentSize.X += childLayoutSize.X;
+                            if (Height == null) contentSize.Y = Math.Max(contentSize.Y, childLayoutSize.Y);
                         }
                         break;
 
@@ -148,21 +156,23 @@ namespace DeepSwarmPlatform.UI
                         foreach (var child in Children)
                         {
                             if (!child.IsMounted) continue;
-                            var childSize = child.ComputeSize(childMaxWidth, childMaxHeight);
-                            if (Width == null) contentSize.X = Math.Max(contentSize.X, childSize.X);
-                            if (Height == null) contentSize.Y += childSize.Y;
+                            child.ComputeSizes(contentMaxWidth, contentMaxHeight, out var childLayoutSize, out _);
+                            if (Width == null) contentSize.X = Math.Max(contentSize.X, childLayoutSize.X);
+                            if (Height == null) contentSize.Y += childLayoutSize.Y;
                         }
                         break;
 
                     default:
                         throw new NotImplementedException();
                 }
-
-                if (Width == null) size.X += contentSize.X + LeftPadding + RightPadding;
-                if (Height == null) size.Y += contentSize.Y + TopPadding + BottomPadding;
             }
 
-            return size;
+            paddedContentSize = new Point(
+                contentSize.X + LeftPadding + RightPadding,
+                contentSize.Y + TopPadding + BottomPadding);
+
+            if (Width == null) layoutSize.X += paddedContentSize.X;
+            if (Height == null) layoutSize.Y += paddedContentSize.Y;
         }
 
         public void Layout(Rectangle? containerRectangle = null)
@@ -171,7 +181,7 @@ namespace DeepSwarmPlatform.UI
 
             if (containerRectangle != null) _containerRectangle = containerRectangle.Value;
 
-            var minSize = ComputeSize(_containerRectangle.Width, _containerRectangle.Height);
+            ComputeSizes(_containerRectangle.Width, _containerRectangle.Height, out var minLayoutSize, out var minPaddedContentSize);
 
             var layoutRectangle = _containerRectangle;
 
@@ -187,8 +197,8 @@ namespace DeepSwarmPlatform.UI
             {
                 if (HorizontalFlow == Flow.Shrink)
                 {
-                    layoutRectangle.X += _containerRectangle.Width / 2 - minSize.X / 2;
-                    layoutRectangle.Width = minSize.X;
+                    layoutRectangle.X += _containerRectangle.Width / 2 - minLayoutSize.X / 2;
+                    layoutRectangle.Width = minLayoutSize.X;
                 }
 
                 if (Left != null)
@@ -217,8 +227,8 @@ namespace DeepSwarmPlatform.UI
             {
                 if (VerticalFlow == Flow.Shrink)
                 {
-                    layoutRectangle.Y += _containerRectangle.Height / 2 - minSize.Y / 2;
-                    layoutRectangle.Height = minSize.Y;
+                    layoutRectangle.Y += _containerRectangle.Height / 2 - minLayoutSize.Y / 2;
+                    layoutRectangle.Height = minLayoutSize.Y;
                 }
 
                 if (Top != null)
@@ -236,7 +246,14 @@ namespace DeepSwarmPlatform.UI
             }
 
             LayoutRectangle = layoutRectangle;
-            RectangleAfterPadding = new Rectangle(LayoutRectangle.X + LeftPadding, LayoutRectangle.Y + TopPadding, LayoutRectangle.Width - LeftPadding - RightPadding, LayoutRectangle.Height - TopPadding - BottomPadding);
+
+            Debug.Assert(minPaddedContentSize.X <= LayoutRectangle.Width || HorizontalFlow == Flow.Scroll);
+            Debug.Assert(minPaddedContentSize.Y <= LayoutRectangle.Height || VerticalFlow == Flow.Scroll);
+
+            _contentRectangle = new Rectangle(
+                LayoutRectangle.X + LeftPadding, LayoutRectangle.Y + TopPadding,
+                Math.Max(minPaddedContentSize.X, LayoutRectangle.Width) - LeftPadding - RightPadding,
+                Math.Max(minPaddedContentSize.Y, LayoutRectangle.Height) - TopPadding - BottomPadding);
 
             LayoutSelf();
 
@@ -252,7 +269,7 @@ namespace DeepSwarmPlatform.UI
             switch (ChildLayout)
             {
                 case ChildLayoutMode.Overlay:
-                    foreach (var child in Children) if (child.IsMounted) child.Layout(RectangleAfterPadding);
+                    foreach (var child in Children) if (child.IsMounted) child.Layout(_contentRectangle);
                     break;
 
                 case ChildLayoutMode.Left:
@@ -263,14 +280,14 @@ namespace DeepSwarmPlatform.UI
                             var child = Children[i];
                             if (!child.IsMounted) continue;
 
-                            var childSize = child.ComputeSize(maxWidth, maxHeight);
+                            child.ComputeSizes(maxWidth, maxHeight, out var childSize, out _);
                             secondarySize = Math.Max(secondarySize, childSize.Y);
 
                             if (child.LayoutWeight == 0 || HorizontalFlow != Flow.Expand) fixedSize += (fixedSizes[i] = childSize.X);
                             else flexWeights += child.LayoutWeight;
                         }
 
-                        var flexSize = RectangleAfterPadding.Width - fixedSize;
+                        var flexSize = _contentRectangle.Width - fixedSize;
                         var offset = 0;
 
                         for (var i = 0; i < Children.Count; i++)
@@ -279,7 +296,7 @@ namespace DeepSwarmPlatform.UI
                             if (!child.IsMounted) continue;
 
                             var size = (child.LayoutWeight == 0 || HorizontalFlow != Flow.Expand) ? fixedSizes[i] : flexSize * child.LayoutWeight / flexWeights;
-                            child.Layout(new Rectangle(RectangleAfterPadding.X + offset, RectangleAfterPadding.Y, size, RectangleAfterPadding.Height));
+                            child.Layout(new Rectangle(_contentRectangle.X + offset, _contentRectangle.Y, size, _contentRectangle.Height));
                             offset += size;
                         }
                         break;
@@ -293,14 +310,14 @@ namespace DeepSwarmPlatform.UI
                             var child = Children[i];
                             if (!child.IsMounted) continue;
 
-                            var childSize = child.ComputeSize(maxWidth, maxHeight);
+                            child.ComputeSizes(maxWidth, maxHeight, out var childSize, out _);
                             secondarySize = Math.Max(secondarySize, childSize.X);
 
                             if (child.LayoutWeight == 0 || VerticalFlow != Flow.Expand) fixedSize += (fixedSizes[i] = childSize.Y);
                             else flexWeights += child.LayoutWeight;
                         }
 
-                        var flexSize = RectangleAfterPadding.Height - fixedSize;
+                        var flexSize = _contentRectangle.Height - fixedSize;
                         var offset = 0;
 
                         for (var i = 0; i < Children.Count; i++)
@@ -309,7 +326,7 @@ namespace DeepSwarmPlatform.UI
                             if (!child.IsMounted) continue;
 
                             var size = (child.LayoutWeight == 0 || VerticalFlow != Flow.Expand) ? fixedSizes[i] : flexSize * child.LayoutWeight / flexWeights;
-                            child.Layout(new Rectangle(RectangleAfterPadding.X, RectangleAfterPadding.Y + offset, RectangleAfterPadding.Width, size));
+                            child.Layout(new Rectangle(_contentRectangle.X, _contentRectangle.Y + offset, _contentRectangle.Width, size));
                             offset += size;
                         }
                         break;
