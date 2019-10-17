@@ -79,6 +79,12 @@ namespace DeepSwarmScenarioEditor.Interface.Editing
                     break;
 
                 case AssetType.Manifest:
+                    {
+                        var editor = new ManifestEditor(Engine.Interface, _mainPanel);
+                        Desktop.SetFocusedElement(editor);
+                        break;
+                    }
+
                 case AssetType.TileSet:
                 case AssetType.Script:
                     {
