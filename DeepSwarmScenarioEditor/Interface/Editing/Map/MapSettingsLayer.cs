@@ -90,8 +90,7 @@ namespace DeepSwarmScenarioEditor.Interface.Editing.Map
         public override void Validate()
         {
             _mapEditor.TileSetPath = _tilesetInput.Value.Trim();
-
-            Visible = false;
+            _mapEditor.CloseSettings();
         }
 
         public override void Dismiss()

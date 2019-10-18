@@ -85,6 +85,8 @@ namespace DeepSwarmScenarioEditor.Interface.Editing.Map
         {
             _mapSettingsLayer.Visible = false;
             _mainLayer.Disabled = false;
+
+            Desktop.SetFocusedElement(_mapViewport);
         }
     }
 }

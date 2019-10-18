@@ -105,6 +105,8 @@ namespace DeepSwarmScenarioEditor.Interface.Editing.Map
         {
             if (button == 1)
             {
+                Desktop.SetFocusedElement(this);
+
                 var startTileX = (int)_scrollingPixelsX / Protocol.MapTileSize;
                 var startTileY = (int)_scrollingPixelsY / Protocol.MapTileSize;
 
