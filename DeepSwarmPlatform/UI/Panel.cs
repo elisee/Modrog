@@ -1,9 +1,12 @@
 ﻿using DeepSwarmPlatform.Graphics;
+using System;
 
 namespace DeepSwarmPlatform.UI
 {
     public class Panel : Element
     {
+        public Action OnValidate;
+
         public Panel(Element parent) : this(parent.Desktop, parent) { }
         public Panel(Element parent, TexturePatch backgroundPatch) : this(parent.Desktop, parent, backgroundPatch) { }
         public Panel(Desktop desktop, Element parent = null) : base(desktop, parent) { }
@@ -14,5 +17,11 @@ namespace DeepSwarmPlatform.UI
         }
 
         public override Element HitTest(int x, int y) => base.HitTest(x, y) ?? (LayoutRectangle.Contains(x, y) ? this : null);
+
+        public override void Validate()
+        {
+            if (OnValidate != null) OnValidate();
+            else base.Validate();
+        }
     }
 }
