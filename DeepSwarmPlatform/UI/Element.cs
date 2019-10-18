@@ -402,10 +402,11 @@ namespace DeepSwarmPlatform.UI
         {
             if (!repeat)
             {
-                if (key == SDL.SDL_Keycode.SDLK_RETURN || key == SDL.SDL_Keycode.SDLK_KP_ENTER) Validate();
-                else if (key == SDL.SDL_Keycode.SDLK_ESCAPE) Dismiss();
-                else if (key == SDL.SDL_Keycode.SDLK_TAB) Desktop.MoveFocus(backwards: Desktop.IsShiftDown);
+                if (key == SDL.SDL_Keycode.SDLK_RETURN || key == SDL.SDL_Keycode.SDLK_KP_ENTER) { Validate(); return; }
+                else if (key == SDL.SDL_Keycode.SDLK_ESCAPE) { Dismiss(); return; }
             }
+
+            if (key == SDL.SDL_Keycode.SDLK_TAB) { Desktop.MoveFocus(backwards: Desktop.IsShiftDown); return; }
         }
 
         public virtual void OnKeyUp(SDL.SDL_Keycode key) { }
