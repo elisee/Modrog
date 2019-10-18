@@ -87,7 +87,7 @@ namespace DeepSwarmPlatform.UI
 
                 while (index < siblings.Count)
                 {
-                    if (siblings[index].IsMounted) return siblings[index];
+                    if (siblings[index].IsMounted && !siblings[index].Disabled) return siblings[index];
                     index++;
                 }
 
@@ -103,7 +103,7 @@ namespace DeepSwarmPlatform.UI
 
                 while (index >= 0)
                 {
-                    if (siblings[index].IsMounted) return siblings[index];
+                    if (siblings[index].IsMounted && !siblings[index].Disabled) return siblings[index];
                     index--;
                 }
 
@@ -118,7 +118,7 @@ namespace DeepSwarmPlatform.UI
                 {
                     foreach (var child in element.Children)
                     {
-                        if (!child.IsMounted) continue;
+                        if (!child.IsMounted || child.Disabled) continue;
                         var focusable = GetFirstFocusable(child);
                         if (focusable != null) return focusable;
                     }
@@ -144,7 +144,7 @@ namespace DeepSwarmPlatform.UI
                     for (var i = element.Children.Count - 1; i >= 0; i--)
                     {
                         var child = element.Children[i];
-                        if (!child.IsMounted) continue;
+                        if (!child.IsMounted || child.Disabled) continue;
                         var focusable = GetLastFocusable(child);
                         if (focusable != null) return focusable;
                     }
@@ -162,7 +162,7 @@ namespace DeepSwarmPlatform.UI
             }
         }
 
-        public void OnHoveredElementUnmounted()
+        public void ClearHoveredElement()
         {
             HoveredElement?.OnMouseExit();
             HoveredElement = RootElement.HitTest(MouseX, MouseY);

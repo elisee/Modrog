@@ -20,7 +20,7 @@ namespace DeepSwarmPlatform.UI
 
         public override Element HitTest(int x, int y) => LayoutRectangle.Contains(x, y) ? this : null;
 
-        public override bool AcceptsFocus() => true;
+        public override bool AcceptsFocus() => !Disabled;
 
         public override void OnMouseEnter()
         {

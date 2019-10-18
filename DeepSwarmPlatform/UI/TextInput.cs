@@ -54,7 +54,7 @@ namespace DeepSwarmPlatform.UI
             }
         }
 
-        public override bool AcceptsFocus() => true;
+        public override bool AcceptsFocus() => !Disabled;
 
         void Animate(float deltaTime)
         {

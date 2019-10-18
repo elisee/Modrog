@@ -31,6 +31,23 @@ namespace DeepSwarmPlatform.UI
 
         bool _visible = true;
 
+        public bool Disabled
+        {
+            get => _disabled;
+            set
+            {
+                _disabled = value;
+
+                if (_disabled)
+                {
+                    if (Desktop.FocusedElement.IsContainedWithin(this)) Desktop.SetFocusedElement(Desktop.RootElement);
+                    if (Desktop.HoveredElement.IsContainedWithin(this)) Desktop.ClearHoveredElement();
+                }
+            }
+        }
+
+        bool _disabled;
+
         public int LayoutWeight = 0;
 
         // Self layout
@@ -111,6 +128,8 @@ namespace DeepSwarmPlatform.UI
             child.Parent = null;
             Children.Remove(child);
         }
+
+        bool IsContainedWithin(Element element) => element == this || (element.Parent != null && IsContainedWithin(element.Parent));
 
         public virtual void ComputeSizes(int? maxWidth, int? maxHeight, out Point layoutSize, out Point paddedContentSize)
         {
@@ -356,7 +375,7 @@ namespace DeepSwarmPlatform.UI
 
         public virtual Element HitTest(int x, int y)
         {
-            if (!LayoutRectangle.Contains(x, y)) return null;
+            if (!LayoutRectangle.Contains(x, y) || Disabled) return null;
 
             for (var i = Children.Count - 1; i >= 0; i--)
             {
@@ -386,7 +405,7 @@ namespace DeepSwarmPlatform.UI
             IsMounted = false;
 
             if (IsFocused) Desktop.SetFocusedElement(Desktop.RootElement);
-            if (IsHovered) Desktop.OnHoveredElementUnmounted();
+            if (IsHovered) Desktop.ClearHoveredElement();
 
             foreach (var child in Children) if (child.IsMounted) child.Unmount();
 
