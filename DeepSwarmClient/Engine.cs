@@ -106,6 +106,7 @@ namespace DeepSwarmClient
 
                                 case SDL.SDL_WindowEventID.SDL_WINDOWEVENT_SIZE_CHANGED:
                                     Interface.SetViewport(new Rectangle(0, 0, @event.window.data1, @event.window.data2));
+                                    Interface.Desktop.ClearHoveredElement();
                                     break;
                             }
 
