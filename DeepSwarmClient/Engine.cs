@@ -80,34 +80,9 @@ namespace DeepSwarmClient
             Interface = new Interface.Interface(this, new Rectangle(0, 0, MinimumWindowSize.X, MinimumWindowSize.Y));
         }
 
-        public void Start()
-        {
-            Run();
-        }
-
-        public void StartWithConnection(string address, int? port, string scenario = null)
-        {
-            State.Connect(address, port ?? Protocol.Port, scenario);
-            Run();
-        }
-
-        public void StartWithScenario(string scenario)
-        {
-            var serverExePath = Path.Combine(FileHelper.FindAppFolder("DeepSwarmServer-Debug"), "netcoreapp3.0", "DeepSwarmServer.exe");
-            var serverProcess = Process.Start(new ProcessStartInfo(serverExePath));
-
-            AppDomain.CurrentDomain.ProcessExit += (@event, args) =>
-            {
-                serverProcess.CloseMainWindow();
-            };
-
-            State.Connect("127.0.0.1", Protocol.Port, scenario);
-            Run();
-        }
-
         public void RunOnEngineThread(Action action) => _actionQueue.Run(action);
 
-        void Run()
+        public void Run()
         {
             var stopwatch = Stopwatch.StartNew();
 

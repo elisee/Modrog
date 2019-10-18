@@ -95,9 +95,10 @@ namespace DeepSwarmServer
 
             if (_hostGuid == Guid.Empty || _hostGuid == peer.Identity.Guid)
             {
-                // This is the first player to successfully connect, make them host
+                // This is the first player to successfully connect, make them host & ready
                 _hostGuid = peer.Identity.Guid;
                 peer.Identity.IsHost = true;
+                peer.Identity.IsReady = true;
             }
 
             peer.Identity.Name = name;
@@ -181,8 +182,6 @@ namespace DeepSwarmServer
         {
             if (!peer.Identity.IsHost) throw new PacketException("Can't start game if not host.");
 
-            var skipCountdown = _packetReader.ReadByte() != 0;
-
             void SendChatError(string message)
             {
                 _packetWriter.WriteByte((byte)Protocol.ServerPacketType.Chat);
@@ -200,7 +199,8 @@ namespace DeepSwarmServer
 
             // TODO: Check if team configurations are okay once that is implemented
 
-            if (skipCountdown)
+            // Skip countdown is there is a single player
+            if (_peerIdentities.Count == 1)
             {
                 StartPlaying();
                 return;

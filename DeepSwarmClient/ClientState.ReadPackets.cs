@@ -133,7 +133,7 @@ namespace DeepSwarmClient
                 {
                     SetScenario(_preselectedScenario);
                     ToggleReady();
-                    StartGame(skipCountdown: true);
+                    StartGame();
                 }
             }
             else

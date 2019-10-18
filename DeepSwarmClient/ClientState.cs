@@ -1,12 +1,15 @@
 ﻿using DeepSwarmApi;
 using DeepSwarmBasics.Math;
 using DeepSwarmCommon;
+using SDL2;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace DeepSwarmClient
 {
@@ -21,6 +24,7 @@ namespace DeepSwarmClient
         PacketReceiver _packetReceiver;
         readonly PacketWriter _packetWriter = new PacketWriter(capacity: 8192, useSizeHeader: true);
         readonly PacketReader _packetReader = new PacketReader();
+        Process _serverProcess;
 
         public string SavedServerHostname = "localhost"; // TODO: Save and load from settings
         public int SavedServerPort = Protocol.Port;
@@ -76,6 +80,9 @@ namespace DeepSwarmClient
         {
             _socket?.Close();
             _socket = null;
+
+            _serverProcess?.CloseMainWindow();
+            _serverProcess = null;
 
             Stage = ClientStage.Exited;
         }
@@ -167,6 +174,21 @@ namespace DeepSwarmClient
             });
         }
 
+        public void StartServer(string scenario)
+        {
+            var serverExePath = Path.Combine(FileHelper.FindAppFolder("DeepSwarmServer-Debug"), "netcoreapp3.0", "DeepSwarmServer.exe");
+            _serverProcess = Process.Start(new ProcessStartInfo(serverExePath));
+
+            // TODO: Replace this with a proper built-in server console
+            ThreadPool.QueueUserWorkItem((_) =>
+            {
+                Task.Delay(100).Wait();
+                _engine.RunOnEngineThread(() => SDL.SDL_RaiseWindow(_engine.Window));
+            });
+
+            Connect("127.0.0.1", Protocol.Port, scenario);
+        }
+
         public void SetPlayingMenuOpen(bool isOpen)
         {
             PlayingMenuOpen = isOpen;
@@ -179,6 +201,9 @@ namespace DeepSwarmClient
 
             _socket?.Close();
             _socket = null;
+
+            _serverProcess?.CloseMainWindow();
+            _serverProcess = null;
 
             if (PlayingMenuOpen) SetPlayingMenuOpen(false);
 
@@ -232,10 +257,9 @@ namespace DeepSwarmClient
             SendPacket();
         }
 
-        public void StartGame(bool skipCountdown = false)
+        public void StartGame()
         {
             _packetWriter.WriteByte((byte)Protocol.ClientPacketType.StartGame);
-            _packetWriter.WriteByte(skipCountdown ? (byte)1 : (byte)0);
             SendPacket();
         }
         #endregion

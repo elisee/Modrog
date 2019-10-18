@@ -33,35 +33,75 @@ namespace DeepSwarmClient.Interface
                 ChildLayout = ChildLayoutMode.Top,
             };
 
-            new Label(mainPanel) { Text = "Enter your name:", Bottom = 8 };
+            var nameRow = new Panel(mainPanel) { ChildLayout = ChildLayoutMode.Left, Bottom = 8 };
+            new Label(nameRow) { Text = "Your name:", VerticalFlow = Flow.Shrink, Right = 8 };
 
-            _nameInput = new TextInput(mainPanel)
+            _nameInput = new TextInput(nameRow)
             {
-                Bottom = 8,
                 Padding = 8,
                 BackgroundPatch = new TexturePatch(0x004400ff),
-                MaxLength = Protocol.MaxPlayerNameLength
+                MaxLength = Protocol.MaxPlayerNameLength,
+                LayoutWeight = 1,
             };
 
             {
-                var serverAddressContainer = new Panel(mainPanel) { ChildLayout = ChildLayoutMode.Left, Bottom = 8 };
+                var startServerPanel = new Panel(mainPanel)
+                {
+                    BackgroundPatch = new TexturePatch(0x00000044),
+                    ChildLayout = ChildLayoutMode.Top,
+                    Padding = 8,
+                    Bottom = 8,
+                    OnValidate = OnSubmitStartServer
+                };
 
-                new Label(serverAddressContainer) { Text = "Hostname:", VerticalFlow = Flow.Shrink, RightPadding = 8 };
+                new Label(startServerPanel) { Text = "PLAY SOLO OR INVITE FRIENDS", Bottom = 8 };
 
-                _serverHostnameInput = new TextInput(serverAddressContainer)
+                var actionsContainer = new Element(startServerPanel) { ChildLayout = ChildLayoutMode.Left };
+
+                new StyledTextButton(actionsContainer)
+                {
+                    Text = "Start server",
+                    OnActivate = OnSubmitStartServer
+                };
+            }
+
+            {
+                var connectToServerPanel = new Panel(mainPanel)
+                {
+                    BackgroundPatch = new TexturePatch(0x00000044),
+                    ChildLayout = ChildLayoutMode.Top,
+                    Padding = 8,
+                    OnValidate = OnSubmitConnectToServer
+                };
+
+                new Label(connectToServerPanel) { Text = "JOIN FRIENDS", Bottom = 8 };
+
+                var hostnameRow = new Panel(connectToServerPanel) { ChildLayout = ChildLayoutMode.Left, Bottom = 8 };
+                new Label(hostnameRow) { Text = "Hostname / IP:", VerticalFlow = Flow.Shrink, Width = 140, Right = 8 };
+
+                _serverHostnameInput = new TextInput(hostnameRow)
                 {
                     Padding = 8,
                     LayoutWeight = 1,
                     BackgroundPatch = new TexturePatch(0x004400ff)
                 };
 
-                new Label(serverAddressContainer) { Text = "Port:", VerticalFlow = Flow.Shrink, HorizontalPadding = 8 };
+                var portRow = new Panel(connectToServerPanel) { ChildLayout = ChildLayoutMode.Left, Bottom = 8 };
+                new Label(portRow) { Text = "Port:", VerticalFlow = Flow.Shrink, Width = 140, Right = 8 };
 
-                _serverPortInput = new TextInput(serverAddressContainer)
+                _serverPortInput = new TextInput(portRow)
                 {
                     Padding = 8,
-                    Width = 100,
+                    LayoutWeight = 1,
                     BackgroundPatch = new TexturePatch(0x004400ff)
+                };
+
+                var actionsContainer = new Element(connectToServerPanel) { ChildLayout = ChildLayoutMode.Left };
+
+                new StyledTextButton(actionsContainer)
+                {
+                    Text = "Connect",
+                    OnActivate = OnSubmitConnectToServer
                 };
             }
 
@@ -72,14 +112,6 @@ namespace DeepSwarmClient.Interface
                 Padding = 8,
                 Wrap = true,
                 Visible = false
-            };
-
-            var actionsContainer = new Element(mainPanel) { ChildLayout = ChildLayoutMode.Left, Top = 16 };
-
-            new StyledTextButton(actionsContainer)
-            {
-                Text = "Connect",
-                OnActivate = Validate
             };
         }
 
@@ -102,7 +134,7 @@ namespace DeepSwarmClient.Interface
             Desktop.SetFocusedElement(_nameInput);
         }
 
-        public override void Validate()
+        void OnSubmitConnectToServer()
         {
             var name = _nameInput.Value.Trim();
             if (name.Length == 0) return;
@@ -131,6 +163,11 @@ namespace DeepSwarmClient.Interface
 
             Engine.State.SetName(name);
             Engine.State.Connect(hostname, port);
+        }
+
+        void OnSubmitStartServer()
+        {
+            Engine.State.StartServer(scenario: null);
         }
     }
 }

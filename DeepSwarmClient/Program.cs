@@ -13,7 +13,7 @@ namespace DeepSwarmClient
             {
                 if (args[0] == "--scenario")
                 {
-                    engine.StartWithScenario(args[1]);
+                    engine.State.StartServer(args[1]);
                 }
                 else
                 {
@@ -21,13 +21,11 @@ namespace DeepSwarmClient
                     var hostname = pieces[0];
                     var port = pieces.Length > 1 ? int.Parse(pieces[1], CultureInfo.InvariantCulture) : Protocol.Port;
                     var scenario = args.Length == 2 ? args[1] : null;
-                    engine.StartWithConnection(hostname, port, scenario);
+                    engine.State.Connect(hostname, port, scenario);
                 }
             }
-            else
-            {
-                engine.Start();
-            }
+
+            engine.Run();
         }
     }
 }
