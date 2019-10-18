@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
-using System.Threading.Tasks;
+using System.Threading;
 
 namespace DeepSwarmClient
 {
@@ -94,7 +94,7 @@ namespace DeepSwarmClient
             Stage = ClientStage.Loading;
             _engine.Interface.OnStageChanged();
 
-            Task.Run(() =>
+            ThreadPool.QueueUserWorkItem((_) =>
             {
                 _socket = new Socket(SocketType.Stream, ProtocolType.Tcp) { NoDelay = true, LingerState = new LingerOption(true, seconds: 1) };
 
