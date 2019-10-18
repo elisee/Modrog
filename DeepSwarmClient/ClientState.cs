@@ -140,6 +140,8 @@ namespace DeepSwarmClient
 
                         _engine.RunOnEngineThread(() =>
                         {
+                            if (Stage != ClientStage.Loading) return;
+
                             if (connectionErrors.Count > 1) ErrorMessage = $"Could not connect after trying {connectionErrors.Count} addresses.\n{string.Join("\n", connectionErrors)}";
                             else ErrorMessage = $"Could not connect: {connectionErrors[0]}";
                             Stage = ClientStage.Home;
