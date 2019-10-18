@@ -1,5 +1,6 @@
 ﻿using DeepSwarmBasics;
 using DeepSwarmPlatform.Graphics;
+using SDL2;
 using System;
 
 namespace DeepSwarmPlatform.UI
@@ -21,6 +22,12 @@ namespace DeepSwarmPlatform.UI
         public override Element HitTest(int x, int y) => LayoutRectangle.Contains(x, y) ? this : null;
 
         public override bool AcceptsFocus() => !Disabled;
+
+        public override void OnKeyDown(SDL.SDL_Keycode key, bool repeat)
+        {
+            if (!repeat && key == SDL.SDL_Keycode.SDLK_SPACE) { Validate(); return; }
+            base.OnKeyDown(key, repeat);
+        }
 
         public override void OnMouseEnter()
         {
