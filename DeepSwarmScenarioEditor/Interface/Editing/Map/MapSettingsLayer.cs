@@ -83,6 +83,8 @@ namespace DeepSwarmScenarioEditor.Interface.Editing.Map
         public override void OnMounted()
         {
             _tilesetInput.SetValue(_mapEditor.TileSetPath);
+
+            Desktop.SetFocusedElement(_tilesetInput);
         }
 
         public override void Validate()
@@ -94,7 +96,7 @@ namespace DeepSwarmScenarioEditor.Interface.Editing.Map
 
         public override void Dismiss()
         {
-            Visible = false;
+            _mapEditor.CloseSettings();
         }
     }
 }

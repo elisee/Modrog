@@ -8,6 +8,7 @@ namespace DeepSwarmScenarioEditor.Interface.Editing.Map
 {
     class MapEditor : BaseAssetEditor
     {
+        readonly Panel _mainLayer;
         readonly MapSettingsLayer _mapSettingsLayer;
 
         public string TileSetPath = "";
@@ -16,12 +17,12 @@ namespace DeepSwarmScenarioEditor.Interface.Editing.Map
             : base(@interface, fullAssetPath)
         {
             {
-                var mainLayer = new Panel(this)
+                _mainLayer = new Panel(this)
                 {
                     ChildLayout = ChildLayoutMode.Top
                 };
 
-                var topBar = new Panel(mainLayer)
+                var topBar = new Panel(_mainLayer)
                 {
                     BackgroundPatch = new TexturePatch(0x123456ff),
                     ChildLayout = ChildLayoutMode.Left,
@@ -43,13 +44,13 @@ namespace DeepSwarmScenarioEditor.Interface.Editing.Map
                     Text = "Settings",
                     OnActivate = () =>
                     {
+                        _mainLayer.Disabled = true;
                         _mapSettingsLayer.Visible = true;
                         _mapSettingsLayer.Layout(_contentRectangle);
-                        Desktop.SetFocusedElement(_mapSettingsLayer);
                     }
                 };
 
-                var viewport = new Panel(mainLayer)
+                var viewport = new Panel(_mainLayer)
                 {
                     LayoutWeight = 1
                 };
@@ -78,6 +79,12 @@ namespace DeepSwarmScenarioEditor.Interface.Editing.Map
 
             using var file = File.OpenWrite(FullAssetPath);
             file.Write(writer.Buffer, 0, writer.Finish());
+        }
+
+        internal void CloseSettings()
+        {
+            _mapSettingsLayer.Visible = false;
+            _mainLayer.Disabled = false;
         }
     }
 }
