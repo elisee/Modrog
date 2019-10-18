@@ -338,14 +338,14 @@ namespace DeepSwarmPlatform.UI
 #endif
         }
 
-        internal void PushClipRect(Rectangle clipRect)
+        public void PushClipRect(Rectangle clipRect)
         {
             var sdlRect = clipRect.ToSDL_Rect();
             SDL.SDL_RenderSetClipRect(Renderer, ref sdlRect);
             _clipStack.Push(sdlRect);
         }
 
-        internal void PopClipRect()
+        public void PopClipRect()
         {
             _clipStack.Pop();
 

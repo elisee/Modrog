@@ -9,8 +9,11 @@ namespace DeepSwarmScenarioEditor.Interface.Editing.Map
     class MapEditor : BaseAssetEditor
     {
         readonly Panel _mainLayer;
+        readonly MapViewport _mapViewport;
+
         readonly MapSettingsLayer _mapSettingsLayer;
 
+        // Tile Kinds
         public string TileSetPath = "";
 
         public MapEditor(Interface @interface, string fullAssetPath)
@@ -33,10 +36,7 @@ namespace DeepSwarmScenarioEditor.Interface.Editing.Map
                 {
                     Text = "Save",
                     Right = 8,
-                    OnActivate = () =>
-                    {
-                        Save();
-                    }
+                    OnActivate = () => Save()
                 };
 
                 new StyledTextButton(topBar)
@@ -50,10 +50,8 @@ namespace DeepSwarmScenarioEditor.Interface.Editing.Map
                     }
                 };
 
-                var viewport = new Panel(_mainLayer)
-                {
-                    LayoutWeight = 1
-                };
+                _mapViewport = new MapViewport(this) { LayoutWeight = 1 };
+                _mainLayer.Add(_mapViewport);
             }
 
             _mapSettingsLayer = new MapSettingsLayer(this) { Visible = false };
@@ -66,7 +64,7 @@ namespace DeepSwarmScenarioEditor.Interface.Editing.Map
 
             TileSetPath = reader.ReadByteSizeString();
 
-            Desktop.SetFocusedElement(this);
+            Desktop.SetFocusedElement(_mapViewport);
         }
 
         public override void OnUnmounted()
