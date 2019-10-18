@@ -19,6 +19,8 @@ namespace DeepSwarmScenarioEditor.Interface.Editing.Image
             SDL.SDL_QueryTexture(texture, out _, out _, out var textureWidth, out var textureHeight);
 
             _textureArea = new TextureArea(texture, new Rectangle(0, 0, textureWidth, textureHeight));
+
+            Desktop.SetFocusedElement(this);
         }
 
         public override void OnUnmounted()

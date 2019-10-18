@@ -65,6 +65,8 @@ namespace DeepSwarmScenarioEditor.Interface.Editing.Map
             reader.Open(File.ReadAllBytes(FullAssetPath));
 
             TileSetPath = reader.ReadByteSizeString();
+
+            Desktop.SetFocusedElement(this);
         }
 
         public override void OnUnmounted()

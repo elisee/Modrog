@@ -52,6 +52,8 @@ namespace DeepSwarmScenarioEditor.Interface.Editing.Manifest
             _nameLabel.Text = scenarioEntry.Name;
             _titleInput.SetValue(scenarioEntry.Title);
             _descriptionEditor.SetText(scenarioEntry.Description);
+
+            Desktop.SetFocusedElement(_titleInput);
         }
 
         public override void OnUnmounted()

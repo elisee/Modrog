@@ -37,6 +37,7 @@ namespace DeepSwarmScenarioEditor.Interface.Editing.Script
         public override void OnMounted()
         {
             _textEditor.SetText(File.ReadAllText(FullAssetPath));
+            Desktop.SetFocusedElement(_textEditor);
         }
 
         public override void OnUnmounted()

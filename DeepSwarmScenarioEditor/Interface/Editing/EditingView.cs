@@ -124,12 +124,7 @@ namespace DeepSwarmScenarioEditor.Interface.Editing
                 case AssetType.Map: editor = new Map.MapEditor(Engine.Interface, fullAssetPath); break;
             }
 
-            if (editor != null)
-            {
-                _editorContainer.Add(editor);
-                Desktop.SetFocusedElement(editor);
-            }
-
+            if (editor != null) _editorContainer.Add(editor);
             _editorContainer.Layout();
         }
     }
