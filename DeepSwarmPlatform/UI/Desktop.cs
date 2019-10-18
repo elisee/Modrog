@@ -75,8 +75,7 @@ namespace DeepSwarmPlatform.UI
             }
 
             if (element == null) element = RootElement;
-            element = !backwards ? GetFirstFocusable(element) : GetLastFocusable(element);
-            if (element == null && backwards) element = GetLastFocusable(RootElement);
+            element = !backwards ? (GetFirstFocusable(element) ?? GetFirstFocusable(RootElement)) : (GetLastFocusable(element) ?? GetLastFocusable(RootElement));
             if (element != null) SetFocusedElement(element);
 
             Element GetNextSibling(Element element)
@@ -125,7 +124,14 @@ namespace DeepSwarmPlatform.UI
                     }
                 }
 
-                var nextInTree = GetNextSibling(element) ?? GetNextSibling(element.Parent);
+                var nextInTree = GetNextSibling(element);
+
+                while (nextInTree == null && element.Parent != null)
+                {
+                    element = element.Parent;
+                    nextInTree = GetNextSibling(element);
+                }
+
                 return nextInTree != null ? GetFirstFocusable(nextInTree) : null;
             }
 
@@ -144,7 +150,14 @@ namespace DeepSwarmPlatform.UI
                     }
                 }
 
-                var previousInTree = GetPreviousSibling(element) ?? GetPreviousSibling(element.Parent);
+                var previousInTree = GetPreviousSibling(element);
+
+                while (previousInTree == null && element.Parent != null)
+                {
+                    element = element.Parent;
+                    previousInTree = GetPreviousSibling(element);
+                }
+
                 return previousInTree != null ? GetLastFocusable(previousInTree) : null;
             }
         }
