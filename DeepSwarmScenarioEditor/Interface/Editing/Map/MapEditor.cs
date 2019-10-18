@@ -43,7 +43,7 @@ namespace DeepSwarmScenarioEditor.Interface.Editing.Map
                     Text = "Settings",
                     OnActivate = () =>
                     {
-                        _mapSettingsLayer.IsVisible = true;
+                        _mapSettingsLayer.Visible = true;
                         _mapSettingsLayer.Layout(_contentRectangle);
                         Desktop.SetFocusedElement(_mapSettingsLayer);
                     }
@@ -55,7 +55,7 @@ namespace DeepSwarmScenarioEditor.Interface.Editing.Map
                 };
             }
 
-            _mapSettingsLayer = new MapSettingsLayer(this) { IsVisible = false };
+            _mapSettingsLayer = new MapSettingsLayer(this) { Visible = false };
         }
 
         public override void OnMounted()

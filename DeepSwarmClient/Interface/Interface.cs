@@ -42,7 +42,7 @@ namespace DeepSwarmClient.Interface
                 monoFontStyle: new FontStyle(MonoFont) { Scale = 2, LetterSpacing = 1, LineSpacing = 8 });
 
             ViewLayer = new Panel(Desktop.RootElement, new TexturePatch(0x000000ff));
-            PopupLayer = new Panel(Desktop.RootElement, new TexturePatch(0x00000088)) { IsVisible = false };
+            PopupLayer = new Panel(Desktop.RootElement, new TexturePatch(0x00000088)) { Visible = false };
 
             HomeView = new HomeView(this);
             LoadingView = new LoadingView(this);
@@ -79,7 +79,7 @@ namespace DeepSwarmClient.Interface
         {
             Desktop.SetFocusedElement(null);
             PopupLayer.Clear();
-            PopupLayer.IsVisible = popup != null;
+            PopupLayer.Visible = popup != null;
 
             if (popup != null)
             {

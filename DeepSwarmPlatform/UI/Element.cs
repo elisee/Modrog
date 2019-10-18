@@ -14,14 +14,14 @@ namespace DeepSwarmPlatform.UI
         public Element Parent;
         public readonly List<Element> Children = new List<Element>();
 
-        public bool IsVisible
+        public bool Visible
         {
-            get => _isVisible;
+            get => _visible;
             set
             {
-                _isVisible = value;
+                _visible = value;
 
-                if (_isVisible != IsMounted)
+                if (_visible != IsMounted)
                 {
                     if (IsMounted) Unmount();
                     else if (Parent.IsMounted) Mount();
@@ -29,7 +29,7 @@ namespace DeepSwarmPlatform.UI
             }
         }
 
-        bool _isVisible = true;
+        bool _visible = true;
 
         public int LayoutWeight = 0;
 
@@ -100,7 +100,7 @@ namespace DeepSwarmPlatform.UI
 
             Children.Add(child);
             child.Parent = this;
-            if (IsMounted && child.IsVisible) child.Mount();
+            if (IsMounted && child.Visible) child.Mount();
         }
 
         public void Remove(Element child)
@@ -375,7 +375,7 @@ namespace DeepSwarmPlatform.UI
             Debug.Assert(!IsMounted);
             IsMounted = true;
 
-            foreach (var child in Children) if (child.IsVisible) child.Mount();
+            foreach (var child in Children) if (child.Visible) child.Mount();
 
             OnMounted();
         }

@@ -88,9 +88,9 @@ namespace DeepSwarmClient.Interface
                     {
                         var gameInfoPanel = new Panel(centerPanel, new TexturePatch(0x456721ff)) { LayoutWeight = 1, ChildLayout = ChildLayoutMode.Top };
 
-                        _noGameSelectedLabel = new Label(gameInfoPanel) { Text = "No game selected.", IsVisible = true, Padding = 8 };
+                        _noGameSelectedLabel = new Label(gameInfoPanel) { Text = "No game selected.", Visible = true, Padding = 8 };
 
-                        _scenarioInfoContainer = new Panel(gameInfoPanel) { ChildLayout = ChildLayoutMode.Top, IsVisible = false, Padding = 8 };
+                        _scenarioInfoContainer = new Panel(gameInfoPanel) { ChildLayout = ChildLayoutMode.Top, Visible = false, Padding = 8 };
                         _scenarioTitleLabel = new Label(_scenarioInfoContainer) { Bottom = 16, FontStyle = new FontStyle(@interface.TitleFont) { LetterSpacing = 1 } };
 
                         var minMaxPlayersPanel = new Panel(_scenarioInfoContainer) { ChildLayout = ChildLayoutMode.Left, Bottom = 16 };
@@ -247,8 +247,8 @@ namespace DeepSwarmClient.Interface
 
             if (scenario != null)
             {
-                _noGameSelectedLabel.IsVisible = false;
-                _scenarioInfoContainer.IsVisible = true;
+                _noGameSelectedLabel.Visible = false;
+                _scenarioInfoContainer.Visible = true;
 
                 _scenarioTitleLabel.Text = scenario.Title;
                 _minMaxPlayersLabel.Text = $"{scenario.MinPlayers} to {scenario.MaxPlayers}";
@@ -259,8 +259,8 @@ namespace DeepSwarmClient.Interface
             }
             else
             {
-                _noGameSelectedLabel.IsVisible = true;
-                _scenarioInfoContainer.IsVisible = false;
+                _noGameSelectedLabel.Visible = true;
+                _scenarioInfoContainer.Visible = false;
 
                 _noGameSelectedLabel.Parent.Layout();
             }

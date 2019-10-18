@@ -55,7 +55,7 @@ namespace DeepSwarmScenarioEditor.Interface.Editing
             {
                 ChildLayout = ChildLayoutMode.Top,
                 Left = 24,
-                IsVisible = false
+                Visible = false
             };
 
             UpdateLabel();
@@ -69,13 +69,13 @@ namespace DeepSwarmScenarioEditor.Interface.Editing
 
         public void ToggleChildren()
         {
-            _childrenPanel.IsVisible = !_childrenPanel.IsVisible;
+            _childrenPanel.Visible = !_childrenPanel.Visible;
             UpdateLabel();
         }
 
         void UpdateLabel()
         {
-            _label.Text = Entry.Name + (_childrenPanel.IsVisible || _childrenPanel.Children.Count == 0 ? "" : $" ({_childrenPanel.Children.Count})");
+            _label.Text = Entry.Name + (_childrenPanel.Visible || _childrenPanel.Children.Count == 0 ? "" : $" ({_childrenPanel.Children.Count})");
         }
     }
 }

@@ -71,7 +71,7 @@ namespace DeepSwarmClient.Interface
                 Top = 8,
                 Padding = 8,
                 Wrap = true,
-                IsVisible = false
+                Visible = false
             };
 
             var actionsContainer = new Element(mainPanel) { ChildLayout = ChildLayoutMode.Left, Top = 16 };
@@ -87,12 +87,12 @@ namespace DeepSwarmClient.Interface
         {
             if (Engine.State.ErrorMessage != null)
             {
-                _errorLabel.IsVisible = true;
+                _errorLabel.Visible = true;
                 _errorLabel.Text = Engine.State.ErrorMessage + (Engine.State.KickReason != null ? $" Reason: {Engine.State.KickReason}" : "");
             }
             else
             {
-                _errorLabel.IsVisible = false;
+                _errorLabel.Visible = false;
             }
 
             _nameInput.SetValue(Engine.State.SelfPlayerName ?? "");

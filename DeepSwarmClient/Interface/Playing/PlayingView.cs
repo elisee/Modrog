@@ -46,7 +46,7 @@ namespace DeepSwarmClient.Interface.Playing
         {
             _sidebarPanel = new Panel(Desktop, this)
             {
-                IsVisible = false,
+                Visible = false,
                 BackgroundPatch = new TexturePatch(0x123456ff),
                 Left = 0,
                 Width = 300,
@@ -57,7 +57,7 @@ namespace DeepSwarmClient.Interface.Playing
             _scenarioNameLabel = new Label(_sidebarPanel) { FontStyle = @interface.HeaderFontStyle, Wrap = true, Padding = 8, BackgroundPatch = new TexturePatch(0x331111ff) };
             _playerListContainer = new Panel(_sidebarPanel) { LayoutWeight = 1, ChildLayout = ChildLayoutMode.Top, Padding = 8 };
 
-            _menu = new PlayingMenu(@interface, this) { IsVisible = false };
+            _menu = new PlayingMenu(@interface, this) { Visible = false };
         }
 
         #region Internals
@@ -114,7 +114,7 @@ namespace DeepSwarmClient.Interface.Playing
 
             if (key == SDL.SDL_Keycode.SDLK_TAB)
             {
-                _sidebarPanel.IsVisible = true;
+                _sidebarPanel.Visible = true;
                 _sidebarPanel.Layout(_contentRectangle);
             }
         }
@@ -131,7 +131,7 @@ namespace DeepSwarmClient.Interface.Playing
             if (key == SDL.SDL_Keycode.SDLK_w || key == SDL.SDL_Keycode.SDLK_z) Engine.State.StopMovingTowards(DeepSwarmApi.EntityDirection.Up);
             if (key == SDL.SDL_Keycode.SDLK_s) Engine.State.StopMovingTowards(DeepSwarmApi.EntityDirection.Down);
 
-            if (key == SDL.SDL_Keycode.SDLK_TAB) _sidebarPanel.IsVisible = false;
+            if (key == SDL.SDL_Keycode.SDLK_TAB) _sidebarPanel.Visible = false;
         }
 
         public override void OnMouseMove()
@@ -228,7 +228,7 @@ namespace DeepSwarmClient.Interface.Playing
         #region Events
         public void OnMenuStateUpdated()
         {
-            _menu.IsVisible = Engine.State.PlayingMenuOpen;
+            _menu.Visible = Engine.State.PlayingMenuOpen;
             _menu.Layout(_contentRectangle);
 
             if (!Engine.State.PlayingMenuOpen) Desktop.SetFocusedElement(this);

@@ -89,12 +89,12 @@ namespace DeepSwarmScenarioEditor.Interface.Editing.Map
         {
             _mapEditor.TileSetPath = _tilesetInput.Value.Trim();
 
-            IsVisible = false;
+            Visible = false;
         }
 
         public override void Dismiss()
         {
-            IsVisible = false;
+            Visible = false;
         }
     }
 }
