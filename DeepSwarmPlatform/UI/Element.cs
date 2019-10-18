@@ -281,8 +281,8 @@ namespace DeepSwarmPlatform.UI
 
             LayoutSelf();
 
-            var maxWidth = LayoutRectangle.Width;
-            var maxHeight = LayoutRectangle.Height;
+            var maxWidth = _contentRectangle.Width;
+            var maxHeight = _contentRectangle.Height;
 
             var fixedSize = 0;
             var fixedSizes = new int[Children.Count];
