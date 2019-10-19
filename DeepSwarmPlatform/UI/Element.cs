@@ -81,8 +81,8 @@ namespace DeepSwarmPlatform.UI
         protected int _scrollMultiplier = 30;
 
         // Child layout
-        public enum ChildLayoutMode { Overlay, Left, Right, Top, Bottom }
-        public ChildLayoutMode ChildLayout = ChildLayoutMode.Overlay;
+        public enum ChildLayoutMode { Stack, Overlay, Left, Right, Top, Bottom }
+        public ChildLayoutMode ChildLayout = ChildLayoutMode.Stack;
 
         // Background
         public TexturePatch BackgroundPatch;
@@ -159,6 +159,7 @@ namespace DeepSwarmPlatform.UI
 
             switch (ChildLayout)
             {
+                case ChildLayoutMode.Stack:
                 case ChildLayoutMode.Overlay:
                     foreach (var child in Children)
                     {
@@ -303,6 +304,7 @@ namespace DeepSwarmPlatform.UI
 
             switch (ChildLayout)
             {
+                case ChildLayoutMode.Stack:
                 case ChildLayoutMode.Overlay:
                     foreach (var child in Children) if (child.IsMounted) child.Layout(_contentRectangle);
                     break;
@@ -388,6 +390,8 @@ namespace DeepSwarmPlatform.UI
 
                 var hitElement = child.HitTest(x, y);
                 if (hitElement != null) return hitElement;
+
+                if (ChildLayout == ChildLayoutMode.Stack) break;
             }
 
             return null;

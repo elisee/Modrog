@@ -44,7 +44,6 @@ namespace DeepSwarmScenarioEditor.Interface.Editing.Map
                     Text = "Settings",
                     OnActivate = () =>
                     {
-                        _mainLayer.Disabled = true;
                         _mapSettingsLayer.Visible = true;
                         _mapSettingsLayer.Layout(_contentRectangle);
                     }
@@ -84,7 +83,6 @@ namespace DeepSwarmScenarioEditor.Interface.Editing.Map
         internal void CloseSettings()
         {
             _mapSettingsLayer.Visible = false;
-            _mainLayer.Disabled = false;
 
             Desktop.SetFocusedElement(_mapViewport);
         }

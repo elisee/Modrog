@@ -80,9 +80,11 @@ namespace DeepSwarmPlatform.UI
 
             Element GetNextSibling(Element element)
             {
-                if (element.Parent == null) return null;
+                var parent = element.Parent;
+                if (parent == null) return null;
+                if (parent.ChildLayout == Element.ChildLayoutMode.Stack) return GetNextSibling(parent);
 
-                var siblings = element.Parent.Children;
+                var siblings = parent.Children;
                 var index = siblings.IndexOf(element) + 1;
 
                 while (index < siblings.Count)
@@ -96,9 +98,11 @@ namespace DeepSwarmPlatform.UI
 
             Element GetPreviousSibling(Element element)
             {
-                if (element.Parent == null) return null;
+                var parent = element.Parent;
+                if (parent == null) return null;
+                if (parent.ChildLayout == Element.ChildLayoutMode.Stack) return GetNextSibling(parent);
 
-                var siblings = element.Parent.Children;
+                var siblings = parent.Children;
                 var index = siblings.IndexOf(element) - 1;
 
                 while (index >= 0)
@@ -116,11 +120,26 @@ namespace DeepSwarmPlatform.UI
 
                 if (element.Children.Count > 0)
                 {
-                    foreach (var child in element.Children)
+                    if (element.ChildLayout == Element.ChildLayoutMode.Stack)
                     {
-                        if (!child.IsMounted || child.Disabled) continue;
-                        var focusable = GetFirstFocusable(child);
-                        if (focusable != null) return focusable;
+                        for (var i = element.Children.Count - 1; i >= 0; i--)
+                        {
+                            var child = element.Children[i];
+                            if (!child.IsMounted || child.Disabled) continue;
+                            var focusable = GetFirstFocusable(child);
+                            if (focusable != null) return focusable;
+                            break;
+                        }
+                    }
+                    else
+                    {
+                        for (var i = 0; i < element.Children.Count; i++)
+                        {
+                            var child = element.Children[i];
+                            if (!child.IsMounted || child.Disabled) continue;
+                            var focusable = GetFirstFocusable(child);
+                            if (focusable != null) return focusable;
+                        }
                     }
                 }
 
@@ -147,6 +166,7 @@ namespace DeepSwarmPlatform.UI
                         if (!child.IsMounted || child.Disabled) continue;
                         var focusable = GetLastFocusable(child);
                         if (focusable != null) return focusable;
+                        if (element.ChildLayout == Element.ChildLayoutMode.Stack) break;
                     }
                 }
 
