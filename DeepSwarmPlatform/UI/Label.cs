@@ -27,10 +27,8 @@ namespace DeepSwarmPlatform.UI
             FontStyle = Desktop.MainFontStyle;
         }
 
-        public override void ComputeSizes(int? maxWidth, int? maxHeight, out Point layoutSize, out Point paddedContentSize)
+        protected override Point ComputeContentSize(int? maxWidth, int? maxHeight)
         {
-            base.ComputeSizes(maxWidth, maxHeight, out layoutSize, out _);
-
             var contentSize = Point.Zero;
 
             if (Width == null && !Ellipsize)
@@ -97,12 +95,7 @@ namespace DeepSwarmPlatform.UI
                 contentSize.Y = FontStyle.LineHeight;
             }
 
-            if (Width == null) layoutSize.X += contentSize.X;
-            if (Height == null) layoutSize.Y += contentSize.Y;
-
-            paddedContentSize = new Point(
-                contentSize.X + LeftPadding + RightPadding,
-                contentSize.Y + TopPadding + BottomPadding);
+            return contentSize;
         }
 
         public override void LayoutSelf()

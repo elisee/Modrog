@@ -131,12 +131,24 @@ namespace DeepSwarmPlatform.UI
 
         bool IsContainedWithin(Element element) => element == this || (element.Parent != null && IsContainedWithin(element.Parent));
 
-        public virtual void ComputeSizes(int? maxWidth, int? maxHeight, out Point layoutSize, out Point paddedContentSize)
+        public void ComputeSizes(int? maxWidth, int? maxHeight, out Point layoutSize, out Point paddedContentSize)
         {
             layoutSize = new Point(
                 (Width ?? 0) + (Left ?? 0) + (Right ?? 0),
                 (Height ?? 0) + (Top ?? 0) + (Bottom ?? 0));
 
+            var contentSize = ComputeContentSize(maxWidth, maxHeight);
+
+            paddedContentSize = new Point(
+                contentSize.X + LeftPadding + RightPadding,
+                contentSize.Y + TopPadding + BottomPadding);
+
+            if (Width == null && HorizontalFlow != Flow.Scroll) layoutSize.X += paddedContentSize.X;
+            if (Height == null && VerticalFlow != Flow.Scroll) layoutSize.Y += paddedContentSize.Y;
+        }
+
+        protected virtual Point ComputeContentSize(int? maxWidth, int? maxHeight)
+        {
             var contentSize = Point.Zero;
 
             var contentMaxWidth = Width ?? maxWidth;
@@ -186,12 +198,7 @@ namespace DeepSwarmPlatform.UI
             if (contentMaxWidth != null && contentSize.X > contentMaxWidth && HorizontalFlow != Flow.Scroll) contentSize.X = contentMaxWidth.Value;
             if (contentMaxHeight != null && contentSize.Y > contentMaxHeight && VerticalFlow != Flow.Scroll) contentSize.Y = contentMaxHeight.Value;
 
-            paddedContentSize = new Point(
-                contentSize.X + LeftPadding + RightPadding,
-                contentSize.Y + TopPadding + BottomPadding);
-
-            if (Width == null && HorizontalFlow != Flow.Scroll) layoutSize.X += paddedContentSize.X;
-            if (Height == null && VerticalFlow != Flow.Scroll) layoutSize.Y += paddedContentSize.Y;
+            return contentSize;
         }
 
         public void Layout(Rectangle? containerRectangle = null)

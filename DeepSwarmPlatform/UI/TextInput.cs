@@ -42,17 +42,7 @@ namespace DeepSwarmPlatform.UI
         #endregion
 
         #region Internals
-        public override void ComputeSizes(int? maxWidth, int? maxHeight, out Point layoutSize, out Point contentSize)
-        {
-            base.ComputeSizes(maxWidth, maxHeight, out layoutSize, out _);
-            contentSize = Point.Zero;
-
-            if (Height == null)
-            {
-                contentSize.Y = FontStyle.LineHeight;
-                layoutSize.Y += contentSize.Y;
-            }
-        }
+        protected override Point ComputeContentSize(int? maxWidth, int? maxHeight) => new Point(0, Height == null ? FontStyle.LineHeight : 0);
 
         public override bool AcceptsFocus() => !Disabled;
 
