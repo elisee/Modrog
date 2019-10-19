@@ -10,5 +10,11 @@ namespace DeepSwarmCommon
             while (angle > MathF.PI) angle -= MathF.PI * 2f;
             return angle;
         }
+
+        public static int Mod(int dividend, int divisor)
+        {
+            var remainder = dividend % divisor;
+            return remainder >= 0 ? remainder : remainder + divisor;
+        }
     }
 }
