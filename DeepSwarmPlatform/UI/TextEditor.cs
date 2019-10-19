@@ -7,6 +7,12 @@ using System.Collections.Generic;
 
 namespace DeepSwarmPlatform.UI
 {
+    // TODO: Undo/redo support
+    // TODO: Quick navigation with Ctrl
+    // TODO: PageUp / PageDown support
+    // TODO: Auto-indent when inserting lines
+    // TODO: Syntax highlighting support
+    // TODO: Auto-completion support
     public class TextEditor : Element
     {
         public FontStyle FontStyle;
@@ -14,17 +20,18 @@ namespace DeepSwarmPlatform.UI
         public Point CellSize = new Point(12, 32);
 
         public readonly List<string> Lines = new List<string> { "" };
+        public const int CursorWidth = 2;
 
         Point _cursor;
         Point _selectionAnchor;
         float _cursorTimer;
 
-        Point _scrollingPixels;
-
         public TextEditor(Element parent) : this(parent.Desktop, parent) { }
         public TextEditor(Desktop desktop, Element parent) : base(desktop, parent)
         {
             FontStyle = Desktop.MonoFontStyle;
+            Flow = Flow.Scroll;
+            _scrollMultiplier = CellSize.Y * 3;
         }
 
         #region Configuration
@@ -32,8 +39,6 @@ namespace DeepSwarmPlatform.UI
         {
             Lines.Clear();
             Lines.AddRange(text.Replace("\r", "").Split("\n"));
-            _scrollingPixels = Point.Zero;
-
             _cursor = _selectionAnchor = Point.Zero;
         }
 
@@ -41,20 +46,21 @@ namespace DeepSwarmPlatform.UI
         #endregion
 
         #region Internals
+        protected override Point ComputeContentSize(int? maxWidth, int? maxHeight)
+        {
+            var contentSize = new Point(0, Lines.Count * CellSize.Y);
+            foreach (var line in Lines) contentSize.X = Math.Max(contentSize.X, line.Length * CellSize.X);
+            contentSize.X += CursorWidth;
+
+            return contentSize;
+        }
+
+        public override Element HitTest(int x, int y) => LayoutRectangle.Contains(x, y) ? this : null;
+        public override void LayoutSelf() => ScrollCursorIntoView();
+
         void Animate(float deltaTime)
         {
             _cursorTimer += deltaTime;
-        }
-
-        void InsertText(string text)
-        {
-            EraseSelection();
-            var line = Lines[_cursor.Y];
-            Lines[_cursor.Y] = line[0.._cursor.X] + text + line[_cursor.X..];
-            _cursor.X += text.Length;
-
-            ClearSelection();
-            ClampScrolling();
         }
 
         void GetSelectionRange(out Point start, out Point end)
@@ -68,9 +74,6 @@ namespace DeepSwarmPlatform.UI
                 end = _selectionAnchor;
             }
         }
-
-        void ClearSelection() { _selectionAnchor = _cursor; _cursorTimer = 0f; }
-        bool HasSelection() => _cursor != _selectionAnchor;
 
         void EraseSelection()
         {
@@ -99,8 +102,8 @@ namespace DeepSwarmPlatform.UI
 
         Point GetHoveredTextPosition()
         {
-            var x = Desktop.MouseX + _scrollingPixels.X - _contentRectangle.X;
-            var y = Desktop.MouseY + _scrollingPixels.Y - _contentRectangle.Y;
+            var x = Desktop.MouseX + _contentScroll.X - ViewRectangle.X;
+            var y = Desktop.MouseY + _contentScroll.Y - ViewRectangle.Y;
 
             var targetX = x / CellSize.X;
             var targetY = y / CellSize.Y;
@@ -114,17 +117,15 @@ namespace DeepSwarmPlatform.UI
             return new Point(targetX, targetY);
         }
 
-        void ClampScrolling()
+        void ScrollCursorIntoView()
         {
-            _scrollingPixels.Y = Math.Clamp(_scrollingPixels.Y,
-                Math.Max(0, (_cursor.Y + 1) * CellSize.Y - _contentRectangle.Height),
-                Math.Max(0, Math.Min(_cursor.Y * CellSize.Y, Lines.Count * CellSize.Y - _contentRectangle.Height)));
+            _cursorTimer = 0f;
+            ScrollIntoView(_cursor.X * CellSize.X, _cursor.Y * CellSize.Y);
+            ScrollIntoView(_cursor.X * CellSize.X + CursorWidth, (_cursor.Y + 1) * CellSize.Y);
         }
         #endregion
 
         #region Events
-        public override Element HitTest(int x, int y) => LayoutRectangle.Contains(x, y) ? this : null;
-
         public override void OnMouseEnter() => SDL.SDL_SetCursor(Cursors.IBeamCursor);
         public override void OnMouseExit() => SDL.SDL_SetCursor(Cursors.ArrowCursor);
 
@@ -135,51 +136,57 @@ namespace DeepSwarmPlatform.UI
         {
             switch (key)
             {
+                // Navigate
                 case SDL.SDL_Keycode.SDLK_LEFT: GoLeft(); break;
                 case SDL.SDL_Keycode.SDLK_RIGHT: GoRight(); break;
                 case SDL.SDL_Keycode.SDLK_UP: GoUp(); break;
                 case SDL.SDL_Keycode.SDLK_DOWN: GoDown(); break;
+                case SDL.SDL_Keycode.SDLK_HOME: GoToStartOfLine(); break;
+                case SDL.SDL_Keycode.SDLK_END: GoToEndOfLine(); break;
+                case SDL.SDL_Keycode.SDLK_a: if (Desktop.IsCtrlDown) SelectAll(); break;
+
+                // Edit
                 case SDL.SDL_Keycode.SDLK_BACKSPACE: Erase(); break;
                 case SDL.SDL_Keycode.SDLK_DELETE: Delete(); break;
                 case SDL.SDL_Keycode.SDLK_RETURN: BreakLine(); break;
-                case SDL.SDL_Keycode.SDLK_TAB: InsertText("  "); break;
-                case SDL.SDL_Keycode.SDLK_HOME: GoToStartOfLine(); break;
-                case SDL.SDL_Keycode.SDLK_END: GoToEndOfLine(); break;
+                case SDL.SDL_Keycode.SDLK_TAB: Indent(); break;
+
                 default: base.OnKeyDown(key, repeat); break;
             }
 
-            if (Desktop.IsCtrlDown)
-            {
-                switch (key)
-                {
-                    case SDL.SDL_Keycode.SDLK_a: SelectAll(); break;
-                }
-            }
-
+            #region Navigate
             void GoLeft()
             {
-                if (_cursor.X > 0) _cursor.X--;
+                if (_cursor.X > 0)
+                {
+                    _cursor.X--;
+                }
                 else if (_cursor.Y > 0)
                 {
                     _cursor.Y--;
                     _cursor.X = Lines[_cursor.Y].Length;
                 }
 
-                ClampScrolling();
-                ClearSelectionUnlessShiftDown();
+                if (!Desktop.IsShiftDown) _selectionAnchor = _cursor;
+
+                ScrollCursorIntoView();
             }
 
             void GoRight()
             {
-                if (_cursor.X < Lines[_cursor.Y].Length) _cursor.X++;
+                if (_cursor.X < Lines[_cursor.Y].Length)
+                {
+                    _cursor.X++;
+                }
                 else if (_cursor.Y < Lines.Count - 1)
                 {
                     _cursor.Y++;
                     _cursor.X = 0;
                 }
 
-                ClampScrolling();
-                ClearSelectionUnlessShiftDown();
+                if (!Desktop.IsShiftDown) _selectionAnchor = _cursor;
+
+                ScrollCursorIntoView();
             }
 
             void GoUp()
@@ -194,8 +201,9 @@ namespace DeepSwarmPlatform.UI
                     _cursor.X = 0;
                 }
 
-                ClampScrolling();
-                ClearSelectionUnlessShiftDown();
+                if (!Desktop.IsShiftDown) _selectionAnchor = _cursor;
+
+                ScrollCursorIntoView();
             }
 
             void GoDown()
@@ -210,13 +218,41 @@ namespace DeepSwarmPlatform.UI
                     _cursor.X = Lines[_cursor.Y].Length;
                 }
 
-                ClampScrolling();
-                ClearSelectionUnlessShiftDown();
+                if (!Desktop.IsShiftDown) _selectionAnchor = _cursor;
+
+                ScrollCursorIntoView();
             }
 
+            void GoToStartOfLine()
+            {
+                _cursor.X = 0;
+                if (!Desktop.IsShiftDown) _selectionAnchor = _cursor;
+
+                ScrollCursorIntoView();
+            }
+
+            void GoToEndOfLine()
+            {
+                _cursor.X = Lines[_cursor.Y].Length;
+                if (!Desktop.IsShiftDown) _selectionAnchor = _cursor;
+
+                ScrollCursorIntoView();
+            }
+
+            void SelectAll()
+            {
+                _selectionAnchor = Point.Zero;
+                _cursor.Y = Lines.Count - 1;
+                _cursor.X = Lines[_cursor.Y].Length;
+
+                ScrollCursorIntoView();
+            }
+            #endregion
+
+            #region Edit
             void Erase()
             {
-                if (!HasSelection())
+                if (_selectionAnchor == _cursor)
                 {
                     var line = Lines[_cursor.Y];
 
@@ -232,19 +268,19 @@ namespace DeepSwarmPlatform.UI
                         _cursor.X = Lines[_cursor.Y].Length;
                         Lines[_cursor.Y] += line;
                     }
+
+                    _selectionAnchor = _cursor;
                 }
                 else
                 {
                     EraseSelection();
                 }
-
-                ClampScrolling();
-                ClearSelection();
+                Layout();
             }
 
             void Delete()
             {
-                if (!HasSelection())
+                if (_selectionAnchor == _cursor)
                 {
                     var line = Lines[_cursor.Y];
 
@@ -263,13 +299,13 @@ namespace DeepSwarmPlatform.UI
                     EraseSelection();
                 }
 
-                ClampScrolling();
-                ClearSelection();
+                Layout();
             }
 
             void BreakLine()
             {
                 EraseSelection();
+
                 if (_cursor.X == 0)
                 {
                     Lines.Insert(_cursor.Y, "");
@@ -291,42 +327,97 @@ namespace DeepSwarmPlatform.UI
                     Lines.Insert(_cursor.Y, endOfLine);
                 }
 
-                ClampScrolling();
-                ClearSelection();
+                _selectionAnchor = _cursor;
+
+                Layout();
             }
 
-            void GoToStartOfLine()
+            void Indent()
             {
-                _cursor.X = 0;
-                ClearSelectionUnlessShiftDown();
-            }
+                const int TabSpaceCount = 4;
 
-            void GoToEndOfLine()
-            {
-                _cursor.X = Lines[_cursor.Y].Length;
-                ClearSelectionUnlessShiftDown();
-            }
+                var startY = Math.Min(_cursor.Y, _selectionAnchor.Y);
+                var endY = Math.Max(_cursor.Y, _selectionAnchor.Y);
 
-            void ClearSelectionUnlessShiftDown()
-            {
-                if (!Desktop.IsShiftDown)
-                    ClearSelection();
+                if (startY == endY)
+                {
+                    var startX = Math.Min(_cursor.X, _selectionAnchor.X);
 
-                _cursorTimer = 0f;
-            }
+                    if (!Desktop.IsShiftDown)
+                    {
+                        var spacesToInsert = TabSpaceCount - startX % TabSpaceCount;
 
-            void SelectAll()
-            {
-                _selectionAnchor = Point.Zero;
-                _cursor.Y = Lines.Count - 1;
-                _cursor.X = Lines[_cursor.Y].Length;
-                ClampScrolling();
+                        Lines[_cursor.Y] = Lines[_cursor.Y][0..startX] + new string(' ', spacesToInsert) + Lines[_cursor.Y][startX..];
+                        _cursor.X += spacesToInsert;
+                        _selectionAnchor.X += spacesToInsert;
+                    }
+                    else
+                    {
+                        var maxSpacesToRemove = startX % TabSpaceCount;
+                        if (maxSpacesToRemove == 0) maxSpacesToRemove = TabSpaceCount;
+
+                        var spacesToRemove = 0;
+                        for (var i = 0; i < maxSpacesToRemove; i++)
+                        {
+                            var newStartX = startX - (i + 1);
+                            if (newStartX < 0 || Lines[_cursor.Y][newStartX] != ' ') break;
+                            spacesToRemove++;
+                        }
+
+                        Lines[_cursor.Y] = Lines[_cursor.Y][0..(startX - spacesToRemove)] + Lines[_cursor.Y][startX..];
+
+                        _cursor.X -= spacesToRemove;
+                        _selectionAnchor.X -= spacesToRemove;
+                    }
+                }
+                else
+                {
+                    if (!Desktop.IsShiftDown)
+                    {
+                        var insert = new string(' ', TabSpaceCount);
+                        for (var y = startY; y <= endY; y++)
+                        {
+                            if (Lines[y].Length == 0) continue;
+                            Lines[y] = insert + Lines[y];
+
+                            if (y == _cursor.Y && _cursor.X > 0) _cursor.X += TabSpaceCount;
+                            if (y == _selectionAnchor.Y && _selectionAnchor.X > 0) _selectionAnchor.X += TabSpaceCount;
+                        }
+                    }
+                    else
+                    {
+                        for (var y = startY; y <= endY; y++)
+                        {
+                            var spacesToRemove = 0;
+
+                            for (var i = 0; i < TabSpaceCount; i++)
+                            {
+                                if (i >= Lines[y].Length || Lines[y][i] != ' ') break;
+                                spacesToRemove++;
+                            }
+
+                            Lines[y] = Lines[y][spacesToRemove..];
+
+                            if (y == _cursor.Y) _cursor.X = Math.Max(0, _cursor.X - spacesToRemove);
+                            if (y == _selectionAnchor.Y) _selectionAnchor.X = Math.Max(0, _selectionAnchor.X - spacesToRemove);
+                        }
+                    }
+                }
+
+                Layout();
             }
+            #endregion
         }
 
         public override void OnTextEntered(string text)
         {
-            InsertText(text);
+            EraseSelection();
+
+            Lines[_cursor.Y] = Lines[_cursor.Y][0.._cursor.X] + text + Lines[_cursor.Y][_cursor.X..];
+            _cursor.X = _selectionAnchor.X = _cursor.X + text.Length;
+
+            ScrollCursorIntoView();
+            Layout();
         }
 
         public override void OnMouseDown(int button)
@@ -337,7 +428,7 @@ namespace DeepSwarmPlatform.UI
                 Desktop.SetHoveredElementPressed(true);
 
                 _cursor = _selectionAnchor = GetHoveredTextPosition();
-                ClampScrolling();
+                ScrollCursorIntoView();
             }
         }
 
@@ -346,12 +437,7 @@ namespace DeepSwarmPlatform.UI
             if (IsPressed)
             {
                 _cursor = GetHoveredTextPosition();
-
-                var mouseY = Desktop.MouseY;
-                if (mouseY < _contentRectangle.Top) Scroll(1);
-                if (mouseY > _contentRectangle.Bottom) Scroll(-1);
-
-                ClampScrolling();
+                ScrollCursorIntoView();
             }
         }
 
@@ -360,21 +446,7 @@ namespace DeepSwarmPlatform.UI
             if (button == 1 && IsPressed)
             {
                 Desktop.SetHoveredElementPressed(false);
-                ClampScrolling();
-            }
-        }
-
-        public override void OnMouseWheel(int dx, int dy)
-        {
-            Scroll(dy);
-        }
-
-        void Scroll(int dy)
-        {
-            if (dy != 0)
-            {
-                _scrollingPixels.Y -= dy * CellSize.Y * 3;
-                ClampScrolling();
+                ScrollCursorIntoView();
             }
         }
         #endregion
@@ -384,14 +456,13 @@ namespace DeepSwarmPlatform.UI
         {
             base.DrawSelf();
 
-            var startY = _scrollingPixels.Y / CellSize.Y;
-            var endY = Math.Min(Lines.Count - 1, (_scrollingPixels.Y + _contentRectangle.Height) / CellSize.Y);
+            var startY = _contentScroll.Y / CellSize.Y;
+            var endY = Math.Min(Lines.Count - 1, (_contentScroll.Y + _contentRectangle.Height) / CellSize.Y);
 
-            var clipRect = _contentRectangle.ToSDL_Rect();
-            SDL.SDL_RenderSetClipRect(Desktop.Renderer, ref clipRect);
+            Desktop.PushClipRect(ViewRectangle);
 
             // Draw selection
-            if (HasSelection())
+            if (_selectionAnchor != _cursor)
             {
                 new Color(0x0000ffaa).UseAsDrawColor(Desktop.Renderer);
                 GetSelectionRange(out var firstPosition, out var lastPosition);
@@ -399,34 +470,43 @@ namespace DeepSwarmPlatform.UI
                 if (firstPosition.Y == lastPosition.Y)
                 {
                     var selectionRect = new Rectangle(
-                    _contentRectangle.X + firstPosition.X * CellSize.X - _scrollingPixels.X,
-                    _contentRectangle.Y + firstPosition.Y * CellSize.Y - _scrollingPixels.Y,
-                    (lastPosition.X - firstPosition.X) * CellSize.X, CellSize.Y).ToSDL_Rect();
+                        _contentRectangle.X + firstPosition.X * CellSize.X,
+                        _contentRectangle.Y + firstPosition.Y * CellSize.Y,
+                        (lastPosition.X - firstPosition.X) * CellSize.X, CellSize.Y).ToSDL_Rect();
+
                     SDL.SDL_RenderFillRect(Desktop.Renderer, ref selectionRect);
                 }
                 else
                 {
-                    var firstLineSelectionRect = new Rectangle(
-                    _contentRectangle.X + firstPosition.X * CellSize.X - _scrollingPixels.X,
-                    _contentRectangle.Y + firstPosition.Y * CellSize.Y - _scrollingPixels.Y,
-                    (Lines[firstPosition.Y][firstPosition.X..].Length) * CellSize.X, CellSize.Y).ToSDL_Rect();
-
-                    for (int i = firstPosition.Y + 1; i < lastPosition.Y; i++)
+                    if (firstPosition.Y >= startY)
                     {
-                        var midSelectionRect = new Rectangle(
-                            _contentRectangle.X + 0 - _scrollingPixels.X,
-                            _contentRectangle.Y + i * CellSize.Y - _scrollingPixels.Y,
-                            (Lines[i].Length) * CellSize.X, CellSize.Y).ToSDL_Rect();
-                        SDL.SDL_RenderFillRect(Desktop.Renderer, ref midSelectionRect);
+                        var firstRect = new Rectangle(
+                            _contentRectangle.X + firstPosition.X * CellSize.X,
+                            _contentRectangle.Y + firstPosition.Y * CellSize.Y,
+                            Math.Max(1, Lines[firstPosition.Y][firstPosition.X..].Length) * CellSize.X, CellSize.Y).ToSDL_Rect();
+
+                        SDL.SDL_RenderFillRect(Desktop.Renderer, ref firstRect);
                     }
 
-                    var lastLineSelectionRect = new Rectangle(
-                    _contentRectangle.X + 0 - _scrollingPixels.X,
-                    _contentRectangle.Y + lastPosition.Y * CellSize.Y - _scrollingPixels.Y,
-                    (Lines[lastPosition.Y][..lastPosition.X].Length) * CellSize.X, CellSize.Y).ToSDL_Rect();
+                    for (int i = Math.Max(startY, firstPosition.Y + 1); i < Math.Min(endY, lastPosition.Y); i++)
+                    {
+                        var midRect = new Rectangle(
+                            _contentRectangle.X,
+                            _contentRectangle.Y + i * CellSize.Y,
+                            Math.Max(1, Lines[i].Length) * CellSize.X, CellSize.Y).ToSDL_Rect();
 
-                    SDL.SDL_RenderFillRect(Desktop.Renderer, ref firstLineSelectionRect);
-                    SDL.SDL_RenderFillRect(Desktop.Renderer, ref lastLineSelectionRect);
+                        SDL.SDL_RenderFillRect(Desktop.Renderer, ref midRect);
+                    }
+
+                    if (lastPosition.Y <= endY)
+                    {
+                        var lastRect = new Rectangle(
+                            _contentRectangle.X,
+                            _contentRectangle.Y + lastPosition.Y * CellSize.Y,
+                            (Lines[lastPosition.Y][..lastPosition.X].Length) * CellSize.X, CellSize.Y).ToSDL_Rect();
+
+                        SDL.SDL_RenderFillRect(Desktop.Renderer, ref lastRect);
+                    }
                 }
             }
 
@@ -435,24 +515,26 @@ namespace DeepSwarmPlatform.UI
             for (var y = startY; y <= endY; y++)
             {
                 FontStyle.DrawText(
-                    _contentRectangle.X - _scrollingPixels.X,
-                    _contentRectangle.Y + y * CellSize.Y + (CellSize.Y / 2 - FontStyle.LineSpacing / 2) - _scrollingPixels.Y,
+                    _contentRectangle.X,
+                    _contentRectangle.Y + y * CellSize.Y + (CellSize.Y / 2 - FontStyle.LineSpacing / 2),
                     Lines[y]);
             }
 
-            SDL.SDL_RenderSetClipRect(Desktop.Renderer, IntPtr.Zero);
-
             // Draw cursor
-            if (Desktop.FocusedElement == this && (_cursorTimer % TextInput.CursorFlashInterval * 2) < TextInput.CursorFlashInterval)
+            if (Desktop.FocusedElement == this &&
+                (_cursorTimer % TextInput.CursorFlashInterval * 2) < TextInput.CursorFlashInterval &&
+                _cursor.Y >= startY && _cursor.Y <= endY)
             {
                 new Color(0xffffffff).UseAsDrawColor(Desktop.Renderer);
 
                 var cursorRect = new Rectangle(
-                    _contentRectangle.X + _cursor.X * CellSize.X - _scrollingPixels.X,
-                    _contentRectangle.Y + _cursor.Y * CellSize.Y - _scrollingPixels.Y,
-                    2, CellSize.Y).ToSDL_Rect();
+                    _contentRectangle.X + _cursor.X * CellSize.X,
+                    _contentRectangle.Y + _cursor.Y * CellSize.Y,
+                    CursorWidth, CellSize.Y).ToSDL_Rect();
                 SDL.SDL_RenderDrawRect(Desktop.Renderer, ref cursorRect);
             }
+
+            Desktop.PopClipRect();
         }
         #endregion
     }

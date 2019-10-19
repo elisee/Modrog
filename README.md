@@ -20,7 +20,6 @@ You'll need .NET Core 3 and Visual Studio 2019. VS Code might work.
     - (Gameplay) Add back client-side script editing and display script errors somewhere
     - (Gameplay) Add light checkerboard pattern on the floor
     - (UI) Element: Implement scrollbars
-    - (UI) TextEditor: Fix scrolling, building on Element scrolling
     - (UI) TextInput / TextEditor: Support Cut, Copy, Paste
     - (UI) Element: Implement ChildLayout.Bottom, .Right
     - (UI) TextInput / TextEditor: Keyboard fast movement (Ctrl)
