@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace DeepSwarmCommon
+namespace DeepSwarmBasics.Math
 {
     public static class MathHelper
     {
