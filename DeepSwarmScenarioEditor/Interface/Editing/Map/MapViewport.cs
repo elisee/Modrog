@@ -92,15 +92,26 @@ namespace DeepSwarmScenarioEditor.Interface.Editing.Map
             switch (_mapEditor.Tool)
             {
                 case MapEditor.MapEditorTool.Brush:
-                    chunk.TilesPerLayer[0, chunkTileCoords.Y * Protocol.MapChunkSide + chunkTileCoords.X] = 1;
-                    break;
-
-                case MapEditor.MapEditorTool.Eraser:
-                    chunk.TilesPerLayer[0, chunkTileCoords.Y * Protocol.MapChunkSide + chunkTileCoords.X] = 0;
+                    chunk.TilesPerLayer[_mapEditor.TileLayer, chunkTileCoords.Y * Protocol.MapChunkSide + chunkTileCoords.X] = _mapEditor.BrushTileIndex;
                     break;
             }
-
         }
+
+        short GetTileAt(Point position)
+        {
+            var chunkCoords = new Point(
+                (int)MathF.Floor((float)position.X / Protocol.MapChunkSide),
+                (int)MathF.Floor((float)position.Y / Protocol.MapChunkSide));
+
+            if (!_chunks.TryGetValue(chunkCoords, out var chunk)) return 0;
+
+            var chunkTileCoords = new Point(
+                MathHelper.Mod(position.X, Protocol.MapChunkSide),
+                MathHelper.Mod(position.Y, Protocol.MapChunkSide));
+
+            return chunk.TilesPerLayer[_mapEditor.TileLayer, chunkTileCoords.Y * Protocol.MapChunkSide + chunkTileCoords.X];
+        }
+
 
         public override void OnMounted()
         {
@@ -124,17 +135,24 @@ namespace DeepSwarmScenarioEditor.Interface.Editing.Map
         {
             base.OnKeyDown(key, repeat);
 
-            if (!repeat)
+            if (!repeat && !_isDraggingScroll)
             {
-                if (!_isDraggingScroll)
-                {
-                    if (key == SDL.SDL_Keycode.SDLK_KP_PLUS) _zoom = Math.Min(_zoom + 0.1f, MaxZoom);
-                    if (key == SDL.SDL_Keycode.SDLK_KP_MINUS) _zoom = Math.Max(_zoom - 0.1f, MinZoom);
+                if (key == SDL.SDL_Keycode.SDLK_KP_PLUS) _zoom = Math.Min(_zoom + 0.1f, MaxZoom);
+                if (key == SDL.SDL_Keycode.SDLK_KP_MINUS) _zoom = Math.Max(_zoom - 0.1f, MinZoom);
 
-                    if (key == SDL.SDL_Keycode.SDLK_LEFT) _isScrollingLeft = true;
-                    if (key == SDL.SDL_Keycode.SDLK_RIGHT) _isScrollingRight = true;
-                    if (key == SDL.SDL_Keycode.SDLK_UP) _isScrollingUp = true;
-                    if (key == SDL.SDL_Keycode.SDLK_DOWN) _isScrollingDown = true;
+                if (key == SDL.SDL_Keycode.SDLK_LEFT) _isScrollingLeft = true;
+                if (key == SDL.SDL_Keycode.SDLK_RIGHT) _isScrollingRight = true;
+                if (key == SDL.SDL_Keycode.SDLK_UP) _isScrollingUp = true;
+                if (key == SDL.SDL_Keycode.SDLK_DOWN) _isScrollingDown = true;
+
+                if (key == SDL.SDL_Keycode.SDLK_n)
+                {
+                    _mapEditor.SetBrush(tileIndex: 1);
+                }
+
+                if (key == SDL.SDL_Keycode.SDLK_e)
+                {
+                    _mapEditor.SetBrush(tileIndex: 0);
                 }
             }
         }
@@ -160,19 +178,23 @@ namespace DeepSwarmScenarioEditor.Interface.Editing.Map
 
         public override void OnMouseDown(int button)
         {
+            if (_isDraggingScroll || _isPlacingTiles) return;
+
+            Desktop.SetFocusedElement(this);
+            Desktop.SetHoveredElementPressed(true);
+
             if (button == 1)
             {
-                Desktop.SetFocusedElement(this);
-                Desktop.SetHoveredElementPressed(true);
-
                 // TODO: Place a tile down or select an entity
                 _isPlacingTiles = true;
                 PutTile();
             }
+            else if (button == 1)
+            {
+                _mapEditor.SetBrush(GetTileAt(_hoveredTile));
+            }
             else if (button == 2)
             {
-                Desktop.SetFocusedElement(this);
-                Desktop.SetHoveredElementPressed(true);
                 _isScrollingLeft = false;
                 _isScrollingRight = false;
                 _isScrollingUp = false;

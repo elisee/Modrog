@@ -23,8 +23,13 @@ namespace DeepSwarmScenarioEditor.Interface.Editing.Map
         public string TileSetPath = "";
 
         // Tools
-        public enum MapEditorTool { Brush, Picker, Eraser, Bucket }
+        public enum MapEditorTool { Brush, Picker, Bucket }
         public MapEditorTool Tool { get; private set; } = MapEditorTool.Brush;
+
+        public int TileLayer = 0;
+        public short BrushTileIndex = 1;
+        public bool BrushShouldErase = false;
+        public int BrushSize = 1;
 
         public MapEditor(Interface @interface, string fullAssetPath)
             : base(@interface, fullAssetPath)
@@ -74,15 +79,9 @@ namespace DeepSwarmScenarioEditor.Interface.Editing.Map
                         return new StyledTextButton(toolsContainer) { LayoutWeight = 1, HorizontalFlow = Flow.Expand, Text = name, OnActivate = onActivate };
                     }
 
-                    void SetTool(MapEditorTool tool)
-                    {
-                        Tool = tool;
-                    }
-
-                    MakeButton("Brush", () => SetTool(MapEditorTool.Brush));
-                    MakeButton("Picker", () => SetTool(MapEditorTool.Picker));
-                    MakeButton("Eraser", () => SetTool(MapEditorTool.Eraser));
-                    MakeButton("Bucket", () => SetTool(MapEditorTool.Bucket));
+                    MakeButton("Brush", () => SetBrush(tileIndex: 1));
+                    MakeButton("Picker", () => Tool = MapEditorTool.Picker);
+                    MakeButton("Bucket", () => Tool = MapEditorTool.Bucket);
                 }
             }
 
@@ -168,6 +167,12 @@ namespace DeepSwarmScenarioEditor.Interface.Editing.Map
 
             using var file = File.OpenWrite(FullAssetPath);
             file.Write(writer.Buffer, 0, writer.Finish());
+        }
+
+        internal void SetBrush(short tileIndex)
+        {
+            Tool = MapEditorTool.Brush;
+            BrushTileIndex = tileIndex;
         }
 
         internal void CloseSettings()
