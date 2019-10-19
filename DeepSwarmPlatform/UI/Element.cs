@@ -518,11 +518,14 @@ namespace DeepSwarmPlatform.UI
 
             DrawSelf();
 
-            if (HorizontalFlow == Flow.Scroll || VerticalFlow == Flow.Scroll) Desktop.PushClipRect(ViewRectangle);
+            if (Children.Count > 0)
+            {
+                var shouldClip = HorizontalFlow == Flow.Scroll || VerticalFlow == Flow.Scroll;
 
-            foreach (var child in Children) if (child.IsMounted) child.Draw();
-
-            if (HorizontalFlow == Flow.Scroll || VerticalFlow == Flow.Scroll) Desktop.PopClipRect();
+                if (shouldClip) Desktop.PushClipRect(ViewRectangle);
+                foreach (var child in Children) if (child.IsMounted) child.Draw();
+                if (shouldClip) Desktop.PopClipRect();
+            }
         }
 
         public void DrawOutline()
