@@ -139,7 +139,7 @@ namespace DeepSwarmScenarioEditor.Interface.Editing.Map
 
         public override void OnMouseWheel(int dx, int dy)
         {
-            if (Desktop.IsCtrlDown)
+            if (!Desktop.IsShiftDown)
             {
                 _zoom = Math.Clamp(_zoom + dy / 10f, 0.5f, 2f);
             }
