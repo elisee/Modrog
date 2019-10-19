@@ -7,11 +7,7 @@ using System.Collections.Generic;
 
 namespace DeepSwarmPlatform.UI
 {
-    // TODO: Undo/redo support
-    // TODO: Quick navigation with Ctrl
-    // TODO: Auto-indent when inserting lines
-    // TODO: Syntax highlighting support
-    // TODO: Auto-completion support
+
     public class TextEditor : Element
     {
         public FontStyle FontStyle;

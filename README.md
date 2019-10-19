@@ -19,8 +19,10 @@ You'll need .NET Core 3 and Visual Studio 2019. VS Code might work.
     - (Client) Fix confusion between Engine and ClientState? Have a ClientApp (renamed from ClientState) which has an Engine instead
     - (Gameplay) Add back client-side script editing and display script errors somewhere
     - (Gameplay) Add light checkerboard pattern on the floor
-    - (UI) Element: Implement scrollbars
-    - (UI) TextInput / TextEditor: Support Cut, Copy, Paste
-    - (UI) Element: Implement ChildLayout.Bottom, .Right
-    - (UI) TextInput / TextEditor: Keyboard fast movement (Ctrl)
     - (UI) Desktop: Show focus outline only after navigating with keyboard once to avoid distracting players and hide after clicking with mouse
+    - (UI) Element: Implement scrollbars
+    - (UI) Element: Implement ChildLayout.Bottom, .Right
+    - (UI) TextEditor / TextInput: Undo/redo support
+    - (UI) TextEditor / TextInput: Quick navigation with Ctrl
+    - (UI) TextEditor: Auto-indent when inserting lines
+    - (UI) TextEditor: Language-specific syntax highlighting & auto-completion support (using callbacks or specialization, not built into the UI framework I think)
