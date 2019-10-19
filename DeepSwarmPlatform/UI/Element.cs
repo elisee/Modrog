@@ -77,8 +77,8 @@ namespace DeepSwarmPlatform.UI
         public Rectangle ViewRectangle { get; private set; }
 
         protected Rectangle _contentRectangle { get; private set; }
-        Point _contentScroll;
-        public const int ScrollMultiplier = 30;
+        protected Point _contentScroll;
+        protected int _scrollMultiplier = 30;
 
         // Child layout
         public enum ChildLayoutMode { Overlay, Left, Right, Top, Bottom }
@@ -200,6 +200,10 @@ namespace DeepSwarmPlatform.UI
 
             return contentSize;
         }
+
+        Point GetScrollArea() => new Point(
+            HorizontalFlow == Flow.Scroll ? _contentRectangle.Width - ViewRectangle.Width : 0,
+            VerticalFlow == Flow.Scroll ? _contentRectangle.Height - ViewRectangle.Height : 0);
 
         public void Layout(Rectangle? containerRectangle = null)
         {
@@ -368,14 +372,7 @@ namespace DeepSwarmPlatform.UI
             }
 
             // Clamp scroll
-            var scrollArea = new Point(_contentRectangle.Width - ViewRectangle.Width, _contentRectangle.Height - ViewRectangle.Height);
-            var overscroll = new Point(Math.Max(0, _contentScroll.X - scrollArea.X), Math.Max(0, _contentScroll.Y - scrollArea.Y));
-
-            if (overscroll != Point.Zero)
-            {
-                foreach (var child in Children) child.ApplyParentScroll(-overscroll);
-                _contentScroll -= overscroll;
-            }
+            ScrollIntoView(null, null);
         }
 
         public virtual void LayoutSelf() { }
@@ -449,13 +446,11 @@ namespace DeepSwarmPlatform.UI
         public virtual void OnMouseUp(int button) { }
         public virtual void OnMouseWheel(int dx, int dy)
         {
-            var scrollArea = new Point(
-                HorizontalFlow == Flow.Scroll ? _contentRectangle.Width - ViewRectangle.Width : 0,
-                VerticalFlow == Flow.Scroll ? _contentRectangle.Height - ViewRectangle.Height : 0);
+            var scrollArea = GetScrollArea();
 
             var newContentScroll = new Point(
-                Math.Clamp(_contentScroll.X - dx * ScrollMultiplier, 0, scrollArea.X),
-                Math.Clamp(_contentScroll.Y - dy * ScrollMultiplier, 0, scrollArea.Y));
+                Math.Clamp(_contentScroll.X - dx * _scrollMultiplier, 0, scrollArea.X),
+                Math.Clamp(_contentScroll.Y - dy * _scrollMultiplier, 0, scrollArea.Y));
 
             var scrollOffset = newContentScroll - _contentScroll;
 
@@ -467,21 +462,44 @@ namespace DeepSwarmPlatform.UI
 
             foreach (var child in Children) child.ApplyParentScroll(scrollOffset);
             _contentScroll = newContentScroll;
+            _contentRectangle -= scrollOffset;
         }
 
         public virtual void Validate() => Parent?.Validate();
         public virtual void Dismiss() => Parent?.Dismiss();
 
-        public void ScrollToBottom()
+        public void ScrollIntoView(int? x, int? y)
         {
-            var newContentScrollY = _contentRectangle.Height - ViewRectangle.Height;
+            var scrollRectangle = new Rectangle(
+                _contentScroll.X, _contentScroll.Y,
+                ViewRectangle.Width, ViewRectangle.Height);
 
-            var scrollOffset = new Point(0, newContentScrollY - _contentScroll.Y);
-            if (scrollOffset == Point.Zero) return;
+            if (x != null)
+            {
+                if (x.Value < scrollRectangle.X) scrollRectangle.X = x.Value;
+                else if (x.Value > scrollRectangle.Right) scrollRectangle.X = x.Value - scrollRectangle.Width;
+            }
 
-            foreach (var child in Children) child.ApplyParentScroll(scrollOffset);
-            _contentScroll.Y = newContentScrollY;
+            if (y != null)
+            {
+                if (y.Value < scrollRectangle.Y) scrollRectangle.Y = y.Value;
+                else if (y.Value > scrollRectangle.Bottom) scrollRectangle.Y = y.Value - scrollRectangle.Height;
+            }
+
+            var scrollArea = GetScrollArea();
+            var newContentScroll = new Point(Math.Clamp(scrollRectangle.X, 0, scrollArea.X), Math.Clamp(scrollRectangle.Y, 0, scrollArea.Y));
+
+            if (newContentScroll != _contentScroll)
+            {
+                var scrollOffset = newContentScroll - _contentScroll;
+                foreach (var child in Children) child.ApplyParentScroll(scrollOffset);
+
+                _contentRectangle -= scrollOffset;
+                _contentScroll = newContentScroll;
+            }
         }
+
+        public void ScrollToBottom() => ScrollIntoView(null, _contentRectangle.Height);
 
         protected void ApplyParentScroll(Point offset)
         {
