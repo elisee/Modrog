@@ -1,8 +1,8 @@
 @echo off
-set filename=Build\DeepSwarmServer-Debug\netcoreapp3.0\DeepSwarmServer.exe
+set filename=Build\ModrogServer-Debug\netcoreapp3.0\ModrogServer.exe
 if exist %filename% (
     %filename% %*
 ) else (
-    echo Executable not found. Build DeepSwarmServer as Debug first
+    echo Executable not found. Build ModrogServer as Debug first
     pause
 )

@@ -1,6 +1,6 @@
-using DeepSwarmApi;
-using DeepSwarmApi.Server;
-using DeepSwarmBasics.Math;
+using ModrogApi;
+using ModrogApi.Server;
+using SwarmBasics.Math;
 using System.Collections.Generic;
 
 class ScenarioScript : IScenarioScript

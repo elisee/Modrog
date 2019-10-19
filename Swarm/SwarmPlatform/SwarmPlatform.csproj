@@ -1,0 +1,14 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.0</TargetFramework>
+    <Platforms>x64</Platforms>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\SwarmBasics\SwarmBasics.csproj" />
+    <ProjectReference Include="..\ThirdParty\SDL2-CS\SDL2-CS.Core.csproj" />
+  </ItemGroup>
+
+</Project>

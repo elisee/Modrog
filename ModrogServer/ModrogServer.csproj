@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp3.0</TargetFramework>
+    <Platforms>x64</Platforms>
+    <OutputPath>$(SolutionDir)\Build\ModrogServer-$(Configuration)</OutputPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ModrogApi\ModrogApi.csproj" />
+    <ProjectReference Include="..\ModrogCommon\ModrogCommon.csproj" />
+  </ItemGroup>
+
+</Project>

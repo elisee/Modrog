@@ -1,10 +1,20 @@
-# DeepSwarm
+# Modrog
 
 Top-down adventures to play with friends and build yourself
 
 ## Building
 
 You'll need .NET Core 3 and Visual Studio 2019. VS Code might work.
+
+## Structure
+
+    * ModrogClient, ModrogServer and ModrogEditor are the apps
+    * ModrogCommon contains shared stuff for the apps
+    * ModrogApi contains the scripting APIs
+    * Swarm is the potentially reusable generic framework below it all
+        * SwarmBasics contains shared inert features like Math, can be exposed to scripts safely
+        * SwarmCore contains shared features that do I/O
+        * SwarmPlatform contains shared features that are not suitable for command-line apps
 
 ## Running
 
@@ -26,3 +36,4 @@ You'll need .NET Core 3 and Visual Studio 2019. VS Code might work.
     - (UI) TextEditor / TextInput: Quick navigation with Ctrl
     - (UI) TextEditor: Auto-indent when inserting lines
     - (UI) TextEditor: Language-specific syntax highlighting & auto-completion support (using callbacks or specialization, not built into the UI framework I think)
+    - (UI) TextEditor: Add option for line count gutter on the left
