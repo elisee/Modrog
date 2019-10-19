@@ -20,9 +20,7 @@ namespace DeepSwarmScenarioEditor.Interface.Editing.Map
         readonly Dictionary<Point, Chunk> _chunks = new Dictionary<Point, Chunk>();
 
         // Scrolling
-        // TODO: Allow support 2 levels of zoom or more idk
-        float _scrollingPixelsX;
-        float _scrollingPixelsY;
+        Vector2 _scroll;
         float _zoom = 2f;
 
         bool _isScrollingLeft;
@@ -31,12 +29,10 @@ namespace DeepSwarmScenarioEditor.Interface.Editing.Map
         bool _isScrollingDown;
 
         bool _isDraggingScroll;
-
-        Point _dragScroll;
+        Vector2 _dragScroll;
 
         // Hovered tile
-        int _hoveredTileX;
-        int _hoveredTileY;
+        Point _hoveredTile;
 
         public MapViewport(MapEditor mapEditor) : base(mapEditor.Desktop, null)
         {
@@ -96,8 +92,8 @@ namespace DeepSwarmScenarioEditor.Interface.Editing.Map
         {
             if (_isDraggingScroll)
             {
-                _scrollingPixelsX = _dragScroll.X - Desktop.MouseX;
-                _scrollingPixelsY = _dragScroll.Y - Desktop.MouseY;
+                _scroll.X = _dragScroll.X - Desktop.MouseX / _zoom;
+                _scroll.Y = _dragScroll.Y - Desktop.MouseY / _zoom;
             }
         }
 
@@ -106,30 +102,35 @@ namespace DeepSwarmScenarioEditor.Interface.Editing.Map
             if (button == 1)
             {
                 Desktop.SetFocusedElement(this);
-
-                var startTileX = (int)_scrollingPixelsX / Protocol.MapTileSize;
-                var startTileY = (int)_scrollingPixelsY / Protocol.MapTileSize;
+                Desktop.SetHoveredElementPressed(true);
 
                 // TODO: Entity selection
             }
             else if (button == 2)
             {
+                Desktop.SetFocusedElement(this);
+                Desktop.SetHoveredElementPressed(true);
                 _isScrollingLeft = false;
                 _isScrollingRight = false;
                 _isScrollingUp = false;
                 _isScrollingDown = false;
 
                 _isDraggingScroll = true;
-                _dragScroll.X = (int)_scrollingPixelsX + Desktop.MouseX;
-                _dragScroll.Y = (int)_scrollingPixelsY + Desktop.MouseY;
+                _dragScroll.X = _scroll.X + Desktop.MouseX / _zoom;
+                _dragScroll.Y = _scroll.Y + Desktop.MouseY / _zoom;
             }
         }
 
         public override void OnMouseUp(int button)
         {
-            if (button == 2)
+            if (button == 1)
+            {
+                Desktop.SetHoveredElementPressed(false);
+            }
+            else if (button == 2 && _isDraggingScroll)
             {
                 _isDraggingScroll = false;
+                Desktop.SetHoveredElementPressed(false);
             }
         }
 
@@ -141,8 +142,8 @@ namespace DeepSwarmScenarioEditor.Interface.Editing.Map
             }
             else
             {
-                _scrollingPixelsX += dx * 24 / _zoom;
-                _scrollingPixelsY -= dy * 24 / _zoom;
+                _scroll.X += dx * 24 / _zoom;
+                _scroll.Y -= dy * 24 / _zoom;
             }
         }
 
@@ -160,15 +161,17 @@ namespace DeepSwarmScenarioEditor.Interface.Editing.Map
             if (dx != 0 || dy != 0)
             {
                 var angle = MathF.Atan2(dy, dx);
-                _scrollingPixelsX += MathF.Cos(angle) * ScrollingSpeed * deltaTime / _zoom;
-                _scrollingPixelsY -= MathF.Sin(angle) * ScrollingSpeed * deltaTime / _zoom;
+                _scroll.X += MathF.Cos(angle) * ScrollingSpeed * deltaTime / _zoom;
+                _scroll.Y -= MathF.Sin(angle) * ScrollingSpeed * deltaTime / _zoom;
             }
 
-            var viewportScrollX = (int)_scrollingPixelsX - (int)(ViewRectangle.Width / 2 / _zoom);
-            var viewportScrollY = (int)_scrollingPixelsY - (int)(ViewRectangle.Height / 2 / _zoom);
+            var viewportScroll = new Vector2(
+                _scroll.X - ViewRectangle.Width / 2 / _zoom,
+                _scroll.Y - ViewRectangle.Height / 2 / _zoom);
 
-            _hoveredTileX = (int)MathF.Floor((float)(viewportScrollX + (Desktop.MouseX - ViewRectangle.X) / _zoom) / Protocol.MapTileSize);
-            _hoveredTileY = (int)MathF.Floor((float)(viewportScrollY + (Desktop.MouseY - ViewRectangle.Y) / _zoom) / Protocol.MapTileSize);
+            _hoveredTile = new Point(
+                (int)MathF.Floor((viewportScroll.X + (Desktop.MouseX - ViewRectangle.X) / _zoom) / Protocol.MapTileSize),
+                (int)MathF.Floor((viewportScroll.Y + (Desktop.MouseY - ViewRectangle.Y) / _zoom) / Protocol.MapTileSize));
         }
         #endregion
 
@@ -176,31 +179,34 @@ namespace DeepSwarmScenarioEditor.Interface.Editing.Map
         {
             base.DrawSelf();
 
-            var viewportScrollX = (int)_scrollingPixelsX - (int)(ViewRectangle.Width / 2 / _zoom);
-            var viewportScrollY = (int)_scrollingPixelsY - (int)(ViewRectangle.Height / 2 / _zoom);
+            var viewportScroll = new Vector2(
+                _scroll.X - ViewRectangle.Width / 2 / _zoom,
+                _scroll.Y - ViewRectangle.Height / 2 / _zoom);
 
-            var startTileX = (int)MathF.Floor((float)viewportScrollX / Protocol.MapTileSize);
-            var startTileY = (int)MathF.Floor((float)viewportScrollY / Protocol.MapTileSize);
+            var startTile = new Point(
+                (int)MathF.Floor(viewportScroll.X / Protocol.MapTileSize),
+                (int)MathF.Floor(viewportScroll.Y / Protocol.MapTileSize));
 
-            var endTileX = startTileX + (int)MathF.Ceiling((float)ViewRectangle.Width / (Protocol.MapTileSize * _zoom) + 1);
-            var endTileY = startTileY + (int)MathF.Ceiling((float)ViewRectangle.Height / (Protocol.MapTileSize * _zoom) + 1);
+            var endTile = new Point(
+                startTile.X + (int)MathF.Ceiling(ViewRectangle.Width / (Protocol.MapTileSize * _zoom) + 1),
+                startTile.Y + (int)MathF.Ceiling(ViewRectangle.Height / (Protocol.MapTileSize * _zoom) + 1));
 
             Desktop.PushClipRect(ViewRectangle);
 
             new Color(0xffffffff).UseAsDrawColor(Desktop.Renderer);
 
-            for (var y = startTileY; y <= endTileY; y++)
+            for (var y = startTile.Y; y <= endTile.Y; y++)
             {
-                for (var x = startTileX; x <= endTileX; x++)
+                for (var x = startTile.X; x <= endTile.X; x++)
                 {
                     var red = (byte)(255 * (x - 16) / 32);
                     var blue = (byte)(255 * (y - 16) / 32);
                     new Color((uint)((red << 24) + (blue << 8) + 0xff)).UseAsDrawColor(Desktop.Renderer);
 
-                    var left = ViewRectangle.X + (int)(x * _zoom * Protocol.MapTileSize) - (int)(viewportScrollX * _zoom);
-                    var right = ViewRectangle.X + (int)((x + 1) * _zoom * Protocol.MapTileSize) - (int)(viewportScrollX * _zoom);
-                    var top = ViewRectangle.Y + (int)(y * _zoom * Protocol.MapTileSize) - (int)(viewportScrollY * _zoom);
-                    var bottom = ViewRectangle.Y + (int)((y + 1) * _zoom * Protocol.MapTileSize) - (int)(viewportScrollY * _zoom);
+                    var left = ViewRectangle.X + (int)(x * _zoom * Protocol.MapTileSize) - (int)(viewportScroll.X * _zoom);
+                    var right = ViewRectangle.X + (int)((x + 1) * _zoom * Protocol.MapTileSize) - (int)(viewportScroll.X * _zoom);
+                    var top = ViewRectangle.Y + (int)(y * _zoom * Protocol.MapTileSize) - (int)(viewportScroll.Y * _zoom);
+                    var bottom = ViewRectangle.Y + (int)((y + 1) * _zoom * Protocol.MapTileSize) - (int)(viewportScroll.Y * _zoom);
 
                     var destRect = new SDL.SDL_Rect { x = left, y = top, w = right - left, h = bottom - top };
                     SDL.SDL_RenderFillRect(Desktop.Renderer, ref destRect);
@@ -222,13 +228,13 @@ namespace DeepSwarmScenarioEditor.Interface.Editing.Map
                 var color = new Color(0x00ff00ff);
                 color.UseAsDrawColor(Desktop.Renderer);
 
-                var x = _hoveredTileX;
-                var y = _hoveredTileY;
+                var x = _hoveredTile.X;
+                var y = _hoveredTile.Y;
                 var w = 1;
                 var h = 1;
 
-                var renderX = ViewRectangle.X + (int)(x * _zoom * Protocol.MapTileSize) - (int)(viewportScrollX * _zoom);
-                var renderY = ViewRectangle.Y + (int)(y * _zoom * Protocol.MapTileSize) - (int)(viewportScrollY * _zoom);
+                var renderX = ViewRectangle.X + (int)(x * _zoom * Protocol.MapTileSize) - (int)(viewportScroll.X * _zoom);
+                var renderY = ViewRectangle.Y + (int)(y * _zoom * Protocol.MapTileSize) - (int)(viewportScroll.Y * _zoom);
 
                 var rect = new Rectangle(renderX, renderY, (int)(w * Protocol.MapTileSize * _zoom), (int)(h * Protocol.MapTileSize * _zoom));
 
