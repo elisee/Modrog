@@ -11,7 +11,7 @@ namespace DeepSwarmPlatform.UI
     {
         public FontStyle FontStyle;
         public Color TextColor = new Color(0xffffffff);
-        public Point CellSize = new Point(12, 20);
+        public Point CellSize = new Point(12, 32);
 
         public readonly List<string> Lines = new List<string> { "" };
 
@@ -436,7 +436,7 @@ namespace DeepSwarmPlatform.UI
             {
                 FontStyle.DrawText(
                     _contentRectangle.X - _scrollingPixels.X,
-                    _contentRectangle.Y + y * CellSize.Y + FontStyle.LineSpacing / 2 - _scrollingPixels.Y,
+                    _contentRectangle.Y + y * CellSize.Y + (CellSize.Y / 2 - FontStyle.LineSpacing / 2) - _scrollingPixels.Y,
                     Lines[y]);
             }
 
