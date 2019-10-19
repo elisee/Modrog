@@ -165,8 +165,9 @@ namespace DeepSwarmPlatform.UI
         public void ClearHoveredElement()
         {
             HoveredElement?.OnMouseExit();
-            HoveredElement = RootElement.HitTest(MouseX, MouseY);
             IsHoveredElementPressed = false;
+            HoveredElement = RootElement.HitTest(MouseX, MouseY);
+            HoveredElement?.OnMouseEnter();
         }
 
         public void SetHoveredElementPressed(bool pressed)
