@@ -66,17 +66,20 @@ namespace DeepSwarmScenarioEditor.Interface.Editing.Map
 
         public override void OnKeyDown(SDL.SDL_Keycode key, bool repeat)
         {
-            if (repeat) return;
+            base.OnKeyDown(key, repeat);
 
-            if (!_isDraggingScroll)
+            if (!repeat)
             {
-                if (key == SDL.SDL_Keycode.SDLK_KP_PLUS) _zoom = Math.Min(_zoom + 0.1f, 2f);
-                if (key == SDL.SDL_Keycode.SDLK_KP_MINUS) _zoom = Math.Max(_zoom - 0.1f, 0.5f);
+                if (!_isDraggingScroll)
+                {
+                    if (key == SDL.SDL_Keycode.SDLK_KP_PLUS) _zoom = Math.Min(_zoom + 0.1f, 2f);
+                    if (key == SDL.SDL_Keycode.SDLK_KP_MINUS) _zoom = Math.Max(_zoom - 0.1f, 0.5f);
 
-                if (key == SDL.SDL_Keycode.SDLK_LEFT) _isScrollingLeft = true;
-                if (key == SDL.SDL_Keycode.SDLK_RIGHT) _isScrollingRight = true;
-                if (key == SDL.SDL_Keycode.SDLK_UP) _isScrollingUp = true;
-                if (key == SDL.SDL_Keycode.SDLK_DOWN) _isScrollingDown = true;
+                    if (key == SDL.SDL_Keycode.SDLK_LEFT) _isScrollingLeft = true;
+                    if (key == SDL.SDL_Keycode.SDLK_RIGHT) _isScrollingRight = true;
+                    if (key == SDL.SDL_Keycode.SDLK_UP) _isScrollingUp = true;
+                    if (key == SDL.SDL_Keycode.SDLK_DOWN) _isScrollingDown = true;
+                }
             }
         }
 
