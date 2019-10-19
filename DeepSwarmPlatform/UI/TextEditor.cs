@@ -481,7 +481,7 @@ namespace DeepSwarmPlatform.UI
 
         public override void OnMouseDown(int button)
         {
-            if (button == 1)
+            if (button == SDL.SDL_BUTTON_LEFT)
             {
                 Desktop.SetFocusedElement(this);
                 Desktop.SetHoveredElementPressed(true);
@@ -502,7 +502,7 @@ namespace DeepSwarmPlatform.UI
 
         public override void OnMouseUp(int button)
         {
-            if (button == 1 && IsPressed)
+            if (button == SDL.SDL_BUTTON_LEFT && IsPressed)
             {
                 Desktop.SetHoveredElementPressed(false);
                 ScrollCursorIntoView();

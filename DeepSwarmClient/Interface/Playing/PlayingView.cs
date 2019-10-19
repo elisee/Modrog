@@ -145,7 +145,7 @@ namespace DeepSwarmClient.Interface.Playing
 
         public override void OnMouseDown(int button)
         {
-            if (button == 1)
+            if (button == SDL.SDL_BUTTON_LEFT)
             {
                 var startTileX = (int)ScrollingPixelsX / TileSize;
                 var startTileY = (int)ScrollingPixelsY / TileSize;
@@ -172,7 +172,7 @@ namespace DeepSwarmClient.Interface.Playing
                 }
                 else Engine.State.SelectEntity(null);
             }
-            else if (button == 2)
+            else if (button == SDL.SDL_BUTTON_MIDDLE)
             {
                 _isScrollingLeft = false;
                 _isScrollingRight = false;
@@ -187,7 +187,7 @@ namespace DeepSwarmClient.Interface.Playing
 
         public override void OnMouseUp(int button)
         {
-            if (button == 2)
+            if (button == SDL.SDL_BUTTON_MIDDLE)
             {
                 _isDraggingScroll = false;
             }

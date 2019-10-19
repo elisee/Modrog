@@ -183,17 +183,13 @@ namespace DeepSwarmScenarioEditor.Interface.Editing.Map
             Desktop.SetFocusedElement(this);
             Desktop.SetHoveredElementPressed(true);
 
-            if (button == 1)
+            if (button == SDL.SDL_BUTTON_LEFT)
             {
                 // TODO: Place a tile down or select an entity
                 _isPlacingTiles = true;
                 PutTile();
             }
-            else if (button == 1)
-            {
-                _mapEditor.SetBrush(GetTileAt(_hoveredTile));
-            }
-            else if (button == 2)
+            else if (button == SDL.SDL_BUTTON_MIDDLE)
             {
                 _isScrollingLeft = false;
                 _isScrollingRight = false;
@@ -204,16 +200,20 @@ namespace DeepSwarmScenarioEditor.Interface.Editing.Map
                 _dragScroll.X = _scroll.X + Desktop.MouseX / _zoom;
                 _dragScroll.Y = _scroll.Y + Desktop.MouseY / _zoom;
             }
+            else if (button == SDL.SDL_BUTTON_RIGHT)
+            {
+                _mapEditor.SetBrush(GetTileAt(_hoveredTile));
+            }
         }
 
         public override void OnMouseUp(int button)
         {
-            if (button == 1)
+            if (button == SDL.SDL_BUTTON_LEFT)
             {
                 _isPlacingTiles = false;
                 Desktop.SetHoveredElementPressed(false);
             }
-            else if (button == 2 && _isDraggingScroll)
+            else if (button == SDL.SDL_BUTTON_MIDDLE && _isDraggingScroll)
             {
                 _isDraggingScroll = false;
                 Desktop.SetHoveredElementPressed(false);
