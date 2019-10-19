@@ -37,7 +37,7 @@ namespace DeepSwarmPlatform.UI
         public void SetText(string text)
         {
             Lines.Clear();
-            Lines.AddRange(text.Replace("\r", "").Split("\n"));
+            Lines.AddRange(text.Replace("\r", "").Split('\n'));
             _cursor = _selectionAnchor = Point.Zero;
         }
 
@@ -76,27 +76,22 @@ namespace DeepSwarmPlatform.UI
 
         void EraseSelection()
         {
-            GetSelectionRange(out var selectionStart, out var selectionEnd);
+            GetSelectionRange(out var start, out var end);
 
-            if (selectionStart.Y == selectionEnd.Y)
+            if (start.Y == end.Y)
             {
-                var line = Lines[selectionStart.Y];
-                Lines[selectionStart.Y] = line[0..selectionStart.X] + line[selectionEnd.X..];
+                Lines[start.Y] = Lines[start.Y][0..start.X] + Lines[start.Y][end.X..];
             }
             else
             {
-                var firstLine = Lines[selectionStart.Y];
-                var lastLine = Lines[selectionEnd.Y];
+                var firstLine = Lines[start.Y];
+                var lastLine = Lines[end.Y];
+                for (var i = start.Y + 1; i <= end.Y; i++) Lines.RemoveAt(start.Y + 1);
 
-                for (int i = selectionStart.Y + 1; i <= selectionEnd.Y; i++)
-                {
-                    Lines.RemoveAt(selectionStart.Y + 1);
-                }
-
-                Lines[selectionStart.Y] = firstLine[0..selectionStart.X] + lastLine[selectionEnd.X..];
+                Lines[start.Y] = firstLine[0..start.X] + lastLine[end.X..];
             }
 
-            _cursor = _selectionAnchor = selectionStart;
+            _cursor = _selectionAnchor = start;
         }
 
         Point GetHoveredTextPosition()
@@ -151,6 +146,10 @@ namespace DeepSwarmPlatform.UI
                 case SDL.SDL_Keycode.SDLK_DELETE: Delete(); break;
                 case SDL.SDL_Keycode.SDLK_RETURN: BreakLine(); break;
                 case SDL.SDL_Keycode.SDLK_TAB: Indent(); break;
+
+                case SDL.SDL_Keycode.SDLK_x: Cut(); break;
+                case SDL.SDL_Keycode.SDLK_c: Copy(); break;
+                case SDL.SDL_Keycode.SDLK_v: Paste(); break;
 
                 default: base.OnKeyDown(key, repeat); break;
             }
@@ -305,10 +304,8 @@ namespace DeepSwarmPlatform.UI
                 Layout();
             }
 
-            void BreakLine()
+            void Internal_BreakLine()
             {
-                EraseSelection();
-
                 if (_cursor.X == 0)
                 {
                     Lines.Insert(_cursor.Y, "");
@@ -329,9 +326,14 @@ namespace DeepSwarmPlatform.UI
                     _cursor.Y++;
                     Lines.Insert(_cursor.Y, endOfLine);
                 }
+            }
+
+            void BreakLine()
+            {
+                EraseSelection();
+                Internal_BreakLine();
 
                 _selectionAnchor = _cursor;
-
                 Layout();
             }
 
@@ -408,6 +410,58 @@ namespace DeepSwarmPlatform.UI
                 }
 
                 Layout();
+            }
+
+            string GetSelectionText()
+            {
+                GetSelectionRange(out var start, out var end);
+
+                if (start.Y == end.Y) return Lines[start.Y][start.X..end.X];
+
+                var text = Lines[start.Y][start.X..] + '\n';
+                for (var i = start.Y + 1; i < end.Y; i++) text += Lines[i] + '\n';
+                text += Lines[end.Y][0..end.X];
+
+                return text;
+            }
+
+            void Cut()
+            {
+                SDL.SDL_SetClipboardText(GetSelectionText());
+                EraseSelection();
+                Layout();
+            }
+
+            void Copy()
+            {
+                SDL.SDL_SetClipboardText(GetSelectionText());
+            }
+
+            void Paste()
+            {
+                EraseSelection();
+
+                var pastedLines = SDL.SDL_GetClipboardText().Replace("\r", "").Split('\n');
+                Lines[_cursor.Y] = Lines[_cursor.Y][0.._cursor.X] + pastedLines[0] + Lines[_cursor.Y][_cursor.X..];
+                _cursor.X += pastedLines[0].Length;
+
+                if (pastedLines.Length > 1)
+                {
+                    Internal_BreakLine();
+
+                    if (pastedLines.Length > 2)
+                    {
+                        Lines.InsertRange(_cursor.Y, pastedLines[1..^1]);
+                        _cursor.Y += pastedLines.Length - 2;
+                    }
+
+                    Lines[_cursor.Y] = pastedLines[^1] + Lines[_cursor.Y];
+                    _cursor.X = pastedLines[^1].Length;
+                }
+
+                _selectionAnchor = _cursor;
+                Layout();
+
             }
             #endregion
         }
