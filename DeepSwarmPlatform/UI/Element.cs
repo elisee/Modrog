@@ -442,7 +442,9 @@ namespace DeepSwarmPlatform.UI
         public virtual void OnMouseUp(int button) { }
         public virtual void OnMouseWheel(int dx, int dy)
         {
-            var scrollArea = new Point(_contentRectangle.Width - ViewRectangle.Width, _contentRectangle.Height - ViewRectangle.Height);
+            var scrollArea = new Point(
+                HorizontalFlow == Flow.Scroll ? _contentRectangle.Width - ViewRectangle.Width : 0,
+                VerticalFlow == Flow.Scroll ? _contentRectangle.Height - ViewRectangle.Height : 0);
 
             var newContentScroll = new Point(
                 Math.Clamp(_contentScroll.X - dx * ScrollMultiplier, 0, scrollArea.X),
