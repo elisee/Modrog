@@ -2,7 +2,9 @@
 using DeepSwarmPlatform.Graphics;
 using DeepSwarmPlatform.Interface;
 using DeepSwarmPlatform.UI;
+using System;
 using System.IO;
+using System.Json;
 
 namespace DeepSwarmScenarioEditor.Interface.Editing.Map
 {
@@ -13,12 +15,21 @@ namespace DeepSwarmScenarioEditor.Interface.Editing.Map
 
         readonly MapSettingsLayer _mapSettingsLayer;
 
+        readonly Panel _errorLayer;
+        readonly Label _errorTitleLabel;
+        readonly Label _errorDetailsLabel;
+
         // Tile Kinds
         public string TileSetPath = "";
+
+        // Tools
+        public enum MapEditorTool { Brush, Picker, Eraser, Bucket }
+        public MapEditorTool Tool { get; private set; } = MapEditorTool.Brush;
 
         public MapEditor(Interface @interface, string fullAssetPath)
             : base(@interface, fullAssetPath)
         {
+            // Main layer
             {
                 _mainLayer = new Panel(this)
                 {
@@ -49,19 +60,78 @@ namespace DeepSwarmScenarioEditor.Interface.Editing.Map
                     }
                 };
 
-                _mapViewport = new MapViewport(this) { LayoutWeight = 1 };
-                _mainLayer.Add(_mapViewport);
+                {
+                    var splitter = new Element(_mainLayer) { LayoutWeight = 1, ChildLayout = ChildLayoutMode.Left };
+
+                    _mapViewport = new MapViewport(this, splitter) { LayoutWeight = 1 };
+
+                    var panel = new Panel(splitter) { Width = 300, ChildLayout = ChildLayoutMode.Top };
+
+                    var toolsContainer = new Panel(panel) { ChildLayout = ChildLayoutMode.Left };
+
+                    StyledTextButton MakeButton(string name, Action onActivate)
+                    {
+                        return new StyledTextButton(toolsContainer) { LayoutWeight = 1, HorizontalFlow = Flow.Expand, Text = name, OnActivate = onActivate };
+                    }
+
+                    void SetTool(MapEditorTool tool)
+                    {
+                        Tool = tool;
+                    }
+
+                    MakeButton("Brush", () => SetTool(MapEditorTool.Brush));
+                    MakeButton("Picker", () => SetTool(MapEditorTool.Picker));
+                    MakeButton("Eraser", () => SetTool(MapEditorTool.Eraser));
+                    MakeButton("Bucket", () => SetTool(MapEditorTool.Bucket));
+                }
             }
 
+            // Settings popup
             _mapSettingsLayer = new MapSettingsLayer(this) { Visible = false };
+
+            // Error popup
+            {
+                _errorLayer = new Panel(this) { Visible = false, BackgroundPatch = new TexturePatch(0x00000088) };
+
+                var windowPanel = new Panel(_errorLayer)
+                {
+                    BackgroundPatch = new TexturePatch(0x228800ff),
+                    Width = 480,
+                    Flow = Flow.Shrink,
+                    ChildLayout = ChildLayoutMode.Top,
+                };
+
+                var titlePanel = new Panel(windowPanel, new TexturePatch(0x88aa88ff));
+                _errorTitleLabel = new Label(titlePanel) { Flow = Flow.Shrink, Padding = 8 };
+
+                _errorDetailsLabel = new Label(windowPanel)
+                {
+                    Wrap = true,
+                    Padding = 8,
+                };
+            }
         }
 
         public override void OnMounted()
         {
-            var reader = new PacketReader();
-            reader.Open(File.ReadAllBytes(FullAssetPath));
+            var mapReader = new PacketReader();
+            mapReader.Open(File.ReadAllBytes(FullAssetPath));
 
-            TileSetPath = reader.ReadByteSizeString();
+            TileSetPath = mapReader.ReadByteSizeString();
+
+            JsonObject tileSetJson;
+            try
+            {
+                tileSetJson = (JsonObject)JsonValue.Parse(File.ReadAllText(Path.Combine(Engine.State.ActiveScenarioPath, TileSetPath)));
+            }
+            catch (Exception exception)
+            {
+                _errorTitleLabel.Text = "Cannot open map";
+                _errorDetailsLabel.Text = "Invalid tileset: " + exception.Message;
+                _errorLayer.Visible = true;
+                Desktop.SetFocusedElement(_errorLayer);
+                return;
+            }
 
             Desktop.SetFocusedElement(_mapViewport);
         }

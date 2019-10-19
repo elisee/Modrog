@@ -11,6 +11,9 @@ namespace DeepSwarmScenarioEditor.Interface.Editing.Map
 {
     class MapViewport : Panel
     {
+        readonly MapEditor _mapEditor;
+
+        // Chunks
         class Chunk
         {
             public readonly short[,] TilesPerLayer;
@@ -22,6 +25,8 @@ namespace DeepSwarmScenarioEditor.Interface.Editing.Map
         // Scrolling
         Vector2 _scroll;
         float _zoom = 2f;
+        const float MinZoom = 0.5f;
+        const float MaxZoom = 2f;
 
         bool _isScrollingLeft;
         bool _isScrollingRight;
@@ -31,11 +36,14 @@ namespace DeepSwarmScenarioEditor.Interface.Editing.Map
         bool _isDraggingScroll;
         Vector2 _dragScroll;
 
-        // Hovered tile
+        // Tiles
         Point _hoveredTile;
+        bool _isPlacingTiles;
 
-        public MapViewport(MapEditor mapEditor) : base(mapEditor.Desktop, null)
+        public MapViewport(MapEditor mapEditor, Element parent) : base(mapEditor.Desktop, parent)
         {
+            _mapEditor = mapEditor;
+            BackgroundPatch = new TexturePatch(0x000000ff);
         }
 
         #region Internals
@@ -44,6 +52,54 @@ namespace DeepSwarmScenarioEditor.Interface.Editing.Map
         public override Element HitTest(int x, int y)
         {
             return base.HitTest(x, y) ?? (ViewRectangle.Contains(x, y) ? this : null);
+        }
+
+        void UpdateHoveredTile()
+        {
+            var viewportScroll = new Vector2(
+                _scroll.X - ViewRectangle.Width / 2 / _zoom,
+                _scroll.Y - ViewRectangle.Height / 2 / _zoom);
+
+            var newHoveredTile = new Point(
+                (int)MathF.Floor((viewportScroll.X + (Desktop.MouseX - ViewRectangle.X) / _zoom) / Protocol.MapTileSize),
+                (int)MathF.Floor((viewportScroll.Y + (Desktop.MouseY - ViewRectangle.Y) / _zoom) / Protocol.MapTileSize));
+
+            var hasHoveredTileChanged = _hoveredTile != newHoveredTile;
+            _hoveredTile = newHoveredTile;
+
+            if (hasHoveredTileChanged)
+            {
+                if (_isPlacingTiles) PutTile();
+            }
+        }
+
+        void PutTile()
+        {
+            var chunkCoords = new Point(
+                (int)MathF.Floor((float)_hoveredTile.X / Protocol.MapChunkSide),
+                (int)MathF.Floor((float)_hoveredTile.Y / Protocol.MapChunkSide));
+
+            if (!_chunks.TryGetValue(chunkCoords, out var chunk))
+            {
+                chunk = new Chunk();
+                _chunks.Add(chunkCoords, chunk);
+            }
+
+            var chunkTileCoords = new Point(
+                MathHelper.Mod(_hoveredTile.X, Protocol.MapChunkSide),
+                MathHelper.Mod(_hoveredTile.Y, Protocol.MapChunkSide));
+
+            switch (_mapEditor.Tool)
+            {
+                case MapEditor.MapEditorTool.Brush:
+                    chunk.TilesPerLayer[0, chunkTileCoords.Y * Protocol.MapChunkSide + chunkTileCoords.X] = 1;
+                    break;
+
+                case MapEditor.MapEditorTool.Eraser:
+                    chunk.TilesPerLayer[0, chunkTileCoords.Y * Protocol.MapChunkSide + chunkTileCoords.X] = 0;
+                    break;
+            }
+
         }
 
         public override void OnMounted()
@@ -72,8 +128,8 @@ namespace DeepSwarmScenarioEditor.Interface.Editing.Map
             {
                 if (!_isDraggingScroll)
                 {
-                    if (key == SDL.SDL_Keycode.SDLK_KP_PLUS) _zoom = Math.Min(_zoom + 0.1f, 2f);
-                    if (key == SDL.SDL_Keycode.SDLK_KP_MINUS) _zoom = Math.Max(_zoom - 0.1f, 0.5f);
+                    if (key == SDL.SDL_Keycode.SDLK_KP_PLUS) _zoom = Math.Min(_zoom + 0.1f, MaxZoom);
+                    if (key == SDL.SDL_Keycode.SDLK_KP_MINUS) _zoom = Math.Max(_zoom - 0.1f, MinZoom);
 
                     if (key == SDL.SDL_Keycode.SDLK_LEFT) _isScrollingLeft = true;
                     if (key == SDL.SDL_Keycode.SDLK_RIGHT) _isScrollingRight = true;
@@ -93,6 +149,8 @@ namespace DeepSwarmScenarioEditor.Interface.Editing.Map
 
         public override void OnMouseMove()
         {
+            UpdateHoveredTile();
+
             if (_isDraggingScroll)
             {
                 _scroll.X = _dragScroll.X - Desktop.MouseX / _zoom;
@@ -107,7 +165,9 @@ namespace DeepSwarmScenarioEditor.Interface.Editing.Map
                 Desktop.SetFocusedElement(this);
                 Desktop.SetHoveredElementPressed(true);
 
-                // TODO: Entity selection
+                // TODO: Place a tile down or select an entity
+                _isPlacingTiles = true;
+                PutTile();
             }
             else if (button == 2)
             {
@@ -128,6 +188,7 @@ namespace DeepSwarmScenarioEditor.Interface.Editing.Map
         {
             if (button == 1)
             {
+                _isPlacingTiles = false;
                 Desktop.SetHoveredElementPressed(false);
             }
             else if (button == 2 && _isDraggingScroll)
@@ -141,7 +202,7 @@ namespace DeepSwarmScenarioEditor.Interface.Editing.Map
         {
             if (!Desktop.IsShiftDown)
             {
-                _zoom = Math.Clamp(_zoom + dy / 10f, 0.5f, 2f);
+                _zoom = Math.Clamp(_zoom + dy / 10f, MinZoom, MaxZoom);
             }
             else
             {
@@ -167,14 +228,6 @@ namespace DeepSwarmScenarioEditor.Interface.Editing.Map
                 _scroll.X += MathF.Cos(angle) * ScrollingSpeed * deltaTime / _zoom;
                 _scroll.Y -= MathF.Sin(angle) * ScrollingSpeed * deltaTime / _zoom;
             }
-
-            var viewportScroll = new Vector2(
-                _scroll.X - ViewRectangle.Width / 2 / _zoom,
-                _scroll.Y - ViewRectangle.Height / 2 / _zoom);
-
-            _hoveredTile = new Point(
-                (int)MathF.Floor((viewportScroll.X + (Desktop.MouseX - ViewRectangle.X) / _zoom) / Protocol.MapTileSize),
-                (int)MathF.Floor((viewportScroll.Y + (Desktop.MouseY - ViewRectangle.Y) / _zoom) / Protocol.MapTileSize));
         }
         #endregion
 
@@ -186,47 +239,69 @@ namespace DeepSwarmScenarioEditor.Interface.Editing.Map
                 _scroll.X - ViewRectangle.Width / 2 / _zoom,
                 _scroll.Y - ViewRectangle.Height / 2 / _zoom);
 
-            var startTile = new Point(
+            var startTileCoords = new Point(
                 (int)MathF.Floor(viewportScroll.X / Protocol.MapTileSize),
                 (int)MathF.Floor(viewportScroll.Y / Protocol.MapTileSize));
 
-            var endTile = new Point(
-                startTile.X + (int)MathF.Ceiling(ViewRectangle.Width / (Protocol.MapTileSize * _zoom) + 1),
-                startTile.Y + (int)MathF.Ceiling(ViewRectangle.Height / (Protocol.MapTileSize * _zoom) + 1));
+            var endTileCoords = new Point(
+                startTileCoords.X + (int)MathF.Ceiling(ViewRectangle.Width / (Protocol.MapTileSize * _zoom) + 1),
+                startTileCoords.Y + (int)MathF.Ceiling(ViewRectangle.Height / (Protocol.MapTileSize * _zoom) + 1));
 
             Desktop.PushClipRect(ViewRectangle);
 
             new Color(0xffffffff).UseAsDrawColor(Desktop.Renderer);
 
-            for (var y = startTile.Y; y <= endTile.Y; y++)
+            var startChunkCoords = new Point(
+                (int)MathF.Floor((float)startTileCoords.X / Protocol.MapChunkSide),
+                (int)MathF.Floor((float)startTileCoords.Y / Protocol.MapChunkSide));
+
+            var endChunkCoords = new Point(
+                (int)MathF.Floor((float)endTileCoords.X / Protocol.MapChunkSide),
+                (int)MathF.Floor((float)endTileCoords.Y / Protocol.MapChunkSide));
+
+            for (var chunkY = startChunkCoords.Y; chunkY <= endChunkCoords.Y; chunkY++)
             {
-                for (var x = startTile.X; x <= endTile.X; x++)
+                for (var chunkX = startChunkCoords.X; chunkX <= endChunkCoords.X; chunkX++)
                 {
-                    var red = (byte)(255 * (x - 16) / 32);
-                    var blue = (byte)(255 * (y - 16) / 32);
-                    new Color((uint)((red << 24) + (blue << 8) + 0xff)).UseAsDrawColor(Desktop.Renderer);
+                    if (!_chunks.TryGetValue(new Point(chunkX, chunkY), out var chunk)) continue;
 
-                    var left = ViewRectangle.X + (int)(x * _zoom * Protocol.MapTileSize) - (int)(viewportScroll.X * _zoom);
-                    var right = ViewRectangle.X + (int)((x + 1) * _zoom * Protocol.MapTileSize) - (int)(viewportScroll.X * _zoom);
-                    var top = ViewRectangle.Y + (int)(y * _zoom * Protocol.MapTileSize) - (int)(viewportScroll.Y * _zoom);
-                    var bottom = ViewRectangle.Y + (int)((y + 1) * _zoom * Protocol.MapTileSize) - (int)(viewportScroll.Y * _zoom);
+                    var chunkStartTileCoords = new Point(chunkX * Protocol.MapChunkSide, chunkY * Protocol.MapChunkSide);
 
-                    var destRect = new SDL.SDL_Rect { x = left, y = top, w = right - left, h = bottom - top };
-                    SDL.SDL_RenderFillRect(Desktop.Renderer, ref destRect);
+                    var chunkRelativeStartTileCoords = new Point(
+                        Math.Max(0, startTileCoords.X - chunkStartTileCoords.X),
+                        Math.Max(0, startTileCoords.Y - chunkStartTileCoords.Y));
 
-                    /*
-                    var tile = state.WorldTiles[y * state.WorldSize.X + x];
+                    var chunkRelativeEndTileCoords = new Point(
+                        Math.Min(Protocol.MapChunkSide, endTileCoords.X - chunkStartTileCoords.X),
+                        Math.Min(Protocol.MapChunkSide, endTileCoords.Y - chunkStartTileCoords.Y));
 
-                    if (tile != 0)
+                    for (var chunkRelativeY = chunkRelativeStartTileCoords.Y; chunkRelativeY < chunkRelativeEndTileCoords.Y; chunkRelativeY++)
                     {
-                        var spriteLocation = state.TileKinds[tile].SpriteLocation;
-                        var sourceRect = new SDL.SDL_Rect { x = spriteLocation.X * TileSize, y = spriteLocation.Y * TileSize, w = TileSize, h = TileSize };
-                        SDL.SDL_RenderCopy(Engine.Renderer, SpritesheetTexture, ref sourceRect, ref destRect);
+                        for (var chunkRelativeX = chunkRelativeStartTileCoords.X; chunkRelativeX < chunkRelativeEndTileCoords.X; chunkRelativeX++)
+                        {
+                            if (chunk.TilesPerLayer[0, chunkRelativeY * Protocol.MapChunkSide + chunkRelativeX] != 0)
+                            {
+                                var red = (byte)(255 * (chunkRelativeX - 16) / 32);
+                                var blue = (byte)(255 * (chunkRelativeY - 16) / 32);
+                                new Color((uint)((red << 24) + (blue << 8) + 0xff)).UseAsDrawColor(Desktop.Renderer);
+
+                                var y = chunkStartTileCoords.Y + chunkRelativeY;
+                                var x = chunkStartTileCoords.X + chunkRelativeX;
+
+                                var left = ViewRectangle.X + (int)(x * _zoom * Protocol.MapTileSize) - (int)(viewportScroll.X * _zoom);
+                                var right = ViewRectangle.X + (int)((x + 1) * _zoom * Protocol.MapTileSize) - (int)(viewportScroll.X * _zoom);
+                                var top = ViewRectangle.Y + (int)(y * _zoom * Protocol.MapTileSize) - (int)(viewportScroll.Y * _zoom);
+                                var bottom = ViewRectangle.Y + (int)((y + 1) * _zoom * Protocol.MapTileSize) - (int)(viewportScroll.Y * _zoom);
+
+                                var destRect = new SDL.SDL_Rect { x = left, y = top, w = right - left, h = bottom - top };
+                                SDL.SDL_RenderFillRect(Desktop.Renderer, ref destRect);
+                            }
+                        }
                     }
-                    */
                 }
             }
 
+            if (IsHovered)
             {
                 var color = new Color(0x00ff00ff);
                 color.UseAsDrawColor(Desktop.Renderer);

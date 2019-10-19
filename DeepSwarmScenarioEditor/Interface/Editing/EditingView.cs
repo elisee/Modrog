@@ -106,7 +106,7 @@ namespace DeepSwarmScenarioEditor.Interface.Editing
             _editorContainer.Clear();
 
             var entry = Engine.State.ActiveAssetEntry;
-            var fullAssetPath = Path.Combine(Engine.State.ScenariosPath, Engine.State.ActiveScenarioEntry.Name, entry.Path);
+            var fullAssetPath = Path.Combine(Engine.State.ActiveScenarioPath, entry.Path);
             Element editor = null;
             _assetTitleLabel.Text = entry.Path;
             _assetTitleLabel.Parent.Layout();

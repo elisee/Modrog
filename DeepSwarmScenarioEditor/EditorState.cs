@@ -19,6 +19,7 @@ namespace DeepSwarmScenarioEditor
 
         public ScenarioEntry ActiveScenarioEntry { get; private set; }
         public AssetEntry ActiveAssetEntry { get; private set; }
+        public string ActiveScenarioPath => Path.Combine(ScenariosPath, ActiveScenarioEntry.Name);
 
         public EditorState(Engine engine)
         {

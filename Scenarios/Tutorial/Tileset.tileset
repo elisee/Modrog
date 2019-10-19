@@ -1,20 +1,25 @@
-[
-    {
-        "name": "Floor",
-        "spriteLocation": { "x": 0, "y": 0 },
-        "flags": []
-    },
+{
+    "Floor": [
+        {
+            "name": "Floor",
+            "spriteLocation": { "x": 0, "y": 0 },
+            "flags": []
+        }
+    ],
 
-    {
-        "name": "Dirt",
-        "spriteLocation": { "x": 1, "y": 0 },
-        "flags": [ "solid", "opaque" ]
-    },
-    
+    "Fluid": [],
 
-    {
-        "name": "Door",
-        "spriteLocation": { "x": 2, "y": 0 },
-        "flags": []
-    }
-]
+    "Wall": [
+        {
+            "name": "Dirt",
+            "spriteLocation": { "x": 1, "y": 0 },
+            "flags": [ "solid", "opaque" ],
+        },
+
+        {
+            "name": "Door",
+            "spriteLocation": { "x": 2, "y": 0 },
+            "flags": [],
+        }
+    ]
+}
