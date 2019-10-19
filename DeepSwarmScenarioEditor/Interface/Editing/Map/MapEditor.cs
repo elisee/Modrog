@@ -4,7 +4,7 @@ using DeepSwarmPlatform.Interface;
 using DeepSwarmPlatform.UI;
 using System;
 using System.IO;
-using System.Json;
+using System.Text.Json;
 
 namespace DeepSwarmScenarioEditor.Interface.Editing.Map
 {
@@ -114,23 +114,43 @@ namespace DeepSwarmScenarioEditor.Interface.Editing.Map
 
         public override void OnMounted()
         {
-            var mapReader = new PacketReader();
-            mapReader.Open(File.ReadAllBytes(FullAssetPath));
-
-            TileSetPath = mapReader.ReadByteSizeString();
-
-            JsonObject tileSetJson;
-            try
-            {
-                tileSetJson = (JsonObject)JsonValue.Parse(File.ReadAllText(Path.Combine(Engine.State.ActiveScenarioPath, TileSetPath)));
-            }
-            catch (Exception exception)
+            void OnError(string details)
             {
                 _errorTitleLabel.Text = "Cannot open map";
-                _errorDetailsLabel.Text = "Invalid tileset: " + exception.Message;
+                _errorDetailsLabel.Text = details;
                 _errorLayer.Visible = true;
                 Desktop.SetFocusedElement(_errorLayer);
-                return;
+            }
+
+            {
+                try
+                {
+                    // TODO: This should move into a map asset
+                    var mapReader = new PacketReader();
+                    mapReader.Open(File.ReadAllBytes(FullAssetPath));
+                    TileSetPath = mapReader.ReadByteSizeString();
+                }
+                catch (Exception exception)
+                {
+                    OnError("Error while loading map: " + exception.Message);
+                    return;
+                }
+            }
+
+            {
+                JsonElement tileSetJson;
+                try
+                {
+                    // TODO: This should move into a tileset asset
+                    tileSetJson = JsonHelper.Parse(File.ReadAllText(Path.Combine(Engine.State.ActiveScenarioPath, TileSetPath)));
+
+                    // TODO: Parse tileset and 
+                }
+                catch (Exception exception)
+                {
+                    OnError("Error while loading tileset: " + exception.Message);
+                    return;
+                }
             }
 
             Desktop.SetFocusedElement(_mapViewport);

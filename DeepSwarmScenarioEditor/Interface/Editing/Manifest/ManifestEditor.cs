@@ -1,7 +1,7 @@
 ﻿using DeepSwarmPlatform.Graphics;
 using DeepSwarmPlatform.UI;
 using System.IO;
-using System.Json;
+using System.Text.Json;
 
 namespace DeepSwarmScenarioEditor.Interface.Editing.Manifest
 {
@@ -63,12 +63,24 @@ namespace DeepSwarmScenarioEditor.Interface.Editing.Manifest
 
         void Save()
         {
-            var json = new JsonObject();
-            json["title"] = Engine.State.ActiveScenarioEntry.Title = _titleInput.Value.Trim();
-            json["description"] = Engine.State.ActiveScenarioEntry.Description = _descriptionEditor.GetText().Trim();
-            json["minMaxPlayers"] = new JsonArray(1, 1);
+            var title = Engine.State.ActiveScenarioEntry.Title = _titleInput.Value.Trim();
+            var description = Engine.State.ActiveScenarioEntry.Description = _descriptionEditor.GetText().Trim();
 
-            File.WriteAllText(FullAssetPath, json.ToString());
+            using (var stream = File.OpenWrite(FullAssetPath))
+            using (var writer = new Utf8JsonWriter(stream, new JsonWriterOptions { Indented = true }))
+            {
+                writer.WriteStartObject();
+
+                writer.WriteString("title", title);
+                writer.WriteString("description", description);
+
+                writer.WritePropertyName("minMaxPlayers");
+                writer.WriteNumberValue(1);
+                writer.WriteNumberValue(1);
+                writer.WriteEndArray();
+
+                writer.WriteEndObject();
+            }
         }
     }
 }

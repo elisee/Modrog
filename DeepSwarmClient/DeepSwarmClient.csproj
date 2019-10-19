@@ -26,10 +26,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.Json" Version="4.6.0" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\DeepSwarmApi\DeepSwarmApi.csproj" />
     <ProjectReference Include="..\DeepSwarmCommon\DeepSwarmCommon.csproj" />
     <ProjectReference Include="..\DeepSwarmPlatform\DeepSwarmPlatform.csproj" />

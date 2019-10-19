@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.IO;
-using System.Json;
 
 namespace DeepSwarmCommon
 {
@@ -21,17 +20,17 @@ namespace DeepSwarmCommon
 
             foreach (var folder in Directory.GetDirectories(path, "*.*", SearchOption.TopDirectoryOnly))
             {
-                var manifestJson = JsonValue.Parse(File.ReadAllText(Path.Combine(folder, "Manifest.json")));
+                var manifestJson = JsonHelper.Parse(File.ReadAllText(Path.Combine(folder, "Manifest.json")));
 
                 var entry = new ScenarioEntry
                 {
                     Name = folder[(path.Length + 1)..],
-                    Title = manifestJson["title"],
-                    MinPlayers = manifestJson["minMaxPlayers"][0],
-                    MaxPlayers = manifestJson["minMaxPlayers"][1],
-                    SupportsCoop = manifestJson.ContainsKey("supportsCoop") && manifestJson["supportsCoop"],
-                    SupportsVersus = manifestJson.ContainsKey("supportsVersus") && manifestJson["supportsVersus"],
-                    Description = manifestJson["description"]
+                    Title = manifestJson.GetProperty("title").GetString(),
+                    MinPlayers = manifestJson.GetProperty("minMaxPlayers")[0].GetInt32(),
+                    MaxPlayers = manifestJson.GetProperty("minMaxPlayers")[1].GetInt32(),
+                    SupportsCoop = manifestJson.TryGetProperty("supportsCoop", out var supportsCoop) && supportsCoop.GetBoolean(),
+                    SupportsVersus = manifestJson.TryGetProperty("supportsVersus", out var supportsVersus) && supportsVersus.GetBoolean(),
+                    Description = manifestJson.GetProperty("description").GetString()
                 };
 
                 entries.Add(entry);
