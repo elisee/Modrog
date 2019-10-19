@@ -10,6 +10,8 @@ namespace DeepSwarmPlatform.Interface
             Padding = 8;
             Flow = Flow.Shrink;
             BackgroundPatch = new TexturePatch(0x4444aaff);
+
+            Label.Flow = Flow.Shrink;
         }
     }
 }
