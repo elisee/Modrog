@@ -12,6 +12,7 @@ namespace DeepSwarmScenarioEditor.Interface.Editing.Map
     {
         readonly Panel _mainLayer;
         readonly MapViewport _mapViewport;
+        readonly TileSelector _tileSelector;
 
         readonly MapSettingsLayer _mapSettingsLayer;
 
@@ -30,6 +31,7 @@ namespace DeepSwarmScenarioEditor.Interface.Editing.Map
         public short BrushTileIndex = 1;
         public bool BrushShouldErase = false;
         public int BrushSize = 1;
+
 
         public MapEditor(Interface @interface, string fullAssetPath)
             : base(@interface, fullAssetPath)
@@ -70,18 +72,32 @@ namespace DeepSwarmScenarioEditor.Interface.Editing.Map
 
                     _mapViewport = new MapViewport(this, splitter) { LayoutWeight = 1 };
 
-                    var panel = new Panel(splitter) { Width = 300, ChildLayout = ChildLayoutMode.Top };
+                    var sidebar = new Panel(splitter) { Width = 300, ChildLayout = ChildLayoutMode.Top, Left = 8 };
 
-                    var toolsContainer = new Panel(panel) { ChildLayout = ChildLayoutMode.Left };
+                    // Layers
+                    var layersPanel = new Panel(sidebar) { ChildLayout = ChildLayoutMode.Top };
+                    new Label(layersPanel) { Text = "LAYERS", Padding = 8, BackgroundPatch = new TexturePatch(0x456456ff) };
+
+                    // Tools
+                    var toolsPanel = new Panel(sidebar) { ChildLayout = ChildLayoutMode.Top };
+                    new Label(toolsPanel) { Text = "TOOLS", Padding = 8, BackgroundPatch = new TexturePatch(0x456456ff) };
+
+                    var toolStrip = new Element(toolsPanel) { ChildLayout = ChildLayoutMode.Left };
 
                     StyledTextButton MakeButton(string name, Action onActivate)
                     {
-                        return new StyledTextButton(toolsContainer) { LayoutWeight = 1, HorizontalFlow = Flow.Expand, Text = name, OnActivate = onActivate };
+                        return new StyledTextButton(toolStrip) { LayoutWeight = 1, HorizontalFlow = Flow.Expand, Text = name, OnActivate = onActivate };
                     }
 
                     MakeButton("Brush", () => SetBrush(tileIndex: 1));
                     MakeButton("Picker", () => Tool = MapEditorTool.Picker);
                     MakeButton("Bucket", () => Tool = MapEditorTool.Bucket);
+
+                    // Tile set
+                    var tileSetPanel = new Panel(sidebar) { ChildLayout = ChildLayoutMode.Top, LayoutWeight = 1 };
+                    new Label(tileSetPanel) { Text = "TILE SET", Padding = 8, BackgroundPatch = new TexturePatch(0x456456ff) };
+
+                    _tileSelector = new TileSelector(this, tileSetPanel) { LayoutWeight = 1 };
                 }
             }
 

@@ -11,6 +11,7 @@ namespace DeepSwarmClient
     partial class Engine
     {
         // Threading
+        readonly int _threadId;
         readonly ThreadActionQueue _actionQueue;
 
         // Rendering
@@ -32,7 +33,8 @@ namespace DeepSwarmClient
 
         public Engine()
         {
-            _actionQueue = new ThreadActionQueue(Thread.CurrentThread.ManagedThreadId);
+            _threadId = Thread.CurrentThread.ManagedThreadId;
+            _actionQueue = new ThreadActionQueue(_threadId);
 
             // Rendering
             SDL.SDL_Init(SDL.SDL_INIT_VIDEO);
@@ -86,9 +88,27 @@ namespace DeepSwarmClient
         {
             var stopwatch = Stopwatch.StartNew();
 
+            // Handle resize events live rather than when the resize operation is over
+            SDL.SDL_SetEventFilter((userData, eventPtr) =>
+            {
+                Debug.Assert(Thread.CurrentThread.ManagedThreadId == _threadId);
+
+                unsafe
+                {
+                    var @event = *(SDL.SDL_Event*)eventPtr;
+
+                    if (@event.type == SDL.SDL_EventType.SDL_WINDOWEVENT && @event.window.windowEvent == SDL.SDL_WindowEventID.SDL_WINDOWEVENT_RESIZED)
+                    {
+                        Interface.SetViewport(new Rectangle(0, 0, @event.window.data1, @event.window.data2));
+                        Draw();
+                    }
+                }
+
+                return 1;
+            }, IntPtr.Zero);
+
             while (State.Stage != ClientStage.Exited)
             {
-                // Input
                 while (State.Stage != ClientStage.Exited && SDL.SDL_PollEvent(out var @event) != 0)
                 {
                     switch (@event.type)
@@ -102,11 +122,6 @@ namespace DeepSwarmClient
                             {
                                 case SDL.SDL_WindowEventID.SDL_WINDOWEVENT_CLOSE:
                                     State.Stop();
-                                    break;
-
-                                case SDL.SDL_WindowEventID.SDL_WINDOWEVENT_SIZE_CHANGED:
-                                    Interface.SetViewport(new Rectangle(0, 0, @event.window.data1, @event.window.data2));
-                                    Interface.Desktop.ClearHoveredElement();
                                     break;
                             }
 
@@ -129,28 +144,27 @@ namespace DeepSwarmClient
                 var deltaTime = (float)stopwatch.Elapsed.TotalSeconds;
                 stopwatch.Restart();
 
-                Update(deltaTime);
+                State.Update(deltaTime);
+                Interface.Desktop.Animate(deltaTime);
                 _actionQueue.ExecuteActions();
 
-                // Render
-                SDL.SDL_SetRenderDrawColor(Renderer, 0, 0, 0, 255);
-                SDL.SDL_RenderClear(Renderer);
-
-                Interface.Desktop.Draw();
-
-                SDL.SDL_RenderPresent(Renderer);
+                Draw();
 
                 Thread.Sleep(1);
             }
 
             SDL_image.IMG_Quit();
             SDL.SDL_Quit();
-        }
 
-        void Update(float deltaTime)
-        {
-            State.Update(deltaTime);
-            Interface.Desktop.Animate(deltaTime);
+            void Draw()
+            {
+                SDL.SDL_SetRenderDrawColor(Renderer, 0, 0, 0, 255);
+                SDL.SDL_RenderClear(Renderer);
+
+                Interface.Desktop.Draw();
+
+                SDL.SDL_RenderPresent(Renderer);
+            }
         }
     }
 }
