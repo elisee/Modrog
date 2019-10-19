@@ -144,8 +144,12 @@ namespace DeepSwarmPlatform.UI
                 // Edit
                 case SDL.SDL_Keycode.SDLK_BACKSPACE: Erase(); break;
                 case SDL.SDL_Keycode.SDLK_DELETE: Delete(); break;
-                case SDL.SDL_Keycode.SDLK_RETURN: BreakLine(); break;
                 case SDL.SDL_Keycode.SDLK_TAB: Indent(); break;
+
+                case SDL.SDL_Keycode.SDLK_RETURN:
+                case SDL.SDL_Keycode.SDLK_KP_ENTER:
+                    BreakLine();
+                    break;
 
                 case SDL.SDL_Keycode.SDLK_x: Cut(); break;
                 case SDL.SDL_Keycode.SDLK_c: Copy(); break;
