@@ -9,7 +9,6 @@ namespace DeepSwarmPlatform.UI
 {
     // TODO: Undo/redo support
     // TODO: Quick navigation with Ctrl
-    // TODO: PageUp / PageDown support
     // TODO: Auto-indent when inserting lines
     // TODO: Syntax highlighting support
     // TODO: Auto-completion support
@@ -139,11 +138,13 @@ namespace DeepSwarmPlatform.UI
                 // Navigate
                 case SDL.SDL_Keycode.SDLK_LEFT: GoLeft(); break;
                 case SDL.SDL_Keycode.SDLK_RIGHT: GoRight(); break;
-                case SDL.SDL_Keycode.SDLK_UP: GoUp(); break;
-                case SDL.SDL_Keycode.SDLK_DOWN: GoDown(); break;
+                case SDL.SDL_Keycode.SDLK_UP: GoUp(1); break;
+                case SDL.SDL_Keycode.SDLK_DOWN: GoDown(1); break;
                 case SDL.SDL_Keycode.SDLK_HOME: GoToStartOfLine(); break;
                 case SDL.SDL_Keycode.SDLK_END: GoToEndOfLine(); break;
                 case SDL.SDL_Keycode.SDLK_a: if (Desktop.IsCtrlDown) SelectAll(); break;
+                case SDL.SDL_Keycode.SDLK_PAGEUP: GoUp((int)MathF.Ceiling((float)ViewRectangle.Height / CellSize.Y) - 2); break;
+                case SDL.SDL_Keycode.SDLK_PAGEDOWN: GoDown((int)MathF.Ceiling((float)ViewRectangle.Height / CellSize.Y) - 2); break;
 
                 // Edit
                 case SDL.SDL_Keycode.SDLK_BACKSPACE: Erase(); break;
@@ -189,15 +190,16 @@ namespace DeepSwarmPlatform.UI
                 ScrollCursorIntoView();
             }
 
-            void GoUp()
+            void GoUp(int lineCount)
             {
-                if (_cursor.Y > 0)
+                if (_cursor.Y - lineCount >= 0)
                 {
-                    _cursor.Y--;
+                    _cursor.Y -= lineCount;
                     _cursor.X = Math.Min(_cursor.X, Lines[_cursor.Y].Length);
                 }
                 else
                 {
+                    _cursor.Y = 0;
                     _cursor.X = 0;
                 }
 
@@ -206,15 +208,16 @@ namespace DeepSwarmPlatform.UI
                 ScrollCursorIntoView();
             }
 
-            void GoDown()
+            void GoDown(int lineCount)
             {
-                if (_cursor.Y < Lines.Count - 1)
+                if (_cursor.Y + lineCount < Lines.Count)
                 {
-                    _cursor.Y++;
+                    _cursor.Y += lineCount;
                     _cursor.X = Math.Min(_cursor.X, Lines[_cursor.Y].Length);
                 }
                 else
                 {
+                    _cursor.Y = Lines.Count - 1;
                     _cursor.X = Lines[_cursor.Y].Length;
                 }
 
