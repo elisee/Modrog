@@ -4,3 +4,4 @@ obj/
 bin/
 Temp/
 launchSettings.json
+*.user
