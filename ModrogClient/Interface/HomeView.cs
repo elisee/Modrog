@@ -6,7 +6,7 @@ using System.Globalization;
 
 namespace ModrogClient.Interface
 {
-    class HomeView : InterfaceElement
+    class HomeView : ClientElement
     {
         readonly TextInput _nameInput;
         readonly TextInput _serverHostnameInput;
@@ -14,8 +14,8 @@ namespace ModrogClient.Interface
 
         readonly Label _errorLabel;
 
-        public HomeView(Interface @interface)
-            : base(@interface, null)
+        public HomeView(ClientApp app)
+            : base(app, null)
         {
             var windowPanel = new Panel(this, new TexturePatch(0x228800ff))
             {
@@ -117,19 +117,19 @@ namespace ModrogClient.Interface
 
         public override void OnMounted()
         {
-            if (Engine.State.ErrorMessage != null)
+            if (App.State.ErrorMessage != null)
             {
                 _errorLabel.Visible = true;
-                _errorLabel.Text = Engine.State.ErrorMessage + (Engine.State.KickReason != null ? $" Reason: {Engine.State.KickReason}" : "");
+                _errorLabel.Text = App.State.ErrorMessage + (App.State.KickReason != null ? $" Reason: {App.State.KickReason}" : "");
             }
             else
             {
                 _errorLabel.Visible = false;
             }
 
-            _nameInput.SetValue(Engine.State.SelfPlayerName ?? "");
-            _serverHostnameInput.SetValue(Engine.State.SavedServerHostname ?? "localhost");
-            _serverPortInput.SetValue(Engine.State.SavedServerPort.ToString(CultureInfo.InvariantCulture));
+            _nameInput.SetValue(App.State.SelfPlayerName ?? "");
+            _serverHostnameInput.SetValue(App.State.SavedServerHostname ?? "localhost");
+            _serverPortInput.SetValue(App.State.SavedServerPort.ToString(CultureInfo.InvariantCulture));
 
             Desktop.SetFocusedElement(_nameInput);
         }
@@ -161,8 +161,8 @@ namespace ModrogClient.Interface
                 return;
             }
 
-            Engine.State.SetName(name);
-            Engine.State.Connect(hostname, port);
+            App.State.SetName(name);
+            App.State.Connect(hostname, port);
         }
 
         void OnSubmitStartServer()
@@ -170,8 +170,8 @@ namespace ModrogClient.Interface
             var name = _nameInput.Value.Trim();
             if (name.Length == 0) return;
 
-            Engine.State.SetName(name);
-            Engine.State.StartServer(scenario: null);
+            App.State.SetName(name);
+            App.State.StartServer(scenario: null);
         }
     }
 }

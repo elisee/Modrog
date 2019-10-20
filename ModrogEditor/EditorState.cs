@@ -1,6 +1,6 @@
-﻿using SwarmCore;
-using ModrogCommon;
+﻿using ModrogCommon;
 using ModrogEditor.Scenario;
+using SwarmCore;
 using System.Collections.Generic;
 using System.IO;
 
@@ -10,9 +10,9 @@ namespace ModrogEditor
 
     partial class EditorState
     {
-        public EditorStage Stage;
+        readonly EditorApp _app;
 
-        readonly Engine _engine;
+        public EditorStage Stage;
 
         public readonly string ScenariosPath;
         public readonly List<ScenarioEntry> ScenarioEntries = new List<ScenarioEntry>();
@@ -22,9 +22,9 @@ namespace ModrogEditor
         public AssetEntry ActiveAssetEntry { get; private set; }
         public string ActiveScenarioPath => Path.Combine(ScenariosPath, ActiveScenarioEntry.Name);
 
-        public EditorState(Engine engine)
+        public EditorState(EditorApp app)
         {
-            _engine = engine;
+            _app = app;
 
             ScenariosPath = FileHelper.FindAppFolder("Scenarios");
             ScenarioEntries = ScenarioEntry.ReadScenarioEntries(ScenariosPath);
@@ -81,13 +81,13 @@ namespace ModrogEditor
             Recurse(AssetEntries, scenarioPath);
 
             Stage = EditorStage.Editing;
-            _engine.Interface.OnStageChanged();
+            _app.OnStageChanged();
         }
 
         public void OpenAsset(AssetEntry entry)
         {
             ActiveAssetEntry = entry;
-            _engine.Interface.EditingView.OnActiveAssetChanged();
+            _app.EditingView.OnActiveAssetChanged();
         }
     }
 }

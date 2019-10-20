@@ -4,7 +4,7 @@ using SwarmPlatform.UI;
 
 namespace ModrogClient.Interface
 {
-    class LobbyView : InterfaceElement
+    class LobbyView : ClientElement
     {
         readonly Panel _playerListPanel;
         readonly Panel _scenarioListPanel;
@@ -20,8 +20,8 @@ namespace ModrogClient.Interface
         readonly Panel _chatLog;
         readonly TextInput _chatInput;
 
-        public LobbyView(Interface @interface)
-            : base(@interface, null)
+        public LobbyView(ClientApp app)
+            : base(app, null)
         {
             var panel = new Panel(this, new TexturePatch(0x88aa88ff))
             {
@@ -91,18 +91,18 @@ namespace ModrogClient.Interface
                         _noGameSelectedLabel = new Label(gameInfoPanel) { Text = "No game selected.", Visible = true, Padding = 8 };
 
                         _scenarioInfoContainer = new Panel(gameInfoPanel) { ChildLayout = ChildLayoutMode.Top, Visible = false, Padding = 8 };
-                        _scenarioTitleLabel = new Label(_scenarioInfoContainer) { Bottom = 16, FontStyle = new FontStyle(@interface.TitleFont) { LetterSpacing = 1 } };
+                        _scenarioTitleLabel = new Label(_scenarioInfoContainer) { Bottom = 16, FontStyle = new FontStyle(app.TitleFont) { LetterSpacing = 1 } };
 
                         var minMaxPlayersPanel = new Panel(_scenarioInfoContainer) { ChildLayout = ChildLayoutMode.Left, Bottom = 16 };
-                        new Label(minMaxPlayersPanel) { Text = "Players: ", FontStyle = @interface.HeaderFontStyle };
+                        new Label(minMaxPlayersPanel) { Text = "Players: ", FontStyle = app.HeaderFontStyle };
                         _minMaxPlayersLabel = new Label(minMaxPlayersPanel) { VerticalFlow = Flow.Shrink, Bottom = 0 };
 
                         var modesPanel = new Panel(_scenarioInfoContainer) { ChildLayout = ChildLayoutMode.Left, Bottom = 16 };
-                        new Label(modesPanel) { Text = "Supported modes: ", FontStyle = @interface.HeaderFontStyle };
+                        new Label(modesPanel) { Text = "Supported modes: ", FontStyle = app.HeaderFontStyle };
                         _modesLabel = new Label(modesPanel) { Flow = Flow.Shrink, Bottom = 0 };
 
                         var descriptionPanel = new Panel(_scenarioInfoContainer) { ChildLayout = ChildLayoutMode.Top };
-                        new Label(descriptionPanel) { Text = "Description:", FontStyle = @interface.HeaderFontStyle, Bottom = 8 };
+                        new Label(descriptionPanel) { Text = "Description:", FontStyle = app.HeaderFontStyle, Bottom = 8 };
                         _scenarioDescriptionLabel = new Label(descriptionPanel) { Wrap = true };
                     }
 
@@ -150,9 +150,9 @@ namespace ModrogClient.Interface
 
             {
                 var actionsContainer = new Panel(panel) { Padding = 8, ChildLayout = ChildLayoutMode.Left };
-                new StyledTextButton(actionsContainer) { Text = "Ready", Right = 8, OnActivate = () => Engine.State.ToggleReady() };
-                new StyledTextButton(actionsContainer) { Text = "Start Game", Right = 8, OnActivate = () => Engine.State.StartGame() };
-                new StyledTextButton(actionsContainer) { Text = "Leave", Right = 8, OnActivate = () => Engine.State.Disconnect() };
+                new StyledTextButton(actionsContainer) { Text = "Ready", Right = 8, OnActivate = () => App.State.ToggleReady() };
+                new StyledTextButton(actionsContainer) { Text = "Start Game", Right = 8, OnActivate = () => App.State.StartGame() };
+                new StyledTextButton(actionsContainer) { Text = "Leave", Right = 8, OnActivate = () => App.State.Disconnect() };
             }
 
             // TODO: Display saved games & scenarios to choose from
@@ -164,20 +164,20 @@ namespace ModrogClient.Interface
             OnPlayerListUpdated();
 
             _scenarioListPanel.Clear();
-            foreach (var entry in Engine.State.ScenarioEntries)
+            foreach (var entry in App.State.ScenarioEntries)
             {
                 new TextButton(_scenarioListPanel)
                 {
                     Padding = 8,
                     Text = entry.Title,
-                    OnActivate = () => { Engine.State.SetScenario(entry.Name); }
+                    OnActivate = () => { App.State.SetScenario(entry.Name); }
                 }.Label.Ellipsize = true;
             }
             _scenarioListPanel.Layout();
 
             /*
             _savedGamesListPanel.Clear();
-            foreach (var entry in Engine.State.SavedGameEntries)
+            foreach (var entry in App.State.SavedGameEntries)
             {
                 // TODO: Add date last played and stuff like that
                 new TextButton(_scenarioListPanel)
@@ -205,7 +205,7 @@ namespace ModrogClient.Interface
                 var text = _chatInput.Value.Trim();
                 _chatInput.SetValue("");
 
-                if (text.Length > 0) Engine.State.SendChatMessage(text);
+                if (text.Length > 0) App.State.SendChatMessage(text);
             }
         }
 
@@ -213,7 +213,7 @@ namespace ModrogClient.Interface
         {
             _playerListPanel.Clear();
 
-            foreach (var playerEntry in Engine.State.PlayerList)
+            foreach (var playerEntry in App.State.PlayerList)
             {
                 var playerPanel = new Panel(_playerListPanel) { Padding = 8 };
                 var label = new Label(playerPanel) { Text = $"[{(playerEntry.IsReady ? "x" : " ")}] {playerEntry.Name}" };
@@ -243,7 +243,7 @@ namespace ModrogClient.Interface
 
         public void OnActiveScenarioChanged()
         {
-            var scenario = Engine.State.ActiveScenario;
+            var scenario = App.State.ActiveScenario;
 
             if (scenario != null)
             {
@@ -268,7 +268,7 @@ namespace ModrogClient.Interface
 
         public void OnIsCountingDownChanged()
         {
-            var isCountingDown = Engine.State.IsCountingDown;
+            var isCountingDown = App.State.IsCountingDown;
 
             // TODO: Disable / enable all buttons except chat
 

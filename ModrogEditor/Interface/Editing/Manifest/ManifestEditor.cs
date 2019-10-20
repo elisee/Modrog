@@ -11,7 +11,7 @@ namespace ModrogEditor.Interface.Editing.Manifest
         readonly TextInput _titleInput;
         readonly TextEditor _descriptionEditor;
 
-        public ManifestEditor(Interface @interface, string fullAssetPath)
+        public ManifestEditor(EditorApp @interface, string fullAssetPath)
             : base(@interface, fullAssetPath)
         {
             ChildLayout = ChildLayoutMode.Top;
@@ -47,7 +47,7 @@ namespace ModrogEditor.Interface.Editing.Manifest
 
         public override void OnMounted()
         {
-            var scenarioEntry = Engine.State.ActiveScenarioEntry;
+            var scenarioEntry = App.State.ActiveScenarioEntry;
 
             _nameLabel.Text = scenarioEntry.Name;
             _titleInput.SetValue(scenarioEntry.Title);
@@ -63,8 +63,8 @@ namespace ModrogEditor.Interface.Editing.Manifest
 
         void Save()
         {
-            var title = Engine.State.ActiveScenarioEntry.Title = _titleInput.Value.Trim();
-            var description = Engine.State.ActiveScenarioEntry.Description = _descriptionEditor.GetText().Trim();
+            var title = App.State.ActiveScenarioEntry.Title = _titleInput.Value.Trim();
+            var description = App.State.ActiveScenarioEntry.Description = _descriptionEditor.GetText().Trim();
 
             using (var stream = File.OpenWrite(FullAssetPath))
             using (var writer = new Utf8JsonWriter(stream, new JsonWriterOptions { Indented = true }))

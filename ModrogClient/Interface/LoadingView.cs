@@ -4,13 +4,13 @@ using SwarmPlatform.UI;
 
 namespace ModrogClient.Interface
 {
-    class LoadingView : InterfaceElement
+    class LoadingView : ClientElement
     {
         readonly Label _loadingLabel;
         readonly StyledTextButton _abortButton;
 
-        public LoadingView(Interface @interface)
-            : base(@interface, null)
+        public LoadingView(ClientApp app)
+            : base(app, null)
         {
             var loadingPopup = new Element(Desktop, this)
             {
@@ -26,7 +26,7 @@ namespace ModrogClient.Interface
             _abortButton = new StyledTextButton(loadingPopup)
             {
                 Text = "Abort",
-                OnActivate = () => Engine.State.Disconnect()
+                OnActivate = () => App.State.Disconnect()
             };
         }
 
@@ -39,7 +39,7 @@ namespace ModrogClient.Interface
 
         public void OnProgress()
         {
-            _loadingLabel.Text = Engine.State.LoadingProgressText;
+            _loadingLabel.Text = App.State.LoadingProgressText;
             _loadingLabel.Parent.Layout();
         }
     }

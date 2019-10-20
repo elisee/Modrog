@@ -7,7 +7,7 @@ namespace ModrogClient
     {
         static void Main(string[] args)
         {
-            var engine = new Engine();
+            var engine = new ClientApp();
 
             if (args.Length >= 1)
             {

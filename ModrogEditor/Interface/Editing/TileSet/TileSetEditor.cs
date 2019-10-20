@@ -9,7 +9,7 @@ namespace ModrogEditor.Interface.Editing.TileSet
     {
         TextEditor _textEditor;
 
-        public TileSetEditor(Interface @interface, string fullAssetPath)
+        public TileSetEditor(EditorApp @interface, string fullAssetPath)
             : base(@interface, fullAssetPath)
         {
             var mainLayer = new Panel(this)

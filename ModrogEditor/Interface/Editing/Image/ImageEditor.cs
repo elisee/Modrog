@@ -1,6 +1,6 @@
-﻿using SwarmBasics.Math;
+﻿using SDL2;
+using SwarmBasics.Math;
 using SwarmPlatform.Graphics;
-using SDL2;
 
 namespace ModrogEditor.Interface.Editing.Image
 {
@@ -8,14 +8,14 @@ namespace ModrogEditor.Interface.Editing.Image
     {
         TextureArea _textureArea;
 
-        public ImageEditor(Interface @interface, string fullAssetPath)
+        public ImageEditor(EditorApp @interface, string fullAssetPath)
             : base(@interface, fullAssetPath)
         {
         }
 
         public override void OnMounted()
         {
-            var texture = SDL_image.IMG_LoadTexture(Engine.Renderer, FullAssetPath);
+            var texture = SDL_image.IMG_LoadTexture(Desktop.Renderer, FullAssetPath);
             SDL.SDL_QueryTexture(texture, out _, out _, out var textureWidth, out var textureHeight);
 
             _textureArea = new TextureArea(texture, new Rectangle(0, 0, textureWidth, textureHeight));
@@ -37,7 +37,7 @@ namespace ModrogEditor.Interface.Editing.Image
                 LayoutRectangle.Y + LayoutRectangle.Height / 2 - sourceRect.h / 2,
                 sourceRect.w,
                 sourceRect.h).ToSDL_Rect();
-            SDL.SDL_RenderCopy(Engine.Renderer, _textureArea.Texture, ref sourceRect, ref destRect);
+            SDL.SDL_RenderCopy(Desktop.Renderer, _textureArea.Texture, ref sourceRect, ref destRect);
         }
     }
 }

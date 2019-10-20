@@ -1,14 +1,14 @@
-﻿using SwarmBasics;
+﻿using SDL2;
+using SwarmBasics;
 using SwarmBasics.Math;
 using SwarmPlatform.Graphics;
 using SwarmPlatform.UI;
-using SDL2;
 using System;
 using System.Collections.Generic;
 
 namespace ModrogClient.Interface.Playing
 {
-    class PlayingView : InterfaceElement
+    class PlayingView : ClientElement
     {
         public const int TileSize = 40;
 
@@ -41,8 +41,8 @@ namespace ModrogClient.Interface.Playing
         // Menu
         readonly PlayingMenu _menu;
 
-        public PlayingView(Interface @interface)
-            : base(@interface, null)
+        public PlayingView(ClientApp app)
+            : base(app, null)
         {
             _sidebarPanel = new Panel(Desktop, this)
             {
@@ -54,10 +54,10 @@ namespace ModrogClient.Interface.Playing
             };
 
             _serverNameLabel = new Label(_sidebarPanel) { Ellipsize = true, Padding = 8, BackgroundPatch = new TexturePatch(0x113311ff) };
-            _scenarioNameLabel = new Label(_sidebarPanel) { FontStyle = @interface.HeaderFontStyle, Wrap = true, Padding = 8, BackgroundPatch = new TexturePatch(0x331111ff) };
+            _scenarioNameLabel = new Label(_sidebarPanel) { FontStyle = app.HeaderFontStyle, Wrap = true, Padding = 8, BackgroundPatch = new TexturePatch(0x331111ff) };
             _playerListContainer = new Panel(_sidebarPanel) { LayoutWeight = 1, ChildLayout = ChildLayoutMode.Top, Padding = 8 };
 
-            _menu = new PlayingMenu(@interface, this) { Visible = false };
+            _menu = new PlayingMenu(app, this) { Visible = false };
         }
 
         #region Internals
@@ -71,8 +71,8 @@ namespace ModrogClient.Interface.Playing
             Desktop.RegisterAnimation(Animate);
             Desktop.SetFocusedElement(this);
 
-            _serverNameLabel.Text = $"{Engine.State.SavedServerHostname}:{Engine.State.SavedServerPort}";
-            _scenarioNameLabel.Text = Engine.State.ActiveScenario.Title;
+            _serverNameLabel.Text = $"{App.State.SavedServerHostname}:{App.State.SavedServerPort}";
+            _scenarioNameLabel.Text = App.State.ActiveScenario.Title;
 
             OnPlayerListUpdated();
         }
@@ -94,7 +94,7 @@ namespace ModrogClient.Interface.Playing
 
             if (!_isDraggingScroll)
             {
-                if (key == SDL.SDL_Keycode.SDLK_ESCAPE) Engine.State.SetPlayingMenuOpen(true);
+                if (key == SDL.SDL_Keycode.SDLK_ESCAPE) App.State.SetPlayingMenuOpen(true);
 
                 if (key == SDL.SDL_Keycode.SDLK_LEFT) _isScrollingLeft = true;
                 if (key == SDL.SDL_Keycode.SDLK_RIGHT) _isScrollingRight = true;
@@ -102,7 +102,7 @@ namespace ModrogClient.Interface.Playing
                 if (key == SDL.SDL_Keycode.SDLK_DOWN) _isScrollingDown = true;
             }
 
-            var state = Engine.State;
+            var state = App.State;
 
             if (state.SelectedEntity != null)
             {
@@ -126,10 +126,10 @@ namespace ModrogClient.Interface.Playing
             if (key == SDL.SDL_Keycode.SDLK_UP) _isScrollingUp = false;
             if (key == SDL.SDL_Keycode.SDLK_DOWN) _isScrollingDown = false;
 
-            if (key == SDL.SDL_Keycode.SDLK_a || key == SDL.SDL_Keycode.SDLK_q) Engine.State.StopMovingTowards(ModrogApi.EntityDirection.Left);
-            if (key == SDL.SDL_Keycode.SDLK_d) Engine.State.StopMovingTowards(ModrogApi.EntityDirection.Right);
-            if (key == SDL.SDL_Keycode.SDLK_w || key == SDL.SDL_Keycode.SDLK_z) Engine.State.StopMovingTowards(ModrogApi.EntityDirection.Up);
-            if (key == SDL.SDL_Keycode.SDLK_s) Engine.State.StopMovingTowards(ModrogApi.EntityDirection.Down);
+            if (key == SDL.SDL_Keycode.SDLK_a || key == SDL.SDL_Keycode.SDLK_q) App.State.StopMovingTowards(ModrogApi.EntityDirection.Left);
+            if (key == SDL.SDL_Keycode.SDLK_d) App.State.StopMovingTowards(ModrogApi.EntityDirection.Right);
+            if (key == SDL.SDL_Keycode.SDLK_w || key == SDL.SDL_Keycode.SDLK_z) App.State.StopMovingTowards(ModrogApi.EntityDirection.Up);
+            if (key == SDL.SDL_Keycode.SDLK_s) App.State.StopMovingTowards(ModrogApi.EntityDirection.Down);
 
             if (key == SDL.SDL_Keycode.SDLK_TAB) _sidebarPanel.Visible = false;
         }
@@ -152,25 +152,25 @@ namespace ModrogClient.Interface.Playing
 
                 var hoveredEntities = new List<Game.ClientEntity>();
 
-                foreach (var entity in Engine.State.SeenEntities)
+                foreach (var entity in App.State.SeenEntities)
                 {
                     if (entity.Position.X == _hoveredTileX && entity.Position.Y == _hoveredTileY) hoveredEntities.Add(entity);
                 }
 
                 if (hoveredEntities.Count > 0)
                 {
-                    if (Engine.State.SelectedEntity == null || hoveredEntities.Count == 1)
+                    if (App.State.SelectedEntity == null || hoveredEntities.Count == 1)
                     {
-                        Engine.State.SelectEntity(hoveredEntities[0]);
+                        App.State.SelectEntity(hoveredEntities[0]);
                     }
                     else
                     {
-                        var selectedEntityIndex = hoveredEntities.IndexOf(Engine.State.SelectedEntity);
+                        var selectedEntityIndex = hoveredEntities.IndexOf(App.State.SelectedEntity);
                         var newSelectedEntityIndex = selectedEntityIndex < hoveredEntities.Count - 1 ? selectedEntityIndex + 1 : 0;
-                        Engine.State.SelectEntity(hoveredEntities[newSelectedEntityIndex]);
+                        App.State.SelectEntity(hoveredEntities[newSelectedEntityIndex]);
                     }
                 }
-                else Engine.State.SelectEntity(null);
+                else App.State.SelectEntity(null);
             }
             else if (button == SDL.SDL_BUTTON_MIDDLE)
             {
@@ -217,8 +217,8 @@ namespace ModrogClient.Interface.Playing
                 ScrollingPixelsY -= MathF.Sin(angle) * ScrollingSpeed * deltaTime;
             }
 
-            var viewportScrollX = -Engine.Interface.Viewport.Width / 2 + (int)ScrollingPixelsX;
-            var viewportScrollY = -Engine.Interface.Viewport.Height / 2 + (int)ScrollingPixelsY;
+            var viewportScrollX = -ViewRectangle.Width / 2 + (int)ScrollingPixelsX;
+            var viewportScrollY = -ViewRectangle.Height / 2 + (int)ScrollingPixelsY;
 
             _hoveredTileX = ((int)viewportScrollX + Desktop.MouseX) / TileSize;
             _hoveredTileY = ((int)viewportScrollY + Desktop.MouseY) / TileSize;
@@ -228,17 +228,17 @@ namespace ModrogClient.Interface.Playing
         #region Events
         public void OnMenuStateUpdated()
         {
-            _menu.Visible = Engine.State.PlayingMenuOpen;
+            _menu.Visible = App.State.PlayingMenuOpen;
             _menu.Layout(_contentRectangle);
 
-            if (!Engine.State.PlayingMenuOpen) Desktop.SetFocusedElement(this);
+            if (!App.State.PlayingMenuOpen) Desktop.SetFocusedElement(this);
         }
 
         public void OnPlayerListUpdated()
         {
             _playerListContainer.Clear();
 
-            foreach (var player in Engine.State.PlayerList)
+            foreach (var player in App.State.PlayerList)
             {
                 var panel = new Panel(_playerListContainer) { ChildLayout = ChildLayoutMode.Left };
 
@@ -265,7 +265,7 @@ namespace ModrogClient.Interface.Playing
                 fixed (byte* dataPointer = data)
                 {
                     var rwOps = SDL.SDL_RWFromMem((IntPtr)dataPointer, data.Length);
-                    SpritesheetTexture = SDL_image.IMG_LoadTexture_RW(Engine.Renderer, rwOps, freesrc: 1);
+                    SpritesheetTexture = SDL_image.IMG_LoadTexture_RW(Desktop.Renderer, rwOps, freesrc: 1);
                 }
             }
         }
@@ -287,19 +287,19 @@ namespace ModrogClient.Interface.Playing
         {
             base.DrawSelf();
 
-            var state = Engine.State;
+            var state = App.State;
             if (state.WorldSize.X == 0 || state.WorldSize.Y == 0) return;
 
-            var viewportScrollX = -Engine.Interface.Viewport.Width / 2 + (int)ScrollingPixelsX;
-            var viewportScrollY = -Engine.Interface.Viewport.Height / 2 + (int)ScrollingPixelsY;
+            var viewportScrollX = -ViewRectangle.Width / 2 + (int)ScrollingPixelsX;
+            var viewportScrollY = -ViewRectangle.Height / 2 + (int)ScrollingPixelsY;
 
             var startTileX = Math.Max(0, (int)viewportScrollX / TileSize);
             var startTileY = Math.Max(0, (int)viewportScrollY / TileSize);
 
-            var endTileX = Math.Min(state.WorldSize.X - 1, startTileX + (int)MathF.Ceiling((float)Engine.Interface.Viewport.Width / TileSize + 1));
-            var endTileY = Math.Min(state.WorldSize.Y - 1, startTileY + (int)MathF.Ceiling((float)Engine.Interface.Viewport.Height / TileSize + 1));
+            var endTileX = Math.Min(state.WorldSize.X - 1, startTileX + (int)MathF.Ceiling((float)ViewRectangle.Width / TileSize + 1));
+            var endTileY = Math.Min(state.WorldSize.Y - 1, startTileY + (int)MathF.Ceiling((float)ViewRectangle.Height / TileSize + 1));
 
-            new Color(0xffffffff).UseAsDrawColor(Engine.Renderer);
+            new Color(0xffffffff).UseAsDrawColor(Desktop.Renderer);
 
             for (var y = startTileY; y <= endTileY; y++)
             {
@@ -312,7 +312,7 @@ namespace ModrogClient.Interface.Playing
                         var spriteLocation = state.TileKinds[tile].SpriteLocation;
                         var sourceRect = new SDL.SDL_Rect { x = spriteLocation.X * TileSize, y = spriteLocation.Y * TileSize, w = TileSize, h = TileSize };
                         var destRect = new SDL.SDL_Rect { x = x * TileSize - viewportScrollX, y = y * TileSize - viewportScrollY, w = TileSize, h = TileSize };
-                        SDL.SDL_RenderCopy(Engine.Renderer, SpritesheetTexture, ref sourceRect, ref destRect);
+                        SDL.SDL_RenderCopy(Desktop.Renderer, SpritesheetTexture, ref sourceRect, ref destRect);
                     }
                 }
             }
@@ -323,13 +323,13 @@ namespace ModrogClient.Interface.Playing
 
                 var sourceRect = new SDL.SDL_Rect { x = entity.SpriteLocation.X * TileSize, y = entity.SpriteLocation.Y * TileSize, w = TileSize, h = TileSize };
                 var destRect = new SDL.SDL_Rect { x = entity.Position.X * TileSize - viewportScrollX, y = entity.Position.Y * TileSize - viewportScrollY, w = TileSize, h = TileSize };
-                SDL.SDL_RenderCopy(Engine.Renderer, SpritesheetTexture, ref sourceRect, ref destRect);
+                SDL.SDL_RenderCopy(Desktop.Renderer, SpritesheetTexture, ref sourceRect, ref destRect);
             }
 
-            var fog = Engine.State.WorldFog;
+            var fog = App.State.WorldFog;
             var fogColor = new Color(0x00000044);
-            fogColor.UseAsDrawColor(Engine.Renderer);
-            SDL.SDL_SetRenderDrawBlendMode(Engine.Renderer, SDL.SDL_BlendMode.SDL_BLENDMODE_BLEND);
+            fogColor.UseAsDrawColor(Desktop.Renderer);
+            SDL.SDL_SetRenderDrawBlendMode(Desktop.Renderer, SDL.SDL_BlendMode.SDL_BLENDMODE_BLEND);
 
             for (var y = startTileY; y <= endTileY; y++)
             {
@@ -339,16 +339,16 @@ namespace ModrogClient.Interface.Playing
                     if (fog[tileIndex] != 0) continue;
 
                     var rect = new SDL.SDL_Rect { x = x * TileSize - viewportScrollX, y = y * TileSize - viewportScrollY, w = TileSize, h = TileSize };
-                    SDL.SDL_RenderFillRect(Engine.Renderer, ref rect);
+                    SDL.SDL_RenderFillRect(Desktop.Renderer, ref rect);
                 }
             }
 
-            SDL.SDL_SetRenderDrawBlendMode(Engine.Renderer, SDL.SDL_BlendMode.SDL_BLENDMODE_NONE);
+            SDL.SDL_SetRenderDrawBlendMode(Desktop.Renderer, SDL.SDL_BlendMode.SDL_BLENDMODE_NONE);
 
             if (state.SelectedEntity != null)
             {
                 var color = new Color(0x00ff00ff);
-                color.UseAsDrawColor(Engine.Renderer);
+                color.UseAsDrawColor(Desktop.Renderer);
 
                 var x = state.SelectedEntity.Position.X;
                 var y = state.SelectedEntity.Position.Y;
@@ -360,10 +360,10 @@ namespace ModrogClient.Interface.Playing
 
                 var rect = new Rectangle(renderX, renderY, w * TileSize, h * TileSize);
 
-                SDL.SDL_RenderDrawLine(Engine.Renderer, rect.X, rect.Y, rect.X + rect.Width, rect.Y);
-                SDL.SDL_RenderDrawLine(Engine.Renderer, rect.X + rect.Width, rect.Y, rect.X + rect.Width, rect.Y + rect.Height);
-                SDL.SDL_RenderDrawLine(Engine.Renderer, rect.X + rect.Width, rect.Y + rect.Height, rect.X, rect.Y + rect.Height);
-                SDL.SDL_RenderDrawLine(Engine.Renderer, rect.X, rect.Y + rect.Height, rect.X, rect.Y);
+                SDL.SDL_RenderDrawLine(Desktop.Renderer, rect.X, rect.Y, rect.X + rect.Width, rect.Y);
+                SDL.SDL_RenderDrawLine(Desktop.Renderer, rect.X + rect.Width, rect.Y, rect.X + rect.Width, rect.Y + rect.Height);
+                SDL.SDL_RenderDrawLine(Desktop.Renderer, rect.X + rect.Width, rect.Y + rect.Height, rect.X, rect.Y + rect.Height);
+                SDL.SDL_RenderDrawLine(Desktop.Renderer, rect.X, rect.Y + rect.Height, rect.X, rect.Y);
             }
         }
         #endregion

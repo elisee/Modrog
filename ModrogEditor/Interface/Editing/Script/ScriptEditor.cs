@@ -9,7 +9,7 @@ namespace ModrogEditor.Interface.Editing.Script
     {
         TextEditor _textEditor;
 
-        public ScriptEditor(Interface @interface, string fullAssetPath)
+        public ScriptEditor(EditorApp @interface, string fullAssetPath)
             : base(@interface, fullAssetPath)
         {
             var mainLayer = new Panel(this)

@@ -1,6 +1,6 @@
 ﻿using ModrogApi;
-using SwarmBasics.Math;
 using ModrogCommon;
+using SwarmBasics.Math;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -145,7 +145,7 @@ namespace ModrogClient
                 ReadUniverseSetup();
             }
 
-            _engine.Interface.OnStageChanged();
+            _app.OnStageChanged();
         }
         #endregion
 
@@ -157,8 +157,8 @@ namespace ModrogClient
 
             switch (Stage)
             {
-                case ClientStage.Lobby: _engine.Interface.LobbyView.OnChatMessageReceived(author, message); break;
-                case ClientStage.Playing: _engine.Interface.PlayingView.OnChatMessageReceived(author, message); break;
+                case ClientStage.Lobby: _app.LobbyView.OnChatMessageReceived(author, message); break;
+                case ClientStage.Playing: _app.PlayingView.OnChatMessageReceived(author, message); break;
             }
         }
         #endregion
@@ -188,8 +188,8 @@ namespace ModrogClient
 
             switch (Stage)
             {
-                case ClientStage.Lobby: _engine.Interface.LobbyView.OnPlayerListUpdated(); break;
-                case ClientStage.Playing: _engine.Interface.PlayingView.OnPlayerListUpdated(); break;
+                case ClientStage.Lobby: _app.LobbyView.OnPlayerListUpdated(); break;
+                case ClientStage.Playing: _app.PlayingView.OnPlayerListUpdated(); break;
             }
         }
 
@@ -197,13 +197,13 @@ namespace ModrogClient
         {
             var scenarioName = _packetReader.ReadByteSizeString();
             ActiveScenario = ScenarioEntries.Find(x => x.Name == scenarioName);
-            _engine.Interface.LobbyView.OnActiveScenarioChanged();
+            _app.LobbyView.OnActiveScenarioChanged();
         }
 
         void ReadSetupCountdown()
         {
             IsCountingDown = _packetReader.ReadByte() != 0;
-            _engine.Interface.LobbyView.OnIsCountingDownChanged();
+            _app.LobbyView.OnIsCountingDownChanged();
         }
 
         void ReadUniverseSetup()
@@ -211,7 +211,7 @@ namespace ModrogClient
             // Spritesheet
             var size = _packetReader.ReadInt();
             var image = _packetReader.ReadBytes(size);
-            _engine.Interface.PlayingView.OnSpritesheetReceived(image);
+            _app.PlayingView.OnSpritesheetReceived(image);
 
             // Tile kinds
             var tileKindsCount = _packetReader.ReadInt();
@@ -229,7 +229,7 @@ namespace ModrogClient
             if (Stage == ClientStage.Lobby)
             {
                 Stage = ClientStage.Playing;
-                _engine.Interface.OnStageChanged();
+                _app.OnStageChanged();
             }
 
             TickIndex = _packetReader.ReadInt();
@@ -243,7 +243,7 @@ namespace ModrogClient
                 WorldFog = new byte[WorldSize.X * WorldSize.Y];
 
                 var location = new Point(_packetReader.ReadShort(), _packetReader.ReadShort());
-                _engine.Interface.PlayingView.OnTeleported(location);
+                _app.PlayingView.OnTeleported(location);
             }
 
             if (WorldTiles == null) throw new Exception("Server didn't teleport client on first tick.");
@@ -281,8 +281,8 @@ namespace ModrogClient
 
             // Send scroll update
             var scrollPosition = new Point(
-                (int)(_engine.Interface.PlayingView.ScrollingPixelsX / Interface.Playing.PlayingView.TileSize),
-                (int)(_engine.Interface.PlayingView.ScrollingPixelsY / Interface.Playing.PlayingView.TileSize));
+                (int)(_app.PlayingView.ScrollingPixelsX / Interface.Playing.PlayingView.TileSize),
+                (int)(_app.PlayingView.ScrollingPixelsY / Interface.Playing.PlayingView.TileSize));
 
             _packetWriter.WriteByte((byte)ClientPacketType.SetPosition);
             _packetWriter.WriteShort((short)scrollPosition.X);

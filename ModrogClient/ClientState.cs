@@ -1,6 +1,5 @@
 ﻿using ModrogApi;
 using ModrogCommon;
-using SDL2;
 using SwarmBasics.Math;
 using SwarmCore;
 using System;
@@ -10,7 +9,6 @@ using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace ModrogClient
 {
@@ -33,9 +31,12 @@ namespace ModrogClient
         public string ErrorMessage { get; private set; }
         public string KickReason { get; private set; }
 
-        // Self
+        // Identity
         public Guid SelfGuid;
         public string SelfPlayerName;
+
+        // Settings
+        public readonly string SettingsFilePath;
 
         // Loading
         public string LoadingProgressText { get; private set; }
@@ -73,9 +74,30 @@ namespace ModrogClient
 
         // Ticking
         public int TickIndex;
-        readonly Engine _engine;
+        readonly ClientApp _app;
 
-        public ClientState(Engine engine) { _engine = engine; }
+        public ClientState(ClientApp app)
+        {
+            _app = app;
+
+            // Identity
+            var identityPath = Path.Combine(AppContext.BaseDirectory, "Identity.dat");
+
+            if (File.Exists(identityPath))
+            {
+                try { SelfGuid = new Guid(File.ReadAllBytes(identityPath)); } catch { }
+            }
+
+            if (SelfGuid == Guid.Empty)
+            {
+                SelfGuid = Guid.NewGuid();
+                File.WriteAllBytes(identityPath, SelfGuid.ToByteArray());
+            }
+
+            // Settings
+            SettingsFilePath = Path.Combine(AppContext.BaseDirectory, "Settings.txt");
+            try { SelfPlayerName = File.ReadAllText(SettingsFilePath); } catch { }
+        }
 
         public void Stop()
         {
@@ -100,7 +122,7 @@ namespace ModrogClient
 
             LoadingProgressText = "Connecting...";
             Stage = ClientStage.Loading;
-            _engine.Interface.OnStageChanged();
+            _app.OnStageChanged();
 
             ThreadPool.QueueUserWorkItem((_) =>
             {
@@ -110,22 +132,22 @@ namespace ModrogClient
                 try { hostAddresses = Dns.GetHostAddresses(hostname); }
                 catch (Exception exception)
                 {
-                    _engine.RunOnEngineThread(() =>
+                    _app.RunOnAppThread(() =>
                     {
                         ErrorMessage = $"Could not resolve hostname: {exception.Message}";
                         Stage = ClientStage.Home;
-                        _engine.Interface.OnStageChanged();
+                        _app.OnStageChanged();
                     });
                     return;
                 }
 
                 if (hostAddresses.Length == 0)
                 {
-                    _engine.RunOnEngineThread(() =>
+                    _app.RunOnAppThread(() =>
                     {
                         ErrorMessage = $"Could not resolve hostname.";
                         Stage = ClientStage.Home;
-                        _engine.Interface.OnStageChanged();
+                        _app.OnStageChanged();
                     });
                     return;
                 }
@@ -146,23 +168,23 @@ namespace ModrogClient
 
                         if (i < hostAddresses.Length - 1) continue;
 
-                        _engine.RunOnEngineThread(() =>
+                        _app.RunOnAppThread(() =>
                         {
                             if (Stage != ClientStage.Loading) return;
 
                             if (connectionErrors.Count > 1) ErrorMessage = $"Could not connect after trying {connectionErrors.Count} addresses.\n{string.Join("\n", connectionErrors)}";
                             else ErrorMessage = $"Could not connect: {connectionErrors[0]}";
                             Stage = ClientStage.Home;
-                            _engine.Interface.OnStageChanged();
+                            _app.OnStageChanged();
                         });
                         return;
                     }
                 }
 
-                _engine.RunOnEngineThread(() =>
+                _app.RunOnAppThread(() =>
                 {
                     LoadingProgressText = "Loading...";
-                    _engine.Interface.LoadingView.OnProgress();
+                    _app.LoadingView.OnProgress();
 
                     _packetReceiver = new PacketReceiver(_socket);
 
@@ -180,20 +202,13 @@ namespace ModrogClient
             var serverExePath = Path.Combine(FileHelper.FindAppFolder("ModrogServer-Debug"), "netcoreapp3.0", "ModrogServer.exe");
             _serverProcess = Process.Start(new ProcessStartInfo(serverExePath));
 
-            // TODO: Replace this with a proper built-in server console
-            ThreadPool.QueueUserWorkItem((_) =>
-            {
-                Task.Delay(100).Wait();
-                _engine.RunOnEngineThread(() => SDL.SDL_RaiseWindow(_engine.Window));
-            });
-
             Connect("127.0.0.1", Protocol.Port, scenario);
         }
 
         public void SetPlayingMenuOpen(bool isOpen)
         {
             PlayingMenuOpen = isOpen;
-            _engine.Interface.PlayingView.OnMenuStateUpdated();
+            _app.PlayingView.OnMenuStateUpdated();
         }
 
         public void Disconnect(string error = null)
@@ -209,7 +224,7 @@ namespace ModrogClient
             if (PlayingMenuOpen) SetPlayingMenuOpen(false);
 
             Stage = ClientStage.Home;
-            _engine.Interface.OnStageChanged();
+            _app.OnStageChanged();
         }
 
         void SendPacket()
@@ -221,7 +236,7 @@ namespace ModrogClient
         public void SetName(string name)
         {
             SelfPlayerName = name;
-            File.WriteAllText(_engine.SettingsFilePath, SelfPlayerName);
+            File.WriteAllText(SettingsFilePath, SelfPlayerName);
         }
         #endregion
 
@@ -270,7 +285,7 @@ namespace ModrogClient
         {
             SelectedEntity = entity;
             SelectedEntityMoveDirection = null;
-            _engine.Interface.PlayingView.OnSelectedEntityChanged();
+            _app.PlayingView.OnSelectedEntityChanged();
         }
 
         public void SetMoveTowards(EntityDirection direction)

@@ -3,9 +3,9 @@ using SwarmPlatform.UI;
 
 namespace ModrogClient.Interface.Playing
 {
-    class PlayingMenu : InterfaceElement
+    class PlayingMenu : ClientElement
     {
-        public PlayingMenu(Interface @interface, PlayingView view) : base(@interface, view)
+        public PlayingMenu(ClientApp app, PlayingView view) : base(app, view)
         {
             BackgroundPatch = new TexturePatch(0x00000088);
 
@@ -20,7 +20,7 @@ namespace ModrogClient.Interface.Playing
             new TextButton(panel)
             {
                 Text = "Back to game",
-                OnActivate = () => Engine.State.SetPlayingMenuOpen(false),
+                OnActivate = () => App.State.SetPlayingMenuOpen(false),
                 Padding = 8,
                 Bottom = 8,
             }.Label.Flow = Flow.Shrink;
@@ -28,7 +28,7 @@ namespace ModrogClient.Interface.Playing
             new TextButton(panel)
             {
                 Text = "Quit",
-                OnActivate = () => Engine.State.Disconnect(),
+                OnActivate = () => App.State.Disconnect(),
                 Padding = 8,
             }.Label.Flow = Flow.Shrink;
         }
@@ -40,7 +40,7 @@ namespace ModrogClient.Interface.Playing
 
         public override void Dismiss()
         {
-            Engine.State.SetPlayingMenuOpen(false);
+            App.State.SetPlayingMenuOpen(false);
         }
     }
 }

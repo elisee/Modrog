@@ -3,11 +3,11 @@ using SwarmPlatform.UI;
 
 namespace ModrogEditor.Interface
 {
-    class HomeView : InterfaceElement
+    class HomeView : EditorElement
     {
         readonly Panel _scenarioListPanel;
 
-        public HomeView(Interface @interface)
+        public HomeView(EditorApp @interface)
             : base(@interface, null)
         {
             var windowPanel = new Panel(this, new TexturePatch(0x228800ff))
@@ -42,13 +42,13 @@ namespace ModrogEditor.Interface
         {
             _scenarioListPanel.Clear();
 
-            foreach (var entry in Engine.State.ScenarioEntries)
+            foreach (var entry in App.State.ScenarioEntries)
             {
                 new TextButton(_scenarioListPanel)
                 {
                     Padding = 8,
                     Text = entry.Title,
-                    OnActivate = () => { Engine.State.OpenScenario(entry); }
+                    OnActivate = () => { App.State.OpenScenario(entry); }
                 }.Label.Ellipsize = true;
             }
 

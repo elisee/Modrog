@@ -9,7 +9,7 @@ using System.IO;
 
 namespace ModrogEditor.Interface.Editing
 {
-    class EditingView : InterfaceElement
+    class EditingView : EditorElement
     {
         readonly Panel _sidebarPanel;
         readonly AssetTree _assetTree;
@@ -18,7 +18,7 @@ namespace ModrogEditor.Interface.Editing
         readonly Element _editorContainer;
         readonly Label _assetTitleLabel;
 
-        public EditingView(Interface @interface)
+        public EditingView(EditorApp @interface)
             : base(@interface, null)
         {
             ChildLayout = ChildLayoutMode.Left;
@@ -43,7 +43,7 @@ namespace ModrogEditor.Interface.Editing
                 LayoutWeight = 1,
                 VerticalFlow = Flow.Scroll,
                 Padding = 8,
-                OnActivate = (entry) => Engine.State.OpenAsset(entry)
+                OnActivate = (entry) => App.State.OpenAsset(entry)
             };
 
             _mainPanel = new Panel(this)
@@ -73,7 +73,7 @@ namespace ModrogEditor.Interface.Editing
                 OnActivate = () =>
                 {
                     var clientExePath = Path.Combine(FileHelper.FindAppFolder("ModrogClient-Debug"), "netcoreapp3.0", "ModrogClient.exe");
-                    Process.Start(clientExePath, "--scenario " + Engine.State.ActiveScenarioEntry.Name);
+                    Process.Start(clientExePath, "--scenario " + App.State.ActiveScenarioEntry.Name);
                 }
             };
 
@@ -96,7 +96,7 @@ namespace ModrogEditor.Interface.Editing
                 }
             }
 
-            MakeAssetEntries(null, Engine.State.AssetEntries);
+            MakeAssetEntries(null, App.State.AssetEntries);
 
             Desktop.SetFocusedElement(this);
         }
@@ -105,8 +105,8 @@ namespace ModrogEditor.Interface.Editing
         {
             _editorContainer.Clear();
 
-            var entry = Engine.State.ActiveAssetEntry;
-            var fullAssetPath = Path.Combine(Engine.State.ActiveScenarioPath, entry.Path);
+            var entry = App.State.ActiveAssetEntry;
+            var fullAssetPath = Path.Combine(App.State.ActiveScenarioPath, entry.Path);
             Element editor = null;
             _assetTitleLabel.Text = entry.Path;
             _assetTitleLabel.Parent.Layout();
@@ -117,11 +117,11 @@ namespace ModrogEditor.Interface.Editing
                 case AssetType.Folder:
                     break;
 
-                case AssetType.Manifest: editor = new Manifest.ManifestEditor(Engine.Interface, fullAssetPath); break;
-                case AssetType.TileSet: editor = new TileSet.TileSetEditor(Engine.Interface, fullAssetPath); break;
-                case AssetType.Script: editor = new Script.ScriptEditor(Engine.Interface, fullAssetPath); break;
-                case AssetType.Image: editor = new Image.ImageEditor(Engine.Interface, fullAssetPath); break;
-                case AssetType.Map: editor = new Map.MapEditor(Engine.Interface, fullAssetPath); break;
+                case AssetType.Manifest: editor = new Manifest.ManifestEditor(App, fullAssetPath); break;
+                case AssetType.TileSet: editor = new TileSet.TileSetEditor(App, fullAssetPath); break;
+                case AssetType.Script: editor = new Script.ScriptEditor(App, fullAssetPath); break;
+                case AssetType.Image: editor = new Image.ImageEditor(App, fullAssetPath); break;
+                case AssetType.Map: editor = new Map.MapEditor(App, fullAssetPath); break;
             }
 
             if (editor != null) _editorContainer.Add(editor);

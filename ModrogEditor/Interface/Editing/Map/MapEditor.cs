@@ -48,7 +48,7 @@ namespace ModrogEditor.Interface.Editing.Map
         public int BrushSize = 1;
 
 
-        public MapEditor(Interface @interface, string fullAssetPath)
+        public MapEditor(EditorApp @interface, string fullAssetPath)
             : base(@interface, fullAssetPath)
         {
             // Main layer
@@ -170,7 +170,7 @@ namespace ModrogEditor.Interface.Editing.Map
                 JsonElement tileSetJson;
                 try
                 {
-                    tileSetJson = JsonHelper.Parse(File.ReadAllText(Path.Combine(Engine.State.ActiveScenarioPath, TileSetPath)));
+                    tileSetJson = JsonHelper.Parse(File.ReadAllText(Path.Combine(App.State.ActiveScenarioPath, TileSetPath)));
 
                     SpritesheetPath = tileSetJson.GetProperty("spritesheet").GetString();
 
@@ -217,7 +217,7 @@ namespace ModrogEditor.Interface.Editing.Map
             {
                 try
                 {
-                    SpritesheetTexture = SDL_image.IMG_LoadTexture(Desktop.Renderer, Path.Combine(Engine.State.ActiveScenarioPath, SpritesheetPath));
+                    SpritesheetTexture = SDL_image.IMG_LoadTexture(Desktop.Renderer, Path.Combine(App.State.ActiveScenarioPath, SpritesheetPath));
                     if (SpritesheetTexture == IntPtr.Zero) throw new Exception(SDL.SDL_GetError());
                 }
                 catch (Exception exception)
