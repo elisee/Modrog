@@ -1,6 +1,6 @@
-﻿using SwarmBasics.Math;
+﻿using SDL2;
+using SwarmBasics.Math;
 using SwarmCore;
-using SDL2;
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -19,6 +19,8 @@ namespace ModrogClient
         public readonly IntPtr Window;
 
         public readonly IntPtr Renderer;
+
+        SDL.SDL_EventFilter _watchResizeEventDelegate;
 
         // State
         public readonly ClientState State;
@@ -88,24 +90,8 @@ namespace ModrogClient
         {
             var stopwatch = Stopwatch.StartNew();
 
-            // Handle resize events live rather than when the resize operation is over
-            SDL.SDL_SetEventFilter((userData, eventPtr) =>
-            {
-                Debug.Assert(Thread.CurrentThread.ManagedThreadId == _threadId);
-
-                unsafe
-                {
-                    var @event = *(SDL.SDL_Event*)eventPtr;
-
-                    if (@event.type == SDL.SDL_EventType.SDL_WINDOWEVENT && @event.window.windowEvent == SDL.SDL_WindowEventID.SDL_WINDOWEVENT_RESIZED)
-                    {
-                        Interface.SetViewport(new Rectangle(0, 0, @event.window.data1, @event.window.data2));
-                        Draw();
-                    }
-                }
-
-                return 1;
-            }, IntPtr.Zero);
+            _watchResizeEventDelegate = WatchResizeEvent;
+            SDL.SDL_AddEventWatch(_watchResizeEventDelegate, IntPtr.Zero);
 
             while (State.Stage != ClientStage.Exited)
             {
@@ -153,18 +139,38 @@ namespace ModrogClient
                 Thread.Sleep(1);
             }
 
+            SDL.SDL_DelEventWatch(_watchResizeEventDelegate, IntPtr.Zero);
+
             SDL_image.IMG_Quit();
             SDL.SDL_Quit();
+        }
 
-            void Draw()
+        void Draw()
+        {
+            SDL.SDL_SetRenderDrawColor(Renderer, 0, 0, 0, 255);
+            SDL.SDL_RenderClear(Renderer);
+
+            Interface.Desktop.Draw();
+
+            SDL.SDL_RenderPresent(Renderer);
+        }
+
+        int WatchResizeEvent(IntPtr userData, IntPtr eventPtr)
+        {
+            Debug.Assert(Thread.CurrentThread.ManagedThreadId == _threadId);
+
+            unsafe
             {
-                SDL.SDL_SetRenderDrawColor(Renderer, 0, 0, 0, 255);
-                SDL.SDL_RenderClear(Renderer);
+                var @event = *(SDL.SDL_Event*)eventPtr;
 
-                Interface.Desktop.Draw();
-
-                SDL.SDL_RenderPresent(Renderer);
+                if (@event.type == SDL.SDL_EventType.SDL_WINDOWEVENT && @event.window.windowEvent == SDL.SDL_WindowEventID.SDL_WINDOWEVENT_RESIZED)
+                {
+                    Interface.SetViewport(new Rectangle(0, 0, @event.window.data1, @event.window.data2));
+                    Draw();
+                }
             }
+
+            return 1;
         }
     }
 }
