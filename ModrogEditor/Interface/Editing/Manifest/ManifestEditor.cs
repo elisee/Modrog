@@ -75,6 +75,7 @@ namespace ModrogEditor.Interface.Editing.Manifest
                 writer.WriteString("description", description);
 
                 writer.WritePropertyName("minMaxPlayers");
+                writer.WriteStartArray();
                 writer.WriteNumberValue(1);
                 writer.WriteNumberValue(1);
                 writer.WriteEndArray();
