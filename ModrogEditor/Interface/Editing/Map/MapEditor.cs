@@ -1,4 +1,6 @@
 ﻿using ModrogCommon;
+using SDL2;
+using SwarmBasics.Math;
 using SwarmCore;
 using SwarmPlatform.Graphics;
 using SwarmPlatform.Interface;
@@ -21,8 +23,20 @@ namespace ModrogEditor.Interface.Editing.Map
         readonly Label _errorTitleLabel;
         readonly Label _errorDetailsLabel;
 
+        // Spritesheet
+        public string SpritesheetPath { get; private set; }
+        public IntPtr SpritesheetTexture { get; private set; }
+
         // Tile Kinds
         public string TileSetPath = "";
+
+        public struct EditorTileKind
+        {
+            public string Name;
+            public Point SpriteLocation;
+        }
+
+        public readonly EditorTileKind[][] TileKindsByLayer = new EditorTileKind[(int)Protocol.MapLayer.Count][];
 
         // Tools
         public enum MapEditorTool { Brush, Picker, Bucket }
@@ -141,7 +155,6 @@ namespace ModrogEditor.Interface.Editing.Map
             {
                 try
                 {
-                    // TODO: This should move into a map asset
                     var mapReader = new PacketReader();
                     mapReader.Open(File.ReadAllBytes(FullAssetPath));
                     TileSetPath = mapReader.ReadByteSizeString();
@@ -157,14 +170,59 @@ namespace ModrogEditor.Interface.Editing.Map
                 JsonElement tileSetJson;
                 try
                 {
-                    // TODO: This should move into a tileset asset
                     tileSetJson = JsonHelper.Parse(File.ReadAllText(Path.Combine(Engine.State.ActiveScenarioPath, TileSetPath)));
 
-                    // TODO: Parse tileset and 
+                    SpritesheetPath = tileSetJson.GetProperty("spritesheet").GetString();
+
+                    var tileKindsJson = tileSetJson.GetProperty("tileKinds");
+
+                    var layerNames = new string[] { "Floor", "Fluid", "Wall" };
+
+                    for (var i = 0; i < (int)Protocol.MapLayer.Count; i++)
+                    {
+                        var layerName = Enum.GetName(typeof(Protocol.MapLayer), i);
+
+                        if (tileKindsJson.TryGetProperty(layerName, out var layerJson))
+                        {
+                            var tileKinds = TileKindsByLayer[i] = new EditorTileKind[layerJson.GetArrayLength()];
+
+                            for (var j = 0; j < tileKinds.Length; j++)
+                            {
+                                var tileKindJson = layerJson[j];
+
+                                var name = tileKindJson.GetProperty("name").GetString();
+
+                                var spriteLocationJson = tileKindJson.GetProperty("spriteLocation");
+                                var spriteLocation = new Point(
+                                    spriteLocationJson[0].GetInt32(),
+                                    spriteLocationJson[1].GetInt32());
+
+                                tileKinds[j] = new EditorTileKind { Name = name, SpriteLocation = spriteLocation };
+                            }
+                        }
+                        else
+                        {
+                            TileKindsByLayer[i] = new EditorTileKind[0];
+                        }
+                    }
+
                 }
                 catch (Exception exception)
                 {
                     OnError("Error while loading tileset: " + exception.Message);
+                    return;
+                }
+            }
+
+            {
+                try
+                {
+                    SpritesheetTexture = SDL_image.IMG_LoadTexture(Desktop.Renderer, Path.Combine(Engine.State.ActiveScenarioPath, SpritesheetPath));
+                    if (SpritesheetTexture == IntPtr.Zero) throw new Exception(SDL.SDL_GetError());
+                }
+                catch (Exception exception)
+                {
+                    OnError("Error while loading spritesheet texture: " + exception.Message);
                     return;
                 }
             }
@@ -174,6 +232,12 @@ namespace ModrogEditor.Interface.Editing.Map
 
         public override void OnUnmounted()
         {
+            if (SpritesheetTexture != IntPtr.Zero)
+            {
+                SDL.SDL_DestroyTexture(SpritesheetTexture);
+                SpritesheetTexture = IntPtr.Zero;
+            }
+
             Save();
         }
 

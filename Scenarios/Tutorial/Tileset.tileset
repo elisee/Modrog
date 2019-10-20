@@ -1,25 +1,39 @@
 {
-    "Floor": [
-        {
-            "name": "Floor",
-            "spriteLocation": { "x": 0, "y": 0 },
-            "flags": []
-        }
-    ],
+    "spritesheet": "Spritesheet.png",
+    "tileKinds": {
+        "Floor": [
+            {
+                "name": "Ground",
+                "spriteLocation": [ 0, 0 ],
+                "flags": []
+            },
 
-    "Fluid": [],
+            {
+                "name": "Ground2",
+                "spriteLocation": [ 1, 0 ],
+                "flags": []
+            },
+        ],
 
-    "Wall": [
-        {
-            "name": "Dirt",
-            "spriteLocation": { "x": 1, "y": 0 },
-            "flags": [ "solid", "opaque" ],
-        },
+        "Fluid": [
+            {
+                "name": "Water",
+                "spriteLocation": [ 1, 0 ]
+            }
+        ],
 
-        {
-            "name": "Door",
-            "spriteLocation": { "x": 2, "y": 0 },
-            "flags": [],
-        }
-    ]
+        "Wall": [
+            {
+                "name": "Block",
+                "spriteLocation": [ 1, 0 ],
+                "flags": [ "solid", "opaque" ],
+            },
+
+            {
+                "name": "Door",
+                "spriteLocation": [ 2, 0 ],
+                "flags": [],
+            }
+        ]
+    }
 }

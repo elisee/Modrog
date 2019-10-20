@@ -1,9 +1,9 @@
-﻿using SwarmBasics;
+﻿using ModrogCommon;
+using SDL2;
+using SwarmBasics;
 using SwarmBasics.Math;
-using ModrogCommon;
 using SwarmPlatform.Graphics;
 using SwarmPlatform.UI;
-using SDL2;
 using System;
 using System.Collections.Generic;
 
@@ -37,7 +37,7 @@ namespace ModrogEditor.Interface.Editing.Map
         Vector2 _dragScroll;
 
         // Tiles
-        Point _hoveredTile;
+        Point _hoveredTileCoords;
         bool _isPlacingTiles;
 
         public MapViewport(MapEditor mapEditor, Element parent) : base(mapEditor.Desktop, parent)
@@ -49,23 +49,18 @@ namespace ModrogEditor.Interface.Editing.Map
         #region Internals
         public override bool AcceptsFocus() => true;
 
-        public override Element HitTest(int x, int y)
-        {
-            return base.HitTest(x, y) ?? (ViewRectangle.Contains(x, y) ? this : null);
-        }
-
         void UpdateHoveredTile()
         {
             var viewportScroll = new Vector2(
                 _scroll.X - ViewRectangle.Width / 2 / _zoom,
                 _scroll.Y - ViewRectangle.Height / 2 / _zoom);
 
-            var newHoveredTile = new Point(
+            var newHoveredTileCoords = new Point(
                 (int)MathF.Floor((viewportScroll.X + (Desktop.MouseX - ViewRectangle.X) / _zoom) / Protocol.MapTileSize),
                 (int)MathF.Floor((viewportScroll.Y + (Desktop.MouseY - ViewRectangle.Y) / _zoom) / Protocol.MapTileSize));
 
-            var hasHoveredTileChanged = _hoveredTile != newHoveredTile;
-            _hoveredTile = newHoveredTile;
+            var hasHoveredTileChanged = _hoveredTileCoords != newHoveredTileCoords;
+            _hoveredTileCoords = newHoveredTileCoords;
 
             if (hasHoveredTileChanged)
             {
@@ -76,8 +71,8 @@ namespace ModrogEditor.Interface.Editing.Map
         void PutTile()
         {
             var chunkCoords = new Point(
-                (int)MathF.Floor((float)_hoveredTile.X / Protocol.MapChunkSide),
-                (int)MathF.Floor((float)_hoveredTile.Y / Protocol.MapChunkSide));
+                (int)MathF.Floor((float)_hoveredTileCoords.X / Protocol.MapChunkSide),
+                (int)MathF.Floor((float)_hoveredTileCoords.Y / Protocol.MapChunkSide));
 
             if (!_chunks.TryGetValue(chunkCoords, out var chunk))
             {
@@ -86,8 +81,8 @@ namespace ModrogEditor.Interface.Editing.Map
             }
 
             var chunkTileCoords = new Point(
-                MathHelper.Mod(_hoveredTile.X, Protocol.MapChunkSide),
-                MathHelper.Mod(_hoveredTile.Y, Protocol.MapChunkSide));
+                MathHelper.Mod(_hoveredTileCoords.X, Protocol.MapChunkSide),
+                MathHelper.Mod(_hoveredTileCoords.Y, Protocol.MapChunkSide));
 
             switch (_mapEditor.Tool)
             {
@@ -121,13 +116,6 @@ namespace ModrogEditor.Interface.Editing.Map
 
         public override void OnUnmounted()
         {
-            // TODO:
-            /* if (SpritesheetTexture != IntPtr.Zero)
-            {
-                SDL.SDL_DestroyTexture(SpritesheetTexture);
-                SpritesheetTexture = IntPtr.Zero;
-            } */
-
             Desktop.UnregisterAnimation(Animate);
         }
 
@@ -202,7 +190,7 @@ namespace ModrogEditor.Interface.Editing.Map
             }
             else if (button == SDL.SDL_BUTTON_RIGHT)
             {
-                _mapEditor.SetBrush(GetTileAt(_hoveredTile));
+                _mapEditor.SetBrush(GetTileAt(_hoveredTileCoords));
             }
         }
 
@@ -301,23 +289,28 @@ namespace ModrogEditor.Interface.Editing.Map
                     {
                         for (var chunkRelativeX = chunkRelativeStartTileCoords.X; chunkRelativeX < chunkRelativeEndTileCoords.X; chunkRelativeX++)
                         {
-                            if (chunk.TilesPerLayer[0, chunkRelativeY * Protocol.MapChunkSide + chunkRelativeX] != 0)
-                            {
-                                var red = (byte)(255 * (chunkRelativeX - 16) / 32);
-                                var blue = (byte)(255 * (chunkRelativeY - 16) / 32);
-                                new Color((uint)((red << 24) + (blue << 8) + 0xff)).UseAsDrawColor(Desktop.Renderer);
+                            var tileLayer = 0;
+                            var tileKinds = _mapEditor.TileKindsByLayer[tileLayer];
 
-                                var y = chunkStartTileCoords.Y + chunkRelativeY;
-                                var x = chunkStartTileCoords.X + chunkRelativeX;
+                            var tileIndex = chunk.TilesPerLayer[tileLayer, chunkRelativeY * Protocol.MapChunkSide + chunkRelativeX];
+                            if (tileIndex == 0) continue;
 
-                                var left = ViewRectangle.X + (int)(x * _zoom * Protocol.MapTileSize) - (int)(viewportScroll.X * _zoom);
-                                var right = ViewRectangle.X + (int)((x + 1) * _zoom * Protocol.MapTileSize) - (int)(viewportScroll.X * _zoom);
-                                var top = ViewRectangle.Y + (int)(y * _zoom * Protocol.MapTileSize) - (int)(viewportScroll.Y * _zoom);
-                                var bottom = ViewRectangle.Y + (int)((y + 1) * _zoom * Protocol.MapTileSize) - (int)(viewportScroll.Y * _zoom);
+                            var red = (byte)(255 * (chunkRelativeX - 16) / 32);
+                            var blue = (byte)(255 * (chunkRelativeY - 16) / 32);
+                            new Color((uint)((red << 24) + (blue << 8) + 0xff)).UseAsDrawColor(Desktop.Renderer);
 
-                                var destRect = new SDL.SDL_Rect { x = left, y = top, w = right - left, h = bottom - top };
-                                SDL.SDL_RenderFillRect(Desktop.Renderer, ref destRect);
-                            }
+                            var y = chunkStartTileCoords.Y + chunkRelativeY;
+                            var x = chunkStartTileCoords.X + chunkRelativeX;
+
+                            var left = ViewRectangle.X + (int)(x * _zoom * Protocol.MapTileSize) - (int)(viewportScroll.X * _zoom);
+                            var right = ViewRectangle.X + (int)((x + 1) * _zoom * Protocol.MapTileSize) - (int)(viewportScroll.X * _zoom);
+                            var top = ViewRectangle.Y + (int)(y * _zoom * Protocol.MapTileSize) - (int)(viewportScroll.Y * _zoom);
+                            var bottom = ViewRectangle.Y + (int)((y + 1) * _zoom * Protocol.MapTileSize) - (int)(viewportScroll.Y * _zoom);
+
+                            var spriteLocation = tileKinds[tileIndex - 1].SpriteLocation;
+                            var sourceRect = new SDL.SDL_Rect { x = spriteLocation.X * Protocol.MapTileSize, y = spriteLocation.Y * Protocol.MapTileSize, w = Protocol.MapTileSize, h = Protocol.MapTileSize };
+                            var destRect = new SDL.SDL_Rect { x = left, y = top, w = right - left, h = bottom - top };
+                            SDL.SDL_RenderCopy(Desktop.Renderer, _mapEditor.SpritesheetTexture, ref sourceRect, ref destRect);
                         }
                     }
                 }
@@ -328,8 +321,8 @@ namespace ModrogEditor.Interface.Editing.Map
                 var color = new Color(0x00ff00ff);
                 color.UseAsDrawColor(Desktop.Renderer);
 
-                var x = _hoveredTile.X;
-                var y = _hoveredTile.Y;
+                var x = _hoveredTileCoords.X;
+                var y = _hoveredTileCoords.Y;
                 var w = 1;
                 var h = 1;
 
