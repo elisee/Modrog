@@ -23,7 +23,12 @@ You'll need .NET Core 3 and Visual Studio 2019. VS Code might work.
 
 ## Tasks
 
-    - (Editor) Build a simple map editor
+    - (Map Editor) Support saving chunks, skip empty ones
+    - (Map Editor) Support choosing among layers
+    - (Server API) Support loading tile sets & maps
+    - (Tutorial) Make a proper simple tileset and build a small world
+    - (Map Editor) Support entities
+    - (Tile Set Editor) Replace JSON editor with visual editor, and maybe switch to binary format
     - (Team) Find a pixel artist
     - (Project) Find a new name that fits better
     - (Client) Fix confusion between Engine and ClientState? Have a ClientApp (renamed from ClientState) which has an Engine instead
