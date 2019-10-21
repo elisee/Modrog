@@ -1,57 +1,72 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using System.Text;
 
 namespace ModrogCommon
 {
     public class PacketWriter
     {
-        public readonly byte[] Buffer;
+        public byte[] Buffer => _buffer;
+        byte[] _buffer;
         int _cursor;
         bool _useSizeHeader = false;
 
-        public PacketWriter(int capacity, bool useSizeHeader)
+        public PacketWriter(int initialCapacity, bool useSizeHeader)
         {
-            Buffer = new byte[capacity];
+            _buffer = new byte[initialCapacity];
 
             _useSizeHeader = useSizeHeader;
-            if (useSizeHeader) _cursor = 2;
+            if (useSizeHeader) _cursor = sizeof(int);
         }
 
         public int Finish()
         {
             if (!_useSizeHeader) return _cursor;
 
-            var length = _cursor - 2;
+            var length = _cursor - sizeof(int);
             _cursor = 0;
-            WriteShort((short)length);
-            return length + 2;
+            WriteInt(length);
+            return length + sizeof(int);
+        }
+
+        void EnsureBytesAvailable(int bytes)
+        {
+            if (_cursor + bytes > _buffer.Length) Array.Resize(ref _buffer, (int)Math.Ceiling((_buffer.Length + bytes) * 1.5));
         }
 
         public void WriteByte(byte value)
         {
-            Buffer[_cursor] = value;
+            EnsureBytesAvailable(sizeof(byte));
+
+            _buffer[_cursor] = value;
             _cursor += sizeof(byte);
         }
 
         public void WriteShort(short value)
         {
-            Buffer[_cursor + 0] = (byte)((value >> 8) & 0xff);
-            Buffer[_cursor + 1] = (byte)((value >> 0) & 0xff);
+            EnsureBytesAvailable(sizeof(short));
+
+            _buffer[_cursor + 0] = (byte)((value >> 8) & 0xff);
+            _buffer[_cursor + 1] = (byte)((value >> 0) & 0xff);
             _cursor += sizeof(short);
         }
 
         public void WriteInt(int value)
         {
-            Buffer[_cursor + 0] = (byte)((value >> 24) & 0xff);
-            Buffer[_cursor + 1] = (byte)((value >> 16) & 0xff);
-            Buffer[_cursor + 2] = (byte)((value >> 8) & 0xff);
-            Buffer[_cursor + 3] = (byte)((value >> 0) & 0xff);
+            EnsureBytesAvailable(sizeof(int));
+
+            _buffer[_cursor + 0] = (byte)((value >> 24) & 0xff);
+            _buffer[_cursor + 1] = (byte)((value >> 16) & 0xff);
+            _buffer[_cursor + 2] = (byte)((value >> 8) & 0xff);
+            _buffer[_cursor + 3] = (byte)((value >> 0) & 0xff);
             _cursor += sizeof(int);
         }
 
         public void WriteByteSizeString(string value)
         {
-            var sizeInBytes = Encoding.UTF8.GetBytes(value, 0, value.Length, Buffer, _cursor + sizeof(byte));
+            var sizeInBytes = Encoding.UTF8.GetBytes(value, 0, value.Length, _buffer, _cursor + sizeof(byte));
+            EnsureBytesAvailable(sizeof(byte) + sizeInBytes);
+
             Debug.Assert(sizeInBytes <= byte.MaxValue);
             WriteByte((byte)sizeInBytes);
             _cursor += sizeInBytes;
@@ -59,7 +74,9 @@ namespace ModrogCommon
 
         public void WriteShortSizeString(string value)
         {
-            var sizeInBytes = Encoding.UTF8.GetBytes(value, 0, value.Length, Buffer, _cursor + sizeof(short));
+            var sizeInBytes = Encoding.UTF8.GetBytes(value, 0, value.Length, _buffer, _cursor + sizeof(short));
+            EnsureBytesAvailable(sizeof(short) + sizeInBytes);
+
             Debug.Assert(sizeInBytes <= short.MaxValue);
             WriteShort((short)sizeInBytes);
             _cursor += sizeInBytes;
@@ -67,8 +84,18 @@ namespace ModrogCommon
 
         public void WriteBytes(byte[] value)
         {
-            System.Buffer.BlockCopy(value, 0, Buffer, _cursor, value.Length);
+            EnsureBytesAvailable(value.Length);
+
+            System.Buffer.BlockCopy(value, 0, _buffer, _cursor, value.Length);
             _cursor += value.Length;
+        }
+
+        public void WriteShorts(short[] value)
+        {
+            EnsureBytesAvailable(value.Length * sizeof(short));
+
+            System.Buffer.BlockCopy(value, 0, _buffer, _cursor, value.Length * sizeof(short));
+            _cursor += value.Length * sizeof(short);
         }
     }
 }

@@ -21,7 +21,7 @@ namespace ModrogClient
         // Networking
         Socket _socket;
         PacketReceiver _packetReceiver;
-        readonly PacketWriter _packetWriter = new PacketWriter(capacity: 8192, useSizeHeader: true);
+        readonly PacketWriter _packetWriter = new PacketWriter(initialCapacity: 8192, useSizeHeader: true);
         readonly PacketReader _packetReader = new PacketReader();
         Process _serverProcess;
 

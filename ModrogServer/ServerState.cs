@@ -25,7 +25,7 @@ namespace ModrogServer
 
         readonly List<Socket> _pollSockets = new List<Socket>();
 
-        readonly PacketWriter _packetWriter = new PacketWriter(capacity: 8192, useSizeHeader: true);
+        readonly PacketWriter _packetWriter = new PacketWriter(initialCapacity: 8192, useSizeHeader: true);
         readonly PacketReader _packetReader = new PacketReader();
 
         // Lobby

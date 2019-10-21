@@ -8,7 +8,7 @@ namespace ModrogCommon
     {
         public Socket _socket;
 
-        byte[] _buffer = new byte[ushort.MaxValue];
+        byte[] _buffer = new byte[uint.MaxValue];
         int _offset;
 
         public PacketReceiver(Socket socket)
@@ -30,17 +30,17 @@ namespace ModrogCommon
             packets = new List<byte[]>();
 
             _offset += bytesRead;
-            if (_offset <= 2) return true;
+            if (_offset <= sizeof(int)) return true;
 
-            while (_offset >= 2)
+            while (_offset >= sizeof(int))
             {
-                var packetSize = (_buffer[0] << 8) + _buffer[1];
-                var endOfPacketOffset = 2 + packetSize;
+                var packetSize = (_buffer[0] << 24) + (_buffer[1] << 16) + (_buffer[2] << 8) + _buffer[3];
+                var endOfPacketOffset = sizeof(int) + packetSize;
 
                 if (_offset < endOfPacketOffset) break;
 
                 var packet = new byte[packetSize];
-                Buffer.BlockCopy(_buffer, 2, packet, 0, packetSize);
+                Buffer.BlockCopy(_buffer, sizeof(int), packet, 0, packetSize);
 
                 Buffer.BlockCopy(_buffer, endOfPacketOffset, _buffer, 0, _offset - endOfPacketOffset);
                 _offset -= endOfPacketOffset;
