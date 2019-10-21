@@ -14,13 +14,23 @@ namespace ModrogEditor.Interface.Editing.Map
         readonly MapEditor _mapEditor;
 
         // Chunks
-        class Chunk
+        public class Chunk
         {
-            public readonly short[,] TilesPerLayer;
-            public Chunk() { TilesPerLayer = new short[(int)Protocol.MapLayer.Count, Protocol.MapChunkSide * Protocol.MapChunkSide]; }
+            public readonly short[][] TilesPerLayer;
+
+            public Chunk(short[][] tilesPerLayer)
+            {
+                TilesPerLayer = tilesPerLayer;
+            }
+
+            public Chunk()
+            {
+                TilesPerLayer = new short[(int)Protocol.MapLayer.Count][];
+                for (var i = 0; i < TilesPerLayer.Length; i++) TilesPerLayer[i] = new short[Protocol.MapChunkSide * Protocol.MapChunkSide];
+            }
         }
 
-        readonly Dictionary<Point, Chunk> _chunks = new Dictionary<Point, Chunk>();
+        public readonly Dictionary<Point, Chunk> Chunks = new Dictionary<Point, Chunk>();
 
         // Scrolling
         Vector2 _scroll;
@@ -74,10 +84,10 @@ namespace ModrogEditor.Interface.Editing.Map
                 (int)MathF.Floor((float)_hoveredTileCoords.X / Protocol.MapChunkSide),
                 (int)MathF.Floor((float)_hoveredTileCoords.Y / Protocol.MapChunkSide));
 
-            if (!_chunks.TryGetValue(chunkCoords, out var chunk))
+            if (!Chunks.TryGetValue(chunkCoords, out var chunk))
             {
                 chunk = new Chunk();
-                _chunks.Add(chunkCoords, chunk);
+                Chunks.Add(chunkCoords, chunk);
             }
 
             var chunkTileCoords = new Point(
@@ -87,7 +97,7 @@ namespace ModrogEditor.Interface.Editing.Map
             switch (_mapEditor.Tool)
             {
                 case MapEditor.MapEditorTool.Brush:
-                    chunk.TilesPerLayer[_mapEditor.TileLayer, chunkTileCoords.Y * Protocol.MapChunkSide + chunkTileCoords.X] = _mapEditor.BrushTileIndex;
+                    chunk.TilesPerLayer[_mapEditor.TileLayer][chunkTileCoords.Y * Protocol.MapChunkSide + chunkTileCoords.X] = _mapEditor.BrushTileIndex;
                     break;
             }
         }
@@ -98,13 +108,13 @@ namespace ModrogEditor.Interface.Editing.Map
                 (int)MathF.Floor((float)position.X / Protocol.MapChunkSide),
                 (int)MathF.Floor((float)position.Y / Protocol.MapChunkSide));
 
-            if (!_chunks.TryGetValue(chunkCoords, out var chunk)) return 0;
+            if (!Chunks.TryGetValue(chunkCoords, out var chunk)) return 0;
 
             var chunkTileCoords = new Point(
                 MathHelper.Mod(position.X, Protocol.MapChunkSide),
                 MathHelper.Mod(position.Y, Protocol.MapChunkSide));
 
-            return chunk.TilesPerLayer[_mapEditor.TileLayer, chunkTileCoords.Y * Protocol.MapChunkSide + chunkTileCoords.X];
+            return chunk.TilesPerLayer[_mapEditor.TileLayer][chunkTileCoords.Y * Protocol.MapChunkSide + chunkTileCoords.X];
         }
 
 
@@ -273,7 +283,7 @@ namespace ModrogEditor.Interface.Editing.Map
             {
                 for (var chunkX = startChunkCoords.X; chunkX <= endChunkCoords.X; chunkX++)
                 {
-                    if (!_chunks.TryGetValue(new Point(chunkX, chunkY), out var chunk)) continue;
+                    if (!Chunks.TryGetValue(new Point(chunkX, chunkY), out var chunk)) continue;
 
                     var chunkStartTileCoords = new Point(chunkX * Protocol.MapChunkSide, chunkY * Protocol.MapChunkSide);
 
@@ -292,7 +302,7 @@ namespace ModrogEditor.Interface.Editing.Map
                             var tileLayer = 0;
                             var tileKinds = _mapEditor.TileKindsByLayer[tileLayer];
 
-                            var tileIndex = chunk.TilesPerLayer[tileLayer, chunkRelativeY * Protocol.MapChunkSide + chunkRelativeX];
+                            var tileIndex = chunk.TilesPerLayer[tileLayer][chunkRelativeY * Protocol.MapChunkSide + chunkRelativeX];
                             if (tileIndex == 0) continue;
 
                             var red = (byte)(255 * (chunkRelativeX - 16) / 32);

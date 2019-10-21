@@ -7,6 +7,7 @@ using SwarmPlatform.Interface;
 using SwarmPlatform.UI;
 using System;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Text.Json;
 
 namespace ModrogEditor.Interface.Editing.Map
@@ -146,6 +147,8 @@ namespace ModrogEditor.Interface.Editing.Map
         {
             void OnError(string details)
             {
+                _mainLayer.Visible = false;
+
                 _errorTitleLabel.Text = "Cannot open map";
                 _errorDetailsLabel.Text = details;
                 _errorLayer.Visible = true;
@@ -155,9 +158,25 @@ namespace ModrogEditor.Interface.Editing.Map
             {
                 try
                 {
-                    var mapReader = new PacketReader();
-                    mapReader.Open(File.ReadAllBytes(FullAssetPath));
-                    TileSetPath = mapReader.ReadByteSizeString();
+                    var reader = new PacketReader();
+                    reader.Open(File.ReadAllBytes(FullAssetPath));
+                    TileSetPath = reader.ReadByteSizeString();
+
+                    var chunksCount = reader.ReadInt();
+
+                    for (var i = 0; i < chunksCount; i++)
+                    {
+                        var coords = new Point(reader.ReadInt(), reader.ReadInt());
+                        var tilesPerLayer = new short[(int)Protocol.MapLayer.Count][];
+
+                        for (var j = 0; j < (int)Protocol.MapLayer.Count; j++)
+                        {
+                            tilesPerLayer[j] = MemoryMarshal.Cast<byte, short>(reader.ReadBytes(Protocol.MapChunkSide * Protocol.MapChunkSide * sizeof(short))).ToArray();
+                        }
+
+                        var chunk = new MapViewport.Chunk(tilesPerLayer);
+                        _mapViewport.Chunks.Add(coords, chunk);
+                    }
                 }
                 catch (Exception exception)
                 {
@@ -227,6 +246,7 @@ namespace ModrogEditor.Interface.Editing.Map
                 }
             }
 
+            _mapViewport.Visible = true;
             Desktop.SetFocusedElement(_mapViewport);
         }
 
@@ -243,8 +263,16 @@ namespace ModrogEditor.Interface.Editing.Map
 
         void Save()
         {
-            var writer = new PacketWriter(capacity: 8192, useSizeHeader: false);
+            var writer = new PacketWriter(initialCapacity: 8192, useSizeHeader: false);
             writer.WriteByteSizeString(TileSetPath);
+            writer.WriteInt(_mapViewport.Chunks.Count);
+
+            foreach (var (coords, chunk) in _mapViewport.Chunks)
+            {
+                writer.WriteInt(coords.X);
+                writer.WriteInt(coords.Y);
+                for (var i = 0; i < (int)Protocol.MapLayer.Count; i++) writer.WriteShorts(chunk.TilesPerLayer[i]);
+            }
 
             using var file = File.OpenWrite(FullAssetPath);
             file.Write(writer.Buffer, 0, writer.Finish());
