@@ -3,14 +3,20 @@
     "tileKinds": {
         "Floor": [
             {
-                "name": "Ground",
+                "name": "Grass",
                 "spriteLocation": [ 0, 0 ],
                 "flags": []
             },
 
             {
-                "name": "Ground2",
+                "name": "Dirt",
                 "spriteLocation": [ 1, 0 ],
+                "flags": []
+            },
+
+            {
+                "name": "Castle Floor",
+                "spriteLocation": [ 3, 0 ],
                 "flags": []
             },
         ],
@@ -18,20 +24,20 @@
         "Fluid": [
             {
                 "name": "Water",
-                "spriteLocation": [ 1, 0 ]
+                "spriteLocation": [ 2, 0 ]
             }
         ],
 
         "Wall": [
             {
-                "name": "Block",
-                "spriteLocation": [ 1, 0 ],
+                "name": "Rock",
+                "spriteLocation": [ 4, 0 ],
                 "flags": [ "solid", "opaque" ],
             },
 
             {
-                "name": "Door",
-                "spriteLocation": [ 2, 0 ],
+                "name": "Castle Wall",
+                "spriteLocation": [ 0, 1 ],
                 "flags": [],
             }
         ]
