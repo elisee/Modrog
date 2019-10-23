@@ -23,6 +23,8 @@ You'll need .NET Core 3 and Visual Studio 2019. VS Code might work.
 
 ## Tasks
 
+    - (Map Editor) Bucket fill
+    - (Editor) Allow creating or deleting assets
     - (Map Editor) Skip empty chunks when saving
     - (Server API) Support loading tile sets & maps
     - (Map Editor) Support entities
