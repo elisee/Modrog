@@ -1,14 +1,17 @@
-﻿using SwarmPlatform.Graphics;
+﻿using ModrogEditor.Scenario;
+using SwarmPlatform.Graphics;
 using SwarmPlatform.UI;
-using ModrogEditor.Scenario;
 
 namespace ModrogEditor.Interface.Editing
 {
     class AssetTreeItem : Element
     {
+        static readonly TexturePatch SelectedBackgroundColor = new TexturePatch(0x0000ffff);
+
         public readonly AssetTree Tree;
         public readonly AssetEntry Entry;
 
+        readonly Button _button;
         readonly Element _icon;
         readonly Label _label;
         readonly Panel _childrenPanel;
@@ -29,14 +32,17 @@ namespace ModrogEditor.Interface.Editing
             Entry = entry;
             ChildLayout = ChildLayoutMode.Top;
 
-            var button = new Button(this)
+            _button = new Button(this)
             {
                 ChildLayout = ChildLayoutMode.Left,
-                OnActivate = () => Tree.Internal_ActivateItem(this),
-                Padding = 8,
+                OnActivate = () =>
+                {
+                    Tree.Internal_ActivateItem(this);
+                },
+                Padding = 8
             };
 
-            _icon = new Element(button)
+            _icon = new Element(_button)
             {
                 Width = 16,
                 Height = 16,
@@ -45,7 +51,7 @@ namespace ModrogEditor.Interface.Editing
 
             _icon.BackgroundPatch = IconsByAssetType[(int)entry.AssetType];
 
-            _label = new Label(button)
+            _label = new Label(_button)
             {
                 LayoutWeight = 1,
                 Ellipsize = true,
@@ -59,6 +65,11 @@ namespace ModrogEditor.Interface.Editing
             };
 
             UpdateLabel();
+        }
+
+        public void SetSelected(bool selected)
+        {
+            _button.BackgroundPatch = selected ? SelectedBackgroundColor : null;
         }
 
         public void AddChildItem(AssetTreeItem item)

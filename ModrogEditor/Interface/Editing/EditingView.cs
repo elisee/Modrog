@@ -103,9 +103,16 @@ namespace ModrogEditor.Interface.Editing
 
         public void OnActiveAssetChanged()
         {
-            _editorContainer.Clear();
-
             var entry = App.State.ActiveAssetEntry;
+
+            _assetTree.SetSelectedEntry(entry);
+
+            if (entry.AssetType == AssetType.Unknown || entry.AssetType == AssetType.Folder)
+            {
+                Desktop.SetFocusedElement(_editorContainer);
+                return;
+            }
+
             var fullAssetPath = Path.Combine(App.State.ActiveScenarioPath, entry.Path);
             Element editor = null;
             _assetTitleLabel.Text = entry.Path;
@@ -113,10 +120,6 @@ namespace ModrogEditor.Interface.Editing
 
             switch (entry.AssetType)
             {
-                case AssetType.Unknown:
-                case AssetType.Folder:
-                    break;
-
                 case AssetType.Manifest: editor = new Manifest.ManifestEditor(App, fullAssetPath); break;
                 case AssetType.TileSet: editor = new TileSet.TileSetEditor(App, fullAssetPath); break;
                 case AssetType.Script: editor = new Script.ScriptEditor(App, fullAssetPath); break;
@@ -124,7 +127,8 @@ namespace ModrogEditor.Interface.Editing
                 case AssetType.Map: editor = new Map.MapEditor(App, fullAssetPath); break;
             }
 
-            if (editor != null) _editorContainer.Add(editor);
+            _editorContainer.Clear();
+            _editorContainer.Add(editor);
             _editorContainer.Layout();
         }
     }
