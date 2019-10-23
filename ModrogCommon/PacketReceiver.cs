@@ -8,7 +8,7 @@ namespace ModrogCommon
     {
         public Socket _socket;
 
-        byte[] _buffer = new byte[uint.MaxValue];
+        byte[] _buffer = new byte[ushort.MaxValue];
         int _offset;
 
         public PacketReceiver(Socket socket)
