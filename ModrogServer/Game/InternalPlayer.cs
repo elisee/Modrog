@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace ModrogServer.Game
 {
-    class InternalPlayer : ModrogApi.Server.Player
+    sealed class InternalPlayer : ModrogApi.Server.Player
     {
         internal int Index;
         internal string Name;

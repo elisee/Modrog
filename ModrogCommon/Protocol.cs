@@ -15,14 +15,6 @@ namespace ModrogCommon
 
         public const int MapTileSize = 20;
         public const int MapChunkSide = 16;
-        public enum MapLayer
-        {
-            Floor,
-            Fluid,
-            Wall,
-
-            Count
-        }
 
         public enum ServerPacketType : byte
         {

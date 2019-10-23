@@ -8,7 +8,10 @@ namespace ModrogApi.Server
 
         public abstract Player[] GetPlayers();
         public abstract EntityKind CreateEntityKind(Point spriteLocation);
-        public abstract TileKind CreateTileKind(Point spriteLocation, TileFlags flags);
-        public abstract World CreateWorld(int width, int height);
+        public abstract TileKind CreateTileKind(MapLayer layer, Point spriteLocation);
+        public abstract World CreateWorld();
+
+        public abstract Map LoadMap(string path);
+        public abstract void LoadTileSet(string path);
     }
 }

@@ -1,5 +1,5 @@
-﻿using SwarmBasics.Math;
-using ModrogCommon;
+﻿using ModrogCommon;
+using SwarmBasics.Math;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -44,11 +44,15 @@ namespace ModrogServer
             _packetWriter.WriteInt(_spritesheetBytes.Length);
             _packetWriter.WriteBytes(_spritesheetBytes);
 
-            _packetWriter.WriteInt(_universe.TileKinds.Count);
-            foreach (var tileKind in _universe.TileKinds)
+            for (var layer = 0; layer < _universe.TileKindsPerLayer.Length; layer++)
             {
-                _packetWriter.WriteShort((short)tileKind.SpriteLocation.X);
-                _packetWriter.WriteShort((short)tileKind.SpriteLocation.Y);
+                _packetWriter.WriteInt(_universe.TileKindsPerLayer[layer].Count);
+
+                foreach (var tileKind in _universe.TileKindsPerLayer[layer])
+                {
+                    _packetWriter.WriteShort((short)tileKind.SpriteLocation.X);
+                    _packetWriter.WriteShort((short)tileKind.SpriteLocation.Y);
+                }
             }
         }
 
@@ -62,7 +66,7 @@ namespace ModrogServer
                 var peer = _peersBySocket[socket];
                 var player = _universe.Players[peer.Identity.PlayerIndex];
                 var seenEntities = new HashSet<Game.InternalEntity>();
-                var seenTiles = new Dictionary<Point, short>();
+                var seenTileStacks = new Dictionary<Point, short[]>();
 
                 foreach (var ownedEntity in player.OwnedEntities)
                 {
@@ -76,7 +80,7 @@ namespace ModrogServer
                     var directionAngle = ownedEntity.GetDirectionAngle();
 
                     var radius = Math.Max(ownedEntity.OmniViewRadius, ownedEntity.DirectionalViewRadius);
-                    seenTiles.TryAdd(ownedEntity.Position, world.PeekTile(ownedEntity.Position.X, ownedEntity.Position.Y));
+                    seenTileStacks.TryAdd(ownedEntity.Position, world.PeekTileStack(ownedEntity.Position.X, ownedEntity.Position.Y));
 
                     for (var dy = -radius; dy <= radius; dy++)
                     {
@@ -102,7 +106,7 @@ namespace ModrogServer
                                 world.HasLineOfSight(ownedEntity.Position.X, ownedEntity.Position.Y, target.X, target.Y - Math.Sign(dy));
                             if (!hasLineOfSight) continue;
 
-                            seenTiles.TryAdd(target, world.PeekTile(target.X, target.Y));
+                            seenTileStacks.TryAdd(target, world.PeekTileStack(target.X, target.Y));
                             var targetEntity = world.PeekEntity(target.X, target.Y);
                             if (targetEntity != null) seenEntities.Add(targetEntity);
                         }
@@ -117,9 +121,6 @@ namespace ModrogServer
 
                 if (player.WasJustTeleported)
                 {
-                    _packetWriter.WriteShort((short)player.World.Width);
-                    _packetWriter.WriteShort((short)player.World.Height);
-
                     _packetWriter.WriteShort((short)player.Position.X);
                     _packetWriter.WriteShort((short)player.Position.Y);
                     player.WasJustTeleported = false;
@@ -140,12 +141,12 @@ namespace ModrogServer
                     _packetWriter.WriteShort((byte)entity.PlayerIndex);
                 }
 
-                _packetWriter.WriteShort((short)seenTiles.Count);
-                foreach (var (position, tile) in seenTiles)
+                _packetWriter.WriteShort((short)seenTileStacks.Count);
+                foreach (var (position, tileStack) in seenTileStacks)
                 {
                     _packetWriter.WriteShort((short)position.X);
                     _packetWriter.WriteShort((short)position.Y);
-                    _packetWriter.WriteShort(tile);
+                    for (var i = 0; i < tileStack.Length; i++) _packetWriter.WriteShort(tileStack[i]);
                 }
 
                 Send(peer.Socket);

@@ -37,9 +37,9 @@ namespace ModrogEditor.Interface.Editing.Map
             public Point SpriteLocation;
         }
 
-        public readonly EditorTileKind[][] TileKindsByLayer = new EditorTileKind[(int)Protocol.MapLayer.Count][];
+        public readonly EditorTileKind[][] TileKindsByLayer = new EditorTileKind[(int)ModrogApi.MapLayer.Count][];
 
-        TextButton[] _tileLayerButtons = new TextButton[(int)Protocol.MapLayer.Count];
+        TextButton[] _tileLayerButtons = new TextButton[(int)ModrogApi.MapLayer.Count];
 
         // Tools
         public enum MapEditorTool { Brush, Picker, Bucket }
@@ -103,13 +103,13 @@ namespace ModrogEditor.Interface.Editing.Map
                         TileLayer = layer;
                     }
 
-                    for (var i = 0; i < (int)Protocol.MapLayer.Count; i++)
+                    for (var i = 0; i < (int)ModrogApi.MapLayer.Count; i++)
                     {
                         var layer = i;
 
                         _tileLayerButtons[i] = new TextButton(layersPanel)
                         {
-                            Text = Enum.GetName(typeof(Protocol.MapLayer), i),
+                            Text = Enum.GetName(typeof(ModrogApi.MapLayer), i),
                             Padding = 8,
                             OnActivate = () => SetTileLayer(layer)
                         };
@@ -190,14 +190,14 @@ namespace ModrogEditor.Interface.Editing.Map
                     for (var i = 0; i < chunksCount; i++)
                     {
                         var coords = new Point(reader.ReadInt(), reader.ReadInt());
-                        var tilesPerLayer = new short[(int)Protocol.MapLayer.Count][];
+                        var tilesPerLayer = new short[(int)ModrogApi.MapLayer.Count][];
 
-                        for (var j = 0; j < (int)Protocol.MapLayer.Count; j++)
+                        for (var j = 0; j < (int)ModrogApi.MapLayer.Count; j++)
                         {
                             tilesPerLayer[j] = MemoryMarshal.Cast<byte, short>(reader.ReadBytes(Protocol.MapChunkSide * Protocol.MapChunkSide * sizeof(short))).ToArray();
                         }
 
-                        var chunk = new MapViewport.Chunk(tilesPerLayer);
+                        var chunk = new Chunk(tilesPerLayer);
                         _mapViewport.Chunks.Add(coords, chunk);
                     }
                 }
@@ -218,11 +218,9 @@ namespace ModrogEditor.Interface.Editing.Map
 
                     var tileKindsJson = tileSetJson.GetProperty("tileKinds");
 
-                    var layerNames = new string[] { "Floor", "Fluid", "Wall" };
-
-                    for (var i = 0; i < (int)Protocol.MapLayer.Count; i++)
+                    for (var i = 0; i < (int)ModrogApi.MapLayer.Count; i++)
                     {
-                        var layerName = Enum.GetName(typeof(Protocol.MapLayer), i);
+                        var layerName = Enum.GetName(typeof(ModrogApi.MapLayer), i);
 
                         if (tileKindsJson.TryGetProperty(layerName, out var layerJson))
                         {
@@ -251,7 +249,7 @@ namespace ModrogEditor.Interface.Editing.Map
                 }
                 catch (Exception exception)
                 {
-                    OnError("Error while loading tileset: " + exception.Message);
+                    OnError("Error while loading tile set: " + exception.Message);
                     return;
                 }
             }
@@ -294,7 +292,7 @@ namespace ModrogEditor.Interface.Editing.Map
             {
                 writer.WriteInt(coords.X);
                 writer.WriteInt(coords.Y);
-                for (var i = 0; i < (int)Protocol.MapLayer.Count; i++) writer.WriteShorts(chunk.TilesPerLayer[i]);
+                for (var i = 0; i < (int)ModrogApi.MapLayer.Count; i++) writer.WriteShorts(chunk.TilesPerLayer[i]);
             }
 
             using var file = File.OpenWrite(FullAssetPath);

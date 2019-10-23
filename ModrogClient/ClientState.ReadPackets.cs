@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using static ModrogCommon.Protocol;
 
 
@@ -28,7 +27,7 @@ namespace ModrogClient
 
                 try
                 {
-                    var packetType = (Protocol.ServerPacketType)_packetReader.ReadByte();
+                    var packetType = (ServerPacketType)_packetReader.ReadByte();
 
                     bool EnsureStage(ClientStage view)
                     {
@@ -137,9 +136,8 @@ namespace ModrogClient
             }
             else
             {
-                WorldSize = Point.Zero;
-                WorldTiles = new short[0];
-                WorldFog = new byte[0];
+                WorldChunks.Clear();
+                FogChunks.Clear();
                 SeenEntities.Clear();
 
                 ReadUniverseSetup();
@@ -214,11 +212,16 @@ namespace ModrogClient
             _app.PlayingView.OnSpritesheetReceived(image);
 
             // Tile kinds
-            var tileKindsCount = _packetReader.ReadInt();
-            for (var i = 0; i < tileKindsCount; i++)
+            for (var layer = 0; layer < (int)MapLayer.Count; layer++)
             {
-                var spriteLocation = new Point(_packetReader.ReadShort(), _packetReader.ReadShort());
-                TileKinds.Add(new Game.ClientTileKind(spriteLocation));
+                var tileKindsCount = _packetReader.ReadInt();
+                TileKindsByLayer[layer] = new Game.ClientTileKind[tileKindsCount];
+
+                for (var i = 0; i < tileKindsCount; i++)
+                {
+                    var spriteLocation = new Point(_packetReader.ReadShort(), _packetReader.ReadShort());
+                    TileKindsByLayer[layer][i] = new Game.ClientTileKind(spriteLocation);
+                }
             }
         }
         #endregion
@@ -238,17 +241,13 @@ namespace ModrogClient
             var wasTeleported = _packetReader.ReadByte() != 0;
             if (wasTeleported)
             {
-                WorldSize = new Point(_packetReader.ReadShort(), _packetReader.ReadShort());
-                WorldTiles = new short[WorldSize.X * WorldSize.Y];
-                WorldFog = new byte[WorldSize.X * WorldSize.Y];
+                WorldChunks.Clear();
 
                 var location = new Point(_packetReader.ReadShort(), _packetReader.ReadShort());
                 _app.PlayingView.OnTeleported(location);
             }
 
-            if (WorldTiles == null) throw new Exception("Server didn't teleport client on first tick.");
-
-            Unsafe.InitBlock(ref WorldFog[0], 0, (uint)WorldFog.Length);
+            FogChunks.Clear();
 
             Game.ClientEntity newSelectedEntity = null;
 
@@ -269,20 +268,42 @@ namespace ModrogClient
 
             SelectedEntity = newSelectedEntity;
 
-            var tilesCount = (int)_packetReader.ReadShort();
-            for (var i = 0; i < tilesCount; i++)
+            var tileStacksCount = (int)_packetReader.ReadShort();
+            for (var i = 0; i < tileStacksCount; i++)
             {
-                var x = _packetReader.ReadShort();
-                var y = _packetReader.ReadShort();
-                var tile = _packetReader.ReadShort();
-                WorldTiles[y * WorldSize.X + x] = tile;
-                WorldFog[y * WorldSize.X + x] = 1;
+                var worldTileCoords = new Point(_packetReader.ReadShort(), _packetReader.ReadShort());
+
+                var chunkCoords = new Point(
+                    (int)MathF.Floor((float)worldTileCoords.X / MapChunkSide),
+                    (int)MathF.Floor((float)worldTileCoords.Y / MapChunkSide));
+
+                if (!WorldChunks.TryGetValue(chunkCoords, out var worldChunk))
+                {
+                    worldChunk = new Chunk((int)MapLayer.Count);
+                    WorldChunks.Add(chunkCoords, worldChunk);
+                }
+
+                var chunkTileCoords = new Point(
+                    MathHelper.Mod(worldTileCoords.X, MapChunkSide),
+                    MathHelper.Mod(worldTileCoords.Y, MapChunkSide));
+
+                var tileOffset = chunkTileCoords.Y * MapChunkSide + chunkTileCoords.X;
+
+                for (var layer = 0; layer < (int)MapLayer.Count; layer++) worldChunk.TilesPerLayer[layer][tileOffset] = _packetReader.ReadShort();
+
+                if (!FogChunks.TryGetValue(chunkCoords, out var fogChunk))
+                {
+                    fogChunk = new Chunk(1);
+                    FogChunks.Add(chunkCoords, fogChunk);
+                }
+
+                fogChunk.TilesPerLayer[0][tileOffset] = 1;
             }
 
             // Send scroll update
             var scrollPosition = new Point(
-                (int)(_app.PlayingView.ScrollingPixelsX / Interface.Playing.PlayingView.TileSize),
-                (int)(_app.PlayingView.ScrollingPixelsY / Interface.Playing.PlayingView.TileSize));
+                (int)(_app.PlayingView.Scroll.X / Protocol.MapTileSize),
+                (int)(_app.PlayingView.Scroll.Y / Protocol.MapTileSize));
 
             _packetWriter.WriteByte((byte)ClientPacketType.SetPosition);
             _packetWriter.WriteShort((short)scrollPosition.X);
@@ -297,7 +318,7 @@ namespace ModrogClient
                 plannedMoves[SelectedEntity.Id] = SelectedEntity.GetMoveForTargetDirection(SelectedEntityMoveDirection.Value);
             }
 
-            _packetWriter.WriteByte((byte)Protocol.ClientPacketType.PlanMoves);
+            _packetWriter.WriteByte((byte)ClientPacketType.PlanMoves);
             _packetWriter.WriteInt(TickIndex);
             _packetWriter.WriteShort((short)plannedMoves.Count);
             foreach (var (entityId, move) in plannedMoves)

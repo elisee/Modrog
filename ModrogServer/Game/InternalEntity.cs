@@ -5,7 +5,7 @@ using System;
 
 namespace ModrogServer.Game
 {
-    public class InternalEntity : Entity
+    sealed class InternalEntity : Entity
     {
         internal readonly int Id;
         internal InternalWorld World;

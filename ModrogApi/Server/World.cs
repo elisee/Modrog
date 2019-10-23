@@ -5,6 +5,8 @@ namespace ModrogApi.Server
     public abstract class World
     {
         public abstract Entity SpawnEntity(EntityKind kind, Point position, EntityDirection direction, Player owner);
-        public abstract void SetTile(int x, int y, TileKind tileKind);
+        public abstract void SetTile(MapLayer layer, int x, int y, TileKind tileKind);
+
+        public abstract void InsertMap(int x, int y, Map map);
     }
 }

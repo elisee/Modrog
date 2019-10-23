@@ -56,11 +56,10 @@ namespace ModrogClient
         // Playing
         public bool PlayingMenuOpen { get; private set; }
 
-        public readonly List<Game.ClientTileKind> TileKinds = new List<Game.ClientTileKind>();
+        public readonly Game.ClientTileKind[][] TileKindsByLayer = new Game.ClientTileKind[(int)MapLayer.Count][];
 
-        public Point WorldSize;
-        public short[] WorldTiles;
-        public byte[] WorldFog;
+        public Dictionary<Point, Chunk> WorldChunks = new Dictionary<Point, Chunk>();
+        public Dictionary<Point, Chunk> FogChunks = new Dictionary<Point, Chunk>();
         public readonly List<Game.ClientEntity> SeenEntities = new List<Game.ClientEntity>();
 
         public Game.ClientEntity SelectedEntity;

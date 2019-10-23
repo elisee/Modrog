@@ -14,22 +14,6 @@ namespace ModrogEditor.Interface.Editing.Map
         readonly MapEditor _mapEditor;
 
         // Chunks
-        public class Chunk
-        {
-            public readonly short[][] TilesPerLayer;
-
-            public Chunk(short[][] tilesPerLayer)
-            {
-                TilesPerLayer = tilesPerLayer;
-            }
-
-            public Chunk()
-            {
-                TilesPerLayer = new short[(int)Protocol.MapLayer.Count][];
-                for (var i = 0; i < TilesPerLayer.Length; i++) TilesPerLayer[i] = new short[Protocol.MapChunkSide * Protocol.MapChunkSide];
-            }
-        }
-
         public readonly Dictionary<Point, Chunk> Chunks = new Dictionary<Point, Chunk>();
 
         // Scrolling
@@ -86,7 +70,7 @@ namespace ModrogEditor.Interface.Editing.Map
 
             if (!Chunks.TryGetValue(chunkCoords, out var chunk))
             {
-                chunk = new Chunk();
+                chunk = new Chunk((int)ModrogApi.MapLayer.Count);
                 Chunks.Add(chunkCoords, chunk);
             }
 
@@ -169,8 +153,9 @@ namespace ModrogEditor.Interface.Editing.Map
 
             if (_isDraggingScroll)
             {
-                _scroll.X = _dragScroll.X - Desktop.MouseX / _zoom;
-                _scroll.Y = _dragScroll.Y - Desktop.MouseY / _zoom;
+                _scroll = new Vector2(
+                    _dragScroll.X - Desktop.MouseX / _zoom,
+                    _dragScroll.Y - Desktop.MouseY / _zoom);
             }
         }
 
@@ -195,8 +180,7 @@ namespace ModrogEditor.Interface.Editing.Map
                 _isScrollingDown = false;
 
                 _isDraggingScroll = true;
-                _dragScroll.X = _scroll.X + Desktop.MouseX / _zoom;
-                _dragScroll.Y = _scroll.Y + Desktop.MouseY / _zoom;
+                _dragScroll = new Vector2(_scroll.X + Desktop.MouseX / _zoom, _scroll.Y + Desktop.MouseY / _zoom);
             }
             else if (button == SDL.SDL_BUTTON_RIGHT)
             {
@@ -295,7 +279,7 @@ namespace ModrogEditor.Interface.Editing.Map
                         Math.Min(Protocol.MapChunkSide, endTileCoords.X - chunkStartTileCoords.X),
                         Math.Min(Protocol.MapChunkSide, endTileCoords.Y - chunkStartTileCoords.Y));
 
-                    for (var tileLayer = 0; tileLayer < (int)Protocol.MapLayer.Count; tileLayer++)
+                    for (var tileLayer = 0; tileLayer < (int)ModrogApi.MapLayer.Count; tileLayer++)
                     {
                         var tileKinds = _mapEditor.TileKindsByLayer[tileLayer];
 

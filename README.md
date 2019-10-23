@@ -26,7 +26,6 @@ You'll need .NET Core 3 and Visual Studio 2019. VS Code might work.
     - (Map Editor) Bucket fill
     - (Editor) Allow creating or deleting assets
     - (Map Editor) Skip empty chunks when saving
-    - (Server API) Support loading tile sets & maps
     - (Map Editor) Support entities
     - (Tile Set Editor) Replace JSON editor with visual editor, and maybe switch to binary format
     - (Team) Find a pixel artist

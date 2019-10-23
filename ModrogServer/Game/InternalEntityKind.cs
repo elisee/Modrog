@@ -2,7 +2,7 @@
 
 namespace ModrogServer.Game
 {
-    public class InternalEntityKind : ModrogApi.Server.EntityKind
+    sealed class InternalEntityKind : ModrogApi.Server.EntityKind
     {
         public readonly Point SpriteLocation;
 
