@@ -295,32 +295,30 @@ namespace ModrogEditor.Interface.Editing.Map
                         Math.Min(Protocol.MapChunkSide, endTileCoords.X - chunkStartTileCoords.X),
                         Math.Min(Protocol.MapChunkSide, endTileCoords.Y - chunkStartTileCoords.Y));
 
-                    for (var chunkRelativeY = chunkRelativeStartTileCoords.Y; chunkRelativeY < chunkRelativeEndTileCoords.Y; chunkRelativeY++)
+                    for (var tileLayer = 0; tileLayer < (int)Protocol.MapLayer.Count; tileLayer++)
                     {
-                        for (var chunkRelativeX = chunkRelativeStartTileCoords.X; chunkRelativeX < chunkRelativeEndTileCoords.X; chunkRelativeX++)
+                        var tileKinds = _mapEditor.TileKindsByLayer[tileLayer];
+
+                        for (var chunkRelativeY = chunkRelativeStartTileCoords.Y; chunkRelativeY < chunkRelativeEndTileCoords.Y; chunkRelativeY++)
                         {
-                            var tileLayer = 0;
-                            var tileKinds = _mapEditor.TileKindsByLayer[tileLayer];
+                            for (var chunkRelativeX = chunkRelativeStartTileCoords.X; chunkRelativeX < chunkRelativeEndTileCoords.X; chunkRelativeX++)
+                            {
+                                var tileIndex = chunk.TilesPerLayer[tileLayer][chunkRelativeY * Protocol.MapChunkSide + chunkRelativeX];
+                                if (tileIndex == 0) continue;
 
-                            var tileIndex = chunk.TilesPerLayer[tileLayer][chunkRelativeY * Protocol.MapChunkSide + chunkRelativeX];
-                            if (tileIndex == 0) continue;
+                                var y = chunkStartTileCoords.Y + chunkRelativeY;
+                                var x = chunkStartTileCoords.X + chunkRelativeX;
 
-                            var red = (byte)(255 * (chunkRelativeX - 16) / 32);
-                            var blue = (byte)(255 * (chunkRelativeY - 16) / 32);
-                            new Color((uint)((red << 24) + (blue << 8) + 0xff)).UseAsDrawColor(Desktop.Renderer);
+                                var left = ViewRectangle.X + (int)(x * _zoom * Protocol.MapTileSize) - (int)(viewportScroll.X * _zoom);
+                                var right = ViewRectangle.X + (int)((x + 1) * _zoom * Protocol.MapTileSize) - (int)(viewportScroll.X * _zoom);
+                                var top = ViewRectangle.Y + (int)(y * _zoom * Protocol.MapTileSize) - (int)(viewportScroll.Y * _zoom);
+                                var bottom = ViewRectangle.Y + (int)((y + 1) * _zoom * Protocol.MapTileSize) - (int)(viewportScroll.Y * _zoom);
 
-                            var y = chunkStartTileCoords.Y + chunkRelativeY;
-                            var x = chunkStartTileCoords.X + chunkRelativeX;
-
-                            var left = ViewRectangle.X + (int)(x * _zoom * Protocol.MapTileSize) - (int)(viewportScroll.X * _zoom);
-                            var right = ViewRectangle.X + (int)((x + 1) * _zoom * Protocol.MapTileSize) - (int)(viewportScroll.X * _zoom);
-                            var top = ViewRectangle.Y + (int)(y * _zoom * Protocol.MapTileSize) - (int)(viewportScroll.Y * _zoom);
-                            var bottom = ViewRectangle.Y + (int)((y + 1) * _zoom * Protocol.MapTileSize) - (int)(viewportScroll.Y * _zoom);
-
-                            var spriteLocation = tileKinds[tileIndex - 1].SpriteLocation;
-                            var sourceRect = new SDL.SDL_Rect { x = spriteLocation.X * Protocol.MapTileSize, y = spriteLocation.Y * Protocol.MapTileSize, w = Protocol.MapTileSize, h = Protocol.MapTileSize };
-                            var destRect = new SDL.SDL_Rect { x = left, y = top, w = right - left, h = bottom - top };
-                            SDL.SDL_RenderCopy(Desktop.Renderer, _mapEditor.SpritesheetTexture, ref sourceRect, ref destRect);
+                                var spriteLocation = tileKinds[tileIndex - 1].SpriteLocation;
+                                var sourceRect = new SDL.SDL_Rect { x = spriteLocation.X * Protocol.MapTileSize, y = spriteLocation.Y * Protocol.MapTileSize, w = Protocol.MapTileSize, h = Protocol.MapTileSize };
+                                var destRect = new SDL.SDL_Rect { x = left, y = top, w = right - left, h = bottom - top };
+                                SDL.SDL_RenderCopy(Desktop.Renderer, _mapEditor.SpritesheetTexture, ref sourceRect, ref destRect);
+                            }
                         }
                     }
                 }

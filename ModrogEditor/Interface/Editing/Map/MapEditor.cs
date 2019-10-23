@@ -39,6 +39,8 @@ namespace ModrogEditor.Interface.Editing.Map
 
         public readonly EditorTileKind[][] TileKindsByLayer = new EditorTileKind[(int)Protocol.MapLayer.Count][];
 
+        TextButton[] _tileLayerButtons = new TextButton[(int)Protocol.MapLayer.Count];
+
         // Tools
         public enum MapEditorTool { Brush, Picker, Bucket }
         public MapEditorTool Tool { get; private set; } = MapEditorTool.Brush;
@@ -47,7 +49,6 @@ namespace ModrogEditor.Interface.Editing.Map
         public short BrushTileIndex = 1;
         public bool BrushShouldErase = false;
         public int BrushSize = 1;
-
 
         public MapEditor(EditorApp @interface, string fullAssetPath)
             : base(@interface, fullAssetPath)
@@ -93,6 +94,28 @@ namespace ModrogEditor.Interface.Editing.Map
                     // Layers
                     var layersPanel = new Panel(sidebar) { ChildLayout = ChildLayoutMode.Top };
                     new Label(layersPanel) { Text = "LAYERS", Padding = 8, BackgroundPatch = new TexturePatch(0x456456ff) };
+
+                    void SetTileLayer(int layer)
+                    {
+                        _tileLayerButtons[TileLayer].BackgroundPatch = new TexturePatch(0x00000000);
+                        _tileLayerButtons[layer].BackgroundPatch = new TexturePatch(0x228822ff);
+
+                        TileLayer = layer;
+                    }
+
+                    for (var i = 0; i < (int)Protocol.MapLayer.Count; i++)
+                    {
+                        var layer = i;
+
+                        _tileLayerButtons[i] = new TextButton(layersPanel)
+                        {
+                            Text = Enum.GetName(typeof(Protocol.MapLayer), i),
+                            Padding = 8,
+                            OnActivate = () => SetTileLayer(layer)
+                        };
+                    }
+
+                    SetTileLayer(0);
 
                     // Tools
                     var toolsPanel = new Panel(sidebar) { ChildLayout = ChildLayoutMode.Top };
