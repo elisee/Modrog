@@ -10,6 +10,7 @@ namespace ModrogEditor.Interface.Editing
     class AssetTree : Element
     {
         public Action<AssetEntry> OnActivate;
+        public Action<AssetEntry> OnDeleteSelectedAsset;
 
         readonly Dictionary<AssetEntry, AssetTreeItem> _itemsByEntry = new Dictionary<AssetEntry, AssetTreeItem>();
 
@@ -54,6 +55,14 @@ namespace ModrogEditor.Interface.Editing
             }
 
             ShowParent(entry);
+        }
+
+        public void DeleteEntry(AssetEntry entry)
+        {
+            var item = _itemsByEntry[entry];
+
+            if (_itemsByEntry.TryGetValue(entry.Parent, out var parentItem)) parentItem.RemoveChildItem(item);
+            else Remove(item);
         }
 
         void SortChildrenItem(List<Element> children)

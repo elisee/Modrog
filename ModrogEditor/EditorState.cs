@@ -52,19 +52,18 @@ namespace ModrogEditor
         public void OpenScenario(ScenarioEntry entry)
         {
             ActiveScenarioEntry = entry;
-            var scenarioPath = Path.Combine(ScenariosPath, entry.Name);
 
             void Recurse(AssetEntry parentEntry, string folderPath)
             {
                 foreach (var filePath in Directory.GetFiles(folderPath, "*.*", SearchOption.TopDirectoryOnly))
                 {
-                    var entry = CreateEntry(filePath[(folderPath.Length + 1)..], filePath[(scenarioPath.Length + 1)..], parentEntry);
+                    var entry = CreateEntry(filePath[(folderPath.Length + 1)..], filePath[(ActiveScenarioPath.Length + 1)..], parentEntry);
                     parentEntry.Children.Add(entry);
                 }
 
                 foreach (var childFolderPath in Directory.GetDirectories(folderPath))
                 {
-                    var folderEntry = CreateEntry(childFolderPath[(folderPath.Length + 1)..], childFolderPath[(scenarioPath.Length + 1)..], parentEntry);
+                    var folderEntry = CreateEntry(childFolderPath[(folderPath.Length + 1)..], childFolderPath[(ActiveScenarioPath.Length + 1)..], parentEntry);
                     parentEntry.Children.Add(folderEntry);
 
                     Recurse(folderEntry, childFolderPath);
@@ -72,7 +71,7 @@ namespace ModrogEditor
             }
 
             RootAssetEntry.Children.Clear();
-            Recurse(RootAssetEntry, scenarioPath);
+            Recurse(RootAssetEntry, ActiveScenarioPath);
 
             ActiveAssetEntry = RootAssetEntry;
 
@@ -144,6 +143,29 @@ namespace ModrogEditor
             else entry.AssetType = AssetType.Folder;
 
             return entry;
+        }
+
+        public void DeleteAsset(AssetEntry assetEntry)
+        {
+            void DeleteFolder(string folderPath)
+            {
+                foreach (var childFilePath in Directory.GetFiles(folderPath, "*.*", SearchOption.TopDirectoryOnly)) File.Delete(childFilePath);
+                foreach (var childFolderPath in Directory.GetDirectories(folderPath)) DeleteFolder(childFolderPath);
+
+                Directory.Delete(folderPath);
+            }
+
+            if (assetEntry.AssetType == AssetType.Folder)
+            {
+                DeleteFolder(Path.Combine(ActiveScenarioPath, assetEntry.Path));
+            }
+            else
+            {
+                File.Delete(Path.Combine(ActiveScenarioPath, assetEntry.Path));
+                assetEntry.Parent.Children.Remove(assetEntry);
+            }
+
+            _app.EditingView.OnAssetDeleted(assetEntry);
         }
 
         public void OpenAsset(AssetEntry entry)

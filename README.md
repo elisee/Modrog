@@ -23,7 +23,6 @@ You'll need .NET Core 3 and Visual Studio 2019. VS Code might work.
 
 ## Tasks
 
-    - (Editor) Allow deleting assets
     - (Editor) Allow renaming assets
     - (Editor) Allow reparenting assets with drag'n'drop (need to add drag'n'drop in UI framework)
     - (Map Editor) Trace line segments when using the brush rather than just placing tiles at hovered position. (Can reuse line drawing logic from line of sight)

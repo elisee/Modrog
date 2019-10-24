@@ -15,6 +15,7 @@ namespace ModrogEditor.Interface.Editing
 
         readonly StyledTextButton _newAssetButton;
         readonly NewAssetLayer _newAssetLayer;
+        readonly DeleteAssetLayer _deleteAssetLayer;
 
         readonly Panel _mainPanel;
         readonly Element _editorContainer;
@@ -60,6 +61,7 @@ namespace ModrogEditor.Interface.Editing
             };
 
             _newAssetLayer = new NewAssetLayer(this) { Visible = false };
+            _deleteAssetLayer = new DeleteAssetLayer(this) { Visible = false };
 
             _assetTree = new AssetTree(_sidebarPanel)
             {
@@ -67,7 +69,13 @@ namespace ModrogEditor.Interface.Editing
                 LayoutWeight = 1,
                 VerticalFlow = Flow.Scroll,
                 Padding = 8,
-                OnActivate = (entry) => App.State.OpenAsset(entry)
+                OnActivate = (entry) => App.State.OpenAsset(entry),
+                OnDeleteSelectedAsset = (entry) =>
+                 {
+                     _deleteAssetLayer.SetSelectedEntry(entry);
+                     _deleteAssetLayer.Visible = true;
+                     _deleteAssetLayer.Layout(_contentRectangle);
+                 }
             };
 
             _mainPanel = new Panel(rootContainer)
@@ -127,15 +135,19 @@ namespace ModrogEditor.Interface.Editing
             Desktop.SetFocusedElement(_newAssetButton);
         }
 
-        public void CloseNewAssetLayer()
-        {
-            _newAssetLayer.Visible = false;
-        }
+        public void CloseNewAssetLayer() => _newAssetLayer.Visible = false;
+        public void CloseDeleteAssetLayer() => _deleteAssetLayer.Visible = false;
 
         public void OnAssetCreated(AssetEntry entry)
         {
             _assetTree.AddEntry(entry);
             _assetTree.ShowEntry(entry);
+            _assetTree.Layout();
+        }
+
+        public void OnAssetDeleted(AssetEntry entry)
+        {
+            _assetTree.DeleteEntry(entry);
             _assetTree.Layout();
         }
 

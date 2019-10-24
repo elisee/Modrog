@@ -16,6 +16,7 @@ namespace ModrogEditor.Interface.Editing
         readonly Element _container;
         readonly Element _icon;
         readonly Label _label;
+        readonly Button _deleteButton;
         readonly Panel _childrenPanel;
 
         public List<Element> ChildrenItem => _childrenPanel.Children;
@@ -57,6 +58,14 @@ namespace ModrogEditor.Interface.Editing
                 Ellipsize = true,
             };
 
+            _deleteButton = new TextButton(_container)
+            {
+                HorizontalPadding = 6,
+                Text = "D",
+                Visible = false,
+                OnActivate = () => Tree.OnDeleteSelectedAsset(Entry)
+            };
+
             _childrenPanel = new Panel(this)
             {
                 ChildLayout = ChildLayoutMode.Top,
@@ -72,11 +81,25 @@ namespace ModrogEditor.Interface.Editing
         public void SetSelected(bool selected)
         {
             _container.BackgroundPatch = selected ? SelectedBackgroundColor : null;
+
+            // The Manifest.json can't be deleted
+            if (Entry.Path != "Manifest.json")
+            {
+                _deleteButton.Visible = selected;
+                Layout();
+            }
         }
 
         public void AddChildItem(AssetTreeItem item)
         {
             _childrenPanel.Add(item);
+
+            UpdateLabel();
+        }
+
+        public void RemoveChildItem(AssetTreeItem item)
+        {
+            _childrenPanel.Remove(item);
 
             UpdateLabel();
         }
