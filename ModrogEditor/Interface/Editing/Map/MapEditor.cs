@@ -56,7 +56,7 @@ namespace ModrogEditor.Interface.Editing.Map
         public MapEditorTool Tool { get; private set; } = MapEditorTool.Brush;
 
         public int TileLayer = 0;
-        public short BrushTileIndex = 1;
+        public short BrushTileKindIndex = 1;
         public bool BrushShouldErase = false;
         public int BrushSize = 1;
 
@@ -111,6 +111,7 @@ namespace ModrogEditor.Interface.Editing.Map
                         _tileLayerButtons[layer].BackgroundPatch = new TexturePatch(0x228822ff);
 
                         TileLayer = layer;
+                        BrushTileKindIndex = (short)Math.Min(1, TileKindsByLayer[TileLayer]?.Length ?? 0);
                     }
 
                     for (var i = 0; i < (int)ModrogApi.MapLayer.Count; i++)
@@ -312,7 +313,7 @@ namespace ModrogEditor.Interface.Editing.Map
         internal void SetBrush(short tileIndex)
         {
             Tool = MapEditorTool.Brush;
-            BrushTileIndex = tileIndex;
+            BrushTileKindIndex = tileIndex;
         }
 
         internal void CloseSettings()

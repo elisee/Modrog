@@ -81,7 +81,7 @@ namespace ModrogEditor.Interface.Editing.Map
             switch (_mapEditor.Tool)
             {
                 case MapEditor.MapEditorTool.Brush:
-                    chunk.TilesPerLayer[_mapEditor.TileLayer][chunkTileCoords.Y * Protocol.MapChunkSide + chunkTileCoords.X] = _mapEditor.BrushTileIndex;
+                    chunk.TilesPerLayer[_mapEditor.TileLayer][chunkTileCoords.Y * Protocol.MapChunkSide + chunkTileCoords.X] = _mapEditor.BrushTileKindIndex;
                     break;
             }
         }
