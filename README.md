@@ -8,13 +8,13 @@ You'll need .NET Core 3 and Visual Studio 2019. VS Code might work.
 
 ## Structure
 
-    * ModrogClient, ModrogServer and ModrogEditor are the apps
-    * ModrogCommon contains shared stuff for the apps
-    * ModrogApi contains the scripting APIs
-    * Swarm is the potentially reusable generic framework below it all
-        * SwarmBasics contains shared inert features like Math, can be exposed to scripts safely
-        * SwarmCore contains shared features that do I/O
-        * SwarmPlatform contains shared features that are not suitable for command-line apps
+  * ModrogClient, ModrogServer and ModrogEditor are the apps
+  * ModrogCommon contains shared stuff for the apps
+  * ModrogApi contains the scripting APIs
+  * Swarm is the potentially reusable generic framework below it all
+    * SwarmBasics contains shared inert features like Math, can be exposed to scripts safely
+    * SwarmCore contains shared features that do I/O
+    * SwarmPlatform contains shared features that are not suitable for command-line apps
 
 ## Running
 
@@ -53,3 +53,5 @@ You'll need .NET Core 3 and Visual Studio 2019. VS Code might work.
   * Arclands https://twitter.com/jonkellerdev/status/1187017848004206592/photo/1
   * Worlds MMO https://twitter.com/2Pblog1/status/546067188558221313, https://pbs.twimg.com/media/CoakSQlWIAAfUhJ?format=jpg&name=large
   * Spelunky Classic https://blog.en.uptodown.com/files/2017/07/spelunky-classic-android-header.jpg
+  * Yokai Dungeon https://twitter.com/Neutronized/status/1187390284117823488
+  * Fidel Dungeon Rescue https://img.itch.zone/aW1nLzE2MjEyNjYucG5n/original/KfVMMM.png
