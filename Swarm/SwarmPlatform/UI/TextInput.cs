@@ -3,6 +3,7 @@ using SwarmBasics;
 using SwarmBasics.Math;
 using SwarmPlatform.Graphics;
 using System;
+using System.Text.RegularExpressions;
 
 namespace SwarmPlatform.UI
 {
@@ -81,6 +82,37 @@ namespace SwarmPlatform.UI
             return targetIndex;
         }
 
+        enum CharType { Word, Space, Other }
+        static readonly Regex WordRegex = new Regex(@"^\w");
+        static readonly Regex SpacesRegex = new Regex(@"^[ ]");
+        static readonly Regex OthersRegex = new Regex(@"^[^\w ]");
+
+        int GetStartOfWord(int positionX, Regex regex)
+        {
+            var startOfWord = positionX;
+
+            for (var i = startOfWord; i > 0; i--)
+            {
+                if (!regex.IsMatch(Value[i - 1].ToString())) break;
+                startOfWord--;
+            }
+
+            return startOfWord;
+        }
+
+        int GetEndOfWord(int positionX, Regex regex)
+        {
+            var endOfWord = positionX;
+
+            for (var i = endOfWord + 1; i <= Value.Length; i++)
+            {
+                if (!regex.IsMatch(Value[i - 1].ToString())) break;
+                endOfWord++;
+            }
+
+            return endOfWord;
+        }
+
         void GetSelectionRange(out int start, out int end)
         {
             start = _selectionAnchorX;
@@ -150,6 +182,14 @@ namespace SwarmPlatform.UI
                     ClampScrolling();
                 }
 
+                if (Desktop.HasControlKeyModifier)
+                {
+                    var sourceChar = _cursorX >= 0 && _cursorX < Value.Length ? Value[_cursorX].ToString() : " ";
+                    if (sourceChar == "." || sourceChar == " ") sourceChar = _cursorX - 1 >= 0 && _cursorX - 1 < Value.Length ? Value[_cursorX - 1].ToString() : " ";
+
+                    var regex = WordRegex.IsMatch(sourceChar) ? WordRegex : (SpacesRegex.IsMatch(sourceChar) ? SpacesRegex : OthersRegex);
+                    _cursorX = GetStartOfWord(_cursorX, regex);
+                }
                 ClearSelectionUnlessShiftDown();
             }
 
@@ -161,6 +201,14 @@ namespace SwarmPlatform.UI
                     ClampScrolling();
                 }
 
+                if (Desktop.HasControlKeyModifier)
+                {
+                    var sourceChar = _cursorX - 1 >= 0 && _cursorX - 1 < Value.Length ? Value[_cursorX - 1].ToString() : " ";
+                    if (sourceChar == "." || sourceChar == " ") sourceChar = _cursorX >= 0 && _cursorX < Value.Length ? Value[_cursorX].ToString() : " ";
+
+                    var regex = WordRegex.IsMatch(sourceChar) ? WordRegex : (SpacesRegex.IsMatch(sourceChar) ? SpacesRegex : OthersRegex);
+                    _cursorX = GetEndOfWord(_cursorX, regex);
+                }
                 ClearSelectionUnlessShiftDown();
             }
 
@@ -253,6 +301,35 @@ namespace SwarmPlatform.UI
                 Desktop.SetHoveredElementPressed(true);
                 _cursorX = _selectionAnchorX = GetHoveredTextPosition();
                 ClampScrolling();
+
+                if (clicks == 2)
+                {
+                    var leftChar = _cursorX - 1 >= 0 && _cursorX - 1 < Value.Length ? Value[_cursorX - 1].ToString() : " ";
+                    var rightChar = _cursorX < Value.Length ? Value[_cursorX].ToString() : " ";
+
+                    var leftCharType = WordRegex.IsMatch(leftChar) ? CharType.Word : (SpacesRegex.IsMatch(leftChar) ? CharType.Space : CharType.Other);
+                    var rightCharType = WordRegex.IsMatch(rightChar) ? CharType.Word : (SpacesRegex.IsMatch(rightChar) ? CharType.Space : CharType.Other);
+                    if (leftCharType == CharType.Word || rightCharType == CharType.Word)
+                    {
+                        if (leftCharType == CharType.Word) _selectionAnchorX = GetStartOfWord(_selectionAnchorX, WordRegex);
+                        if (rightCharType == CharType.Word) _cursorX = GetEndOfWord(_cursorX, WordRegex);
+                    }
+                    else if (leftCharType == CharType.Space && rightCharType == CharType.Space)
+                    {
+                        _selectionAnchorX = GetStartOfWord(_selectionAnchorX, SpacesRegex);
+                        _cursorX = GetEndOfWord(_cursorX, SpacesRegex);
+                    }
+                    else
+                    {
+                        if (leftCharType == CharType.Other) _selectionAnchorX = GetStartOfWord(_selectionAnchorX, OthersRegex);
+                        if (rightCharType == CharType.Other) _cursorX = GetEndOfWord(_cursorX, OthersRegex);
+                    }
+                }
+                else if (clicks == 3)
+                {
+                    _selectionAnchorX = 0;
+                    _cursorX = Value.Length;
+                }
             }
         }
 

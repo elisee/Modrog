@@ -43,7 +43,6 @@ You'll need .NET Core 3 and Visual Studio 2019. VS Code might work.
     - (UI Element) Allow dragging scrollbars
     - (UI Element) Implement ChildLayout.Bottom (use for chat box), .Right
     - (UI TextEditor)/ TextInput: Undo/redo support
-    - (UI TextEditor)/ TextInput: Quick navigation with Ctrl
     - (UI TextEditor) Auto-indent when inserting lines
     - (UI TextEditor) Language-specific syntax highlighting & auto-completion support (using callbacks or specialization, not built into the UI framework I think)
     - (UI TextEditor) Add option for line count gutter on the left and use it in script editor
