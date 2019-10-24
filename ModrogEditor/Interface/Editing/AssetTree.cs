@@ -1,4 +1,5 @@
 ﻿using ModrogEditor.Scenario;
+using SDL2;
 using SwarmPlatform.UI;
 using System;
 using System.Collections.Generic;
@@ -97,6 +98,16 @@ namespace ModrogEditor.Interface.Editing
             }
 
             OnActivate(item.Entry);
+        }
+
+        public override Element HitTest(int x, int y) => base.HitTest(x, y) ?? (LayoutRectangle.Contains(x, y) ? this : null);
+
+        public override void OnMouseUp(int button, bool doubleClick)
+        {
+            if (button == SDL.SDL_BUTTON_LEFT)
+            {
+                SetSelectedEntry(null);
+            }
         }
     }
 }
