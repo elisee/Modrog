@@ -282,21 +282,18 @@ namespace SwarmPlatform.UI
 
                 case SDL.SDL_EventType.SDL_MOUSEBUTTONDOWN:
                     {
-                        HoveredElement = IsHoveredElementPressed ? HoveredElement : RootElement.HitTest(@event.button.x, @event.button.y);
                         HoveredElement?.OnMouseDown(@event.button.button);
                         break;
                     }
 
                 case SDL.SDL_EventType.SDL_MOUSEBUTTONUP:
                     {
-                        HoveredElement = IsHoveredElementPressed ? HoveredElement : RootElement.HitTest(@event.button.x, @event.button.y);
                         HoveredElement?.OnMouseUp(@event.button.button, doubleClick: @event.button.clicks > 1);
                         break;
                     }
 
                 case SDL.SDL_EventType.SDL_MOUSEWHEEL:
                     {
-                        HoveredElement = IsHoveredElementPressed ? HoveredElement : RootElement.HitTest(MouseX, MouseY);
                         HoveredElement?.OnMouseWheel(@event.wheel.x, @event.wheel.y);
                         break;
                     }
