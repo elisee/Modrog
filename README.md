@@ -26,7 +26,7 @@ You'll need .NET Core 3 and Visual Studio 2019. VS Code might work.
     - (Editor) Allow deleting assets
     - (Editor) Allow renaming assets
     - (Editor) Allow reparenting assets with drag'n'drop (need to add drag'n'drop in UI framework)
-    - (Editor) Double-click to open an asset / toggle a folder (Need to stop using buttons)
+    - (Map Editor) Trace line segments when using the brush rather than just placing tiles at hovered position. (Can reuse line drawing logic from line of sight)
     - (Map Editor) Bucket fill
     - (Map Editor) Skip empty chunks when saving
     - (Map Editor) Support entities
