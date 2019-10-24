@@ -7,6 +7,11 @@ namespace ModrogEditor.Interface.Editing.Script
 {
     class ScriptEditor : BaseAssetEditor
     {
+        public static void CreateEmptyFile(string fullAssetPath)
+        {
+            File.WriteAllText(fullAssetPath, "");
+        }
+
         TextEditor _textEditor;
 
         public ScriptEditor(EditorApp @interface, string fullAssetPath)

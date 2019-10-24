@@ -1,6 +1,7 @@
 ﻿using ModrogEditor.Scenario;
 using SwarmPlatform.Graphics;
 using SwarmPlatform.UI;
+using System.Collections.Generic;
 
 namespace ModrogEditor.Interface.Editing
 {
@@ -15,6 +16,8 @@ namespace ModrogEditor.Interface.Editing
         readonly Element _icon;
         readonly Label _label;
         readonly Panel _childrenPanel;
+
+        public List<Element> ChildrenItem => _childrenPanel.Children;
 
         public static readonly TexturePatch[] IconsByAssetType = new TexturePatch[] {
             new TexturePatch(0x222222ff), // Unknown
@@ -67,6 +70,8 @@ namespace ModrogEditor.Interface.Editing
             UpdateLabel();
         }
 
+        public string GetText() => _label.Text;
+
         public void SetSelected(bool selected)
         {
             _button.BackgroundPatch = selected ? SelectedBackgroundColor : null;
@@ -75,12 +80,14 @@ namespace ModrogEditor.Interface.Editing
         public void AddChildItem(AssetTreeItem item)
         {
             _childrenPanel.Add(item);
+            _childrenPanel.Children.Sort((element1, element2) => string.Compare(((AssetTreeItem)element1).GetText(), ((AssetTreeItem)element2).GetText()));
+
             UpdateLabel();
         }
 
-        public void ToggleChildren()
+        public void ToggleChildren(bool forceVisible = false)
         {
-            _childrenPanel.Visible = !_childrenPanel.Visible;
+            _childrenPanel.Visible = forceVisible || !_childrenPanel.Visible;
             UpdateLabel();
         }
 

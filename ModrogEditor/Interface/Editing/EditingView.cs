@@ -3,7 +3,6 @@ using SwarmCore;
 using SwarmPlatform.Graphics;
 using SwarmPlatform.Interface;
 using SwarmPlatform.UI;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 
@@ -14,6 +13,9 @@ namespace ModrogEditor.Interface.Editing
         readonly Panel _sidebarPanel;
         readonly AssetTree _assetTree;
 
+        readonly StyledTextButton _newAssetButton;
+        readonly NewAssetLayer _newAssetLayer;
+
         readonly Panel _mainPanel;
         readonly Element _editorContainer;
         readonly Label _assetTitleLabel;
@@ -21,9 +23,12 @@ namespace ModrogEditor.Interface.Editing
         public EditingView(EditorApp @interface)
             : base(@interface, null)
         {
-            ChildLayout = ChildLayoutMode.Left;
+            var rootContainer = new Element(this)
+            {
+                ChildLayout = ChildLayoutMode.Left
+            };
 
-            _sidebarPanel = new Panel(this)
+            _sidebarPanel = new Panel(rootContainer)
             {
                 BackgroundPatch = new TexturePatch(0x123456ff),
                 Padding = 8,
@@ -31,11 +36,29 @@ namespace ModrogEditor.Interface.Editing
                 ChildLayout = ChildLayoutMode.Top,
             };
 
-            new Label(_sidebarPanel)
+            var headerBar = new Element(_sidebarPanel)
             {
-                Text = "ASSETS",
+                ChildLayout = ChildLayoutMode.Left,
                 Bottom = 8,
             };
+
+            new Label(headerBar)
+            {
+                Text = "ASSETS",
+                LayoutWeight = 1,
+            };
+
+            _newAssetButton = new StyledTextButton(headerBar)
+            {
+                Text = "New",
+                OnActivate = () =>
+                {
+                    _newAssetLayer.Visible = true;
+                    _newAssetLayer.Layout(_contentRectangle);
+                }
+            };
+
+            _newAssetLayer = new NewAssetLayer(this) { Visible = false };
 
             _assetTree = new AssetTree(_sidebarPanel)
             {
@@ -46,7 +69,7 @@ namespace ModrogEditor.Interface.Editing
                 OnActivate = (entry) => App.State.OpenAsset(entry)
             };
 
-            _mainPanel = new Panel(this)
+            _mainPanel = new Panel(rootContainer)
             {
                 LayoutWeight = 1,
                 ChildLayout = ChildLayoutMode.Top,
@@ -84,21 +107,35 @@ namespace ModrogEditor.Interface.Editing
         {
             _assetTree.Clear();
 
-            void MakeAssetEntries(AssetTreeItem parent, List<AssetEntry> entries)
+            void MakeAssetChildrenEntries(AssetEntry parentEntry)
             {
-                foreach (var entry in entries)
+                foreach (var entry in parentEntry.Children)
                 {
-                    var item = new AssetTreeItem(_assetTree, entry);
-                    if (parent != null) parent.AddChildItem(item);
-                    else _assetTree.Add(item);
-
-                    if (entry.Children.Count > 0) MakeAssetEntries(item, entry.Children);
+                    _assetTree.AddEntry(entry);
+                    if (entry.Children.Count > 0) MakeAssetChildrenEntries(entry);
                 }
             }
 
-            MakeAssetEntries(null, App.State.AssetEntries);
+            MakeAssetChildrenEntries(App.State.RootAssetEntry);
 
             Desktop.SetFocusedElement(this);
+        }
+
+        public void FocusNewAssetButton()
+        {
+            Desktop.SetFocusedElement(_newAssetButton);
+        }
+
+        public void CloseNewAssetLayer()
+        {
+            _newAssetLayer.Visible = false;
+        }
+
+        public void OnAssetCreated(AssetEntry entry)
+        {
+            _assetTree.AddEntry(entry);
+            _assetTree.ShowEntry(entry);
+            _assetTree.Layout();
         }
 
         public void OnActiveAssetChanged()
