@@ -7,6 +7,11 @@ namespace ModrogEditor.Interface.Editing.TileSet
 {
     class TileSetEditor : BaseAssetEditor
     {
+        public static void CreateEmptyFile(string fullAssetPath)
+        {
+            File.WriteAllText(fullAssetPath, "{}");
+        }
+
         TextEditor _textEditor;
 
         public TileSetEditor(EditorApp @interface, string fullAssetPath)

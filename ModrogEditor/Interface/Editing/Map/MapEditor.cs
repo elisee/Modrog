@@ -14,6 +14,16 @@ namespace ModrogEditor.Interface.Editing.Map
 {
     class MapEditor : BaseAssetEditor
     {
+        public static void CreateEmptyFile(string fullAssetPath)
+        {
+            var writer = new PacketWriter(initialCapacity: 8192, useSizeHeader: false);
+            writer.WriteByteSizeString("");
+            writer.WriteInt(0);
+
+            using var file = File.OpenWrite(fullAssetPath);
+            file.Write(writer.Buffer, 0, writer.Finish());
+        }
+
         readonly Panel _mainLayer;
         readonly MapViewport _mapViewport;
         readonly TileSelector _tileSelector;

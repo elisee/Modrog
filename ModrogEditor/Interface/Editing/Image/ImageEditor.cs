@@ -8,6 +8,11 @@ namespace ModrogEditor.Interface.Editing.Image
     {
         TextureArea _textureArea;
 
+        public static void CreateEmptyFile(string fullAssetPath)
+        {
+            // TODO
+        }
+
         public ImageEditor(EditorApp @interface, string fullAssetPath)
             : base(@interface, fullAssetPath)
         {

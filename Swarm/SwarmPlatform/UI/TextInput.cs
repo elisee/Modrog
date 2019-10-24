@@ -1,7 +1,7 @@
-﻿using SwarmBasics;
+﻿using SDL2;
+using SwarmBasics;
 using SwarmBasics.Math;
 using SwarmPlatform.Graphics;
-using SDL2;
 using System;
 
 namespace SwarmPlatform.UI
@@ -12,6 +12,8 @@ namespace SwarmPlatform.UI
         public Color TextColor = new Color(0xffffffff);
         public string Value { get; private set; } = "";
         public int MaxLength = byte.MaxValue;
+
+        public Action OnChange;
 
         int _cursorX;
         int _selectionAnchorX;
@@ -182,6 +184,8 @@ namespace SwarmPlatform.UI
 
                 ClampScrolling();
                 ClearSelection();
+
+                OnChange?.Invoke();
             }
 
             void Delete()
@@ -200,6 +204,8 @@ namespace SwarmPlatform.UI
 
                 ClampScrolling();
                 ClearSelection();
+
+                OnChange?.Invoke();
             }
 
             void GoToStartOfLine()
@@ -238,6 +244,8 @@ namespace SwarmPlatform.UI
             _cursorX += text.Length;
             ClampScrolling();
             ClearSelection();
+
+            OnChange?.Invoke();
         }
 
         public override void OnMouseDown(int button)
