@@ -1,7 +1,7 @@
-﻿using SwarmBasics;
+﻿using SDL2;
+using SwarmBasics;
 using SwarmBasics.Math;
 using SwarmPlatform.Graphics;
-using SDL2;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -41,7 +41,7 @@ namespace SwarmPlatform.UI
                 if (_disabled)
                 {
                     if (Desktop.FocusedElement.IsContainedWithin(this)) Desktop.SetFocusedElement(Desktop.RootElement);
-                    if (Desktop.HoveredElement.IsContainedWithin(this)) Desktop.ClearHoveredElement();
+                    if (Desktop.HoveredElement.IsContainedWithin(this)) Desktop.ClearHoveredAndPressedElement();
                 }
             }
         }
@@ -413,7 +413,7 @@ namespace SwarmPlatform.UI
             IsMounted = false;
 
             if (IsFocused) Desktop.SetFocusedElement(Desktop.RootElement);
-            if (IsHovered) Desktop.ClearHoveredElement();
+            if (IsHovered) Desktop.ClearHoveredAndPressedElement();
 
             foreach (var child in Children) if (child.IsMounted) child.Unmount();
 

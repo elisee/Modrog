@@ -118,6 +118,7 @@ namespace ModrogClient
 
                         case SDL.SDL_EventType.SDL_WINDOWEVENT:
                             if (@event.window.windowEvent == SDL.SDL_WindowEventID.SDL_WINDOWEVENT_CLOSE) State.Stop();
+                            else Desktop.HandleSDLEvent(@event);
                             break;
 
                         default:

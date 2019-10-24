@@ -1,6 +1,6 @@
-﻿using SwarmBasics.Math;
+﻿using SDL2;
+using SwarmBasics.Math;
 using SwarmPlatform.Graphics;
-using SDL2;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -182,7 +182,7 @@ namespace SwarmPlatform.UI
             }
         }
 
-        public void ClearHoveredElement()
+        public void ClearHoveredAndPressedElement()
         {
             HoveredElement?.OnMouseExit();
             IsHoveredElementPressed = false;
@@ -236,6 +236,20 @@ namespace SwarmPlatform.UI
 
             switch (@event.type)
             {
+                case SDL.SDL_EventType.SDL_WINDOWEVENT:
+                    switch (@event.window.windowEvent)
+                    {
+                        case SDL.SDL_WindowEventID.SDL_WINDOWEVENT_LEAVE:
+                            if (!IsHoveredElementPressed)
+                            {
+                                MouseX = MouseY = -1;
+                                ClearHoveredAndPressedElement();
+                            }
+                            break;
+                    }
+
+                    break;
+
                 case SDL.SDL_EventType.SDL_KEYDOWN:
                     if (@event.key.keysym.sym == SDL.SDL_Keycode.SDLK_LSHIFT) _leftShiftDown = true;
                     if (@event.key.keysym.sym == SDL.SDL_Keycode.SDLK_RSHIFT) _rightShiftDown = true;
