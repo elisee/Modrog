@@ -99,7 +99,7 @@ namespace ModrogEditor.Interface.Editing
             if (button == SDL.SDL_BUTTON_LEFT)
             {
                 Desktop.SetHoveredElementPressed(true);
-                if (clicks >= 2) Tree.Internal_ActivateItem(this);
+                if (clicks % 2 == 0) Tree.Internal_ActivateItem(this);
             }
         }
 
