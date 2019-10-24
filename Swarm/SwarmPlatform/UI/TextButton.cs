@@ -11,5 +11,7 @@
         {
             Label = new Label(desktop, this);
         }
+
+        public override Element HitTest(int x, int y) => LayoutRectangle.Contains(x, y) ? this : null;
     }
 }

@@ -19,7 +19,7 @@ namespace SwarmPlatform.UI
             OutlineColor = new Color(0xff0000ff);
         }
 
-        public override Element HitTest(int x, int y) => LayoutRectangle.Contains(x, y) ? this : null;
+        public override Element HitTest(int x, int y) => base.HitTest(x, y) ?? (LayoutRectangle.Contains(x, y) ? this : null);
 
         public override bool AcceptsFocus() => !Disabled;
 
