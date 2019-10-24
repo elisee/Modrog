@@ -23,22 +23,27 @@ You'll need .NET Core 3 and Visual Studio 2019. VS Code might work.
 
 ## Tasks
 
+    - (Editor) Allow deleting assets
+    - (Editor) Allow renaming assets
+    - (Editor) Allow reparenting assets with drag'n'drop (need to add drag'n'drop in UI framework)
+    - (Editor) Double-click to open an asset / toggle a folder (Need to stop using buttons)
     - (Map Editor) Bucket fill
-    - (Editor) Allow creating or deleting assets
     - (Map Editor) Skip empty chunks when saving
     - (Map Editor) Support entities
     - (Tile Set Editor) Replace JSON editor with visual editor, and maybe switch to binary format
-    - (Team) Find a pixel artist
+    - (Team) Find a pixel artist! Waiting on mockups from Timothée
+    - (Tutorial) Build it!
     - (Gameplay) Add back client-side script editing and display script errors somewhere
-    - (Gameplay) Add light checkerboard pattern on the floor
-    - (UI) Desktop: Show focus outline only after navigating with keyboard once to avoid distracting players and hide after clicking with mouse
-    - (UI) Element: Implement scrollbars
-    - (UI) Element: Implement ChildLayout.Bottom, .Right
-    - (UI) TextEditor / TextInput: Undo/redo support
-    - (UI) TextEditor / TextInput: Quick navigation with Ctrl
-    - (UI) TextEditor: Auto-indent when inserting lines
-    - (UI) TextEditor: Language-specific syntax highlighting & auto-completion support (using callbacks or specialization, not built into the UI framework I think)
-    - (UI) TextEditor: Add option for line count gutter on the left
+    - (Gameplay) Add light checkerboard pattern on the floor?
+    - (UI Desktop) Show focus outline only after navigating with keyboard once to avoid distracting players and hide after clicking with mouse
+    - (UI Element) Implement scrollbars
+    - (UI Element) Implement ChildLayout.Bottom (use for chat box), .Right
+    - (UI TextEditor)/ TextInput: Undo/redo support
+    - (UI TextEditor)/ TextInput: Quick navigation with Ctrl
+    - (UI TextEditor) Auto-indent when inserting lines
+    - (UI TextEditor) Language-specific syntax highlighting & auto-completion support (using callbacks or specialization, not built into the UI framework I think)
+    - (UI TextEditor) Add option for line count gutter on the left and use it in script editor
+    - (UI TextEditor) Add option to wrap text and use it for manifest description
 
 ## Visual inspirations
 
