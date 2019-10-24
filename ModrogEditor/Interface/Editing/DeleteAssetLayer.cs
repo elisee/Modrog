@@ -60,12 +60,12 @@ namespace ModrogEditor.Interface.Editing
         public override void Validate()
         {
             _editingView.App.State.DeleteAsset(_selectedEntry);
-            _editingView.CloseDeleteAssetLayer();
+            Visible = false;
         }
 
         public override void Dismiss()
         {
-            _editingView.CloseDeleteAssetLayer();
+            Visible = false;
         }
     }
 }

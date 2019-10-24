@@ -1,5 +1,6 @@
 ﻿using SwarmPlatform.Graphics;
 using SwarmPlatform.UI;
+using System;
 using System.IO;
 using System.Text.Json;
 
@@ -33,6 +34,7 @@ namespace ModrogEditor.Interface.Editing.Manifest
                 Bottom = 8,
                 Padding = 8,
                 BackgroundPatch = new TexturePatch(0x004400ff),
+                OnChange = MarkUnsavedChanges
             };
 
             new Label(this) { Text = "Description", Bottom = 8 };
@@ -42,10 +44,18 @@ namespace ModrogEditor.Interface.Editing.Manifest
                 Height = 200,
                 Padding = 8,
                 BackgroundPatch = new TexturePatch(0x004400ff),
+                OnChange = MarkUnsavedChanges
             };
+
+            Load();
         }
 
         public override void OnMounted()
+        {
+            Desktop.SetFocusedElement(_titleInput);
+        }
+
+        protected override bool TryLoad(out string error)
         {
             var scenarioEntry = App.State.ActiveScenarioEntry;
 
@@ -53,35 +63,47 @@ namespace ModrogEditor.Interface.Editing.Manifest
             _titleInput.SetValue(scenarioEntry.Title);
             _descriptionEditor.SetText(scenarioEntry.Description);
 
-            Desktop.SetFocusedElement(_titleInput);
+            error = null;
+            return true;
         }
 
-        public override void OnUnmounted()
+        protected override void Unload()
         {
-            Save();
+            // Nothing
         }
 
-        void Save()
+        protected override bool TrySave(out string error)
         {
             var title = App.State.ActiveScenarioEntry.Title = _titleInput.Value.Trim();
             var description = App.State.ActiveScenarioEntry.Description = _descriptionEditor.GetText().Trim();
 
-            using (var stream = File.OpenWrite(FullAssetPath))
-            using (var writer = new Utf8JsonWriter(stream, new JsonWriterOptions { Indented = true }))
+            try
             {
-                writer.WriteStartObject();
+                using (var stream = File.OpenWrite(FullAssetPath))
+                using (var writer = new Utf8JsonWriter(stream, new JsonWriterOptions { Indented = true }))
+                {
+                    writer.WriteStartObject();
 
-                writer.WriteString("title", title);
-                writer.WriteString("description", description);
+                    writer.WriteString("title", title);
+                    writer.WriteString("description", description);
 
-                writer.WritePropertyName("minMaxPlayers");
-                writer.WriteStartArray();
-                writer.WriteNumberValue(1);
-                writer.WriteNumberValue(1);
-                writer.WriteEndArray();
+                    writer.WritePropertyName("minMaxPlayers");
+                    writer.WriteStartArray();
+                    writer.WriteNumberValue(1);
+                    writer.WriteNumberValue(1);
+                    writer.WriteEndArray();
 
-                writer.WriteEndObject();
+                    writer.WriteEndObject();
+                }
             }
+            catch (Exception exception)
+            {
+                error = "Error while saving manifest: " + exception.Message;
+                return false;
+            }
+
+            error = null;
+            return true;
         }
     }
 }

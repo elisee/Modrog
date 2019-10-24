@@ -3,6 +3,8 @@ using SwarmCore;
 using SwarmPlatform.Graphics;
 using SwarmPlatform.Interface;
 using SwarmPlatform.UI;
+using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 
@@ -18,8 +20,11 @@ namespace ModrogEditor.Interface.Editing
         readonly DeleteAssetLayer _deleteAssetLayer;
 
         readonly Panel _mainPanel;
-        readonly Element _editorContainer;
-        readonly Label _assetTitleLabel;
+        readonly Element _tabsBar;
+        public Element _activeEditorContainer;
+
+        class OpenAssetUI { public Element Tab; public BaseAssetEditor Editor; }
+        readonly Dictionary<AssetEntry, OpenAssetUI> _openAssetUIsByEntry = new Dictionary<AssetEntry, OpenAssetUI>();
 
         public EditingView(EditorApp @interface)
             : base(@interface, null)
@@ -69,7 +74,10 @@ namespace ModrogEditor.Interface.Editing
                 LayoutWeight = 1,
                 VerticalFlow = Flow.Scroll,
                 Padding = 8,
-                OnActivate = (entry) => App.State.OpenAsset(entry),
+                OnActivate = (entry) =>
+                {
+                    if (entry.AssetType != AssetType.Folder && entry.AssetType != AssetType.Unknown) OpenAsset(entry);
+                },
                 OnDeleteSelectedAsset = (entry) =>
                  {
                      _deleteAssetLayer.SetSelectedEntry(entry);
@@ -91,13 +99,11 @@ namespace ModrogEditor.Interface.Editing
                 BackgroundPatch = new TexturePatch(0x654321ff),
             };
 
-            var tabsBar = new Element(topBar)
+            _tabsBar = new Element(topBar)
             {
                 LayoutWeight = 1,
                 ChildLayout = ChildLayoutMode.Left
             };
-
-            _assetTitleLabel = new Label(tabsBar) { Flow = Flow.Shrink, Padding = 8 };
 
             new StyledTextButton(topBar)
             {
@@ -109,7 +115,7 @@ namespace ModrogEditor.Interface.Editing
                 }
             };
 
-            _editorContainer = new Element(_mainPanel) { LayoutWeight = 1 };
+            _activeEditorContainer = new Element(_mainPanel) { LayoutWeight = 1 };
         }
 
         public override void OnMounted()
@@ -130,13 +136,76 @@ namespace ModrogEditor.Interface.Editing
             Desktop.SetFocusedElement(this);
         }
 
-        public void FocusNewAssetButton()
+        internal AssetEntry GetSelectedAssetTreeFolderEntry()
         {
-            Desktop.SetFocusedElement(_newAssetButton);
+            var entry = _assetTree.GetSelectedEntry() ?? App.State.RootAssetEntry;
+            return entry.AssetType == AssetType.Folder ? entry : entry.Parent;
         }
 
-        public void CloseNewAssetLayer() => _newAssetLayer.Visible = false;
-        public void CloseDeleteAssetLayer() => _deleteAssetLayer.Visible = false;
+        internal void OpenAsset(AssetEntry entry)
+        {
+            if (!_openAssetUIsByEntry.TryGetValue(entry, out var assetUI))
+            {
+                var tab = new Button(_tabsBar)
+                {
+                    HorizontalFlow = Flow.Shrink,
+                    ChildLayout = ChildLayoutMode.Left,
+                    BackgroundPatch = new TexturePatch(0x226622ff),
+                    Padding = 8,
+                    Right = 8,
+                    OnActivate = () => OpenAsset(entry)
+                };
+
+                new Label(tab) { Flow = Flow.Shrink, Text = entry.Path };
+                new TextButton(tab) { Left = 8, Text = "(x)", OnActivate = () => CloseAsset(entry) };
+
+                _tabsBar.Layout();
+
+                var fullAssetPath = Path.Combine(App.State.ActiveScenarioPath, entry.Path);
+                BaseAssetEditor editor;
+
+                switch (entry.AssetType)
+                {
+                    case AssetType.Manifest: editor = new Manifest.ManifestEditor(App, fullAssetPath); break;
+                    case AssetType.TileSet: editor = new TileSet.TileSetEditor(App, fullAssetPath); break;
+                    case AssetType.Script: editor = new Script.ScriptEditor(App, fullAssetPath); break;
+                    case AssetType.Image: editor = new Image.ImageEditor(App, fullAssetPath); break;
+                    case AssetType.Map: editor = new Map.MapEditor(App, fullAssetPath); break;
+                    default: throw new NotSupportedException();
+                }
+
+                assetUI = new OpenAssetUI { Tab = tab, Editor = editor };
+                _openAssetUIsByEntry.Add(entry, assetUI);
+            }
+
+            // TODO:
+            // _activeAssetUI?.Tab.SetActive(false);
+            // _activeAssetUI = assetUI;
+            // _activeAssetUI.Tab.SetActive(true);
+
+            _activeEditorContainer.Clear();
+            _activeEditorContainer.Add(assetUI.Editor);
+            _activeEditorContainer.Layout();
+        }
+
+        void CloseAsset(AssetEntry entry)
+        {
+            if (!_openAssetUIsByEntry.TryGetValue(entry, out var assetUI)) return;
+
+            assetUI.Editor.MaybeUnload(() =>
+            {
+                _openAssetUIsByEntry.Remove(entry);
+
+                _tabsBar.Remove(assetUI.Tab);
+                _tabsBar.Layout();
+
+                if (assetUI.Editor.IsMounted)
+                {
+                    // TODO: Make another asset active
+                    _activeEditorContainer.Clear();
+                }
+            });
+        }
 
         public void OnAssetCreated(AssetEntry entry)
         {
@@ -149,37 +218,6 @@ namespace ModrogEditor.Interface.Editing
         {
             _assetTree.DeleteEntry(entry);
             _assetTree.Layout();
-        }
-
-        public void OnActiveAssetChanged()
-        {
-            var entry = App.State.ActiveAssetEntry;
-
-            _assetTree.SetSelectedEntry(entry);
-
-            if (entry.AssetType == AssetType.Unknown || entry.AssetType == AssetType.Folder)
-            {
-                Desktop.SetFocusedElement(_editorContainer);
-                return;
-            }
-
-            var fullAssetPath = Path.Combine(App.State.ActiveScenarioPath, entry.Path);
-            Element editor = null;
-            _assetTitleLabel.Text = entry.Path;
-            _assetTitleLabel.Parent.Layout();
-
-            switch (entry.AssetType)
-            {
-                case AssetType.Manifest: editor = new Manifest.ManifestEditor(App, fullAssetPath); break;
-                case AssetType.TileSet: editor = new TileSet.TileSetEditor(App, fullAssetPath); break;
-                case AssetType.Script: editor = new Script.ScriptEditor(App, fullAssetPath); break;
-                case AssetType.Image: editor = new Image.ImageEditor(App, fullAssetPath); break;
-                case AssetType.Map: editor = new Map.MapEditor(App, fullAssetPath); break;
-            }
-
-            _editorContainer.Clear();
-            _editorContainer.Add(editor);
-            _editorContainer.Layout();
         }
     }
 }

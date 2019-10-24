@@ -10,6 +10,7 @@ namespace ModrogEditor.Interface.Editing
 
         readonly TextInput _newAssetInput;
         readonly Label _errorLabel;
+
         public NewAssetLayer(EditingView editingView) : base(editingView)
         {
             _editingView = editingView;
@@ -68,7 +69,9 @@ namespace ModrogEditor.Interface.Editing
         public override void Validate()
         {
             var newAssetName = _newAssetInput.Value.Trim();
-            if (!_editingView.App.State.TryCreateAsset(newAssetName, out var assetEntry, out var error))
+            var parentEntry = _editingView.GetSelectedAssetTreeFolderEntry();
+
+            if (!_editingView.App.State.TryCreateAsset(newAssetName, parentEntry, out var assetEntry, out var error))
             {
                 _errorLabel.Text = error;
                 _errorLabel.Visible = true;
@@ -76,15 +79,14 @@ namespace ModrogEditor.Interface.Editing
             }
             else
             {
-                _editingView.CloseNewAssetLayer();
-                _editingView.App.State.OpenAsset(assetEntry);
+                Visible = false;
+                _editingView.OpenAsset(assetEntry);
             }
         }
 
         public override void Dismiss()
         {
-            _editingView.CloseNewAssetLayer();
-            _editingView.FocusNewAssetButton();
+            Visible = false;
         }
     }
 }

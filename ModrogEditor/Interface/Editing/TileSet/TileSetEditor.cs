@@ -1,6 +1,5 @@
-﻿using SwarmPlatform.Graphics;
-using SwarmPlatform.Interface;
-using SwarmPlatform.UI;
+﻿using SwarmPlatform.UI;
+using System;
 using System.IO;
 
 namespace ModrogEditor.Interface.Editing.TileSet
@@ -12,47 +11,62 @@ namespace ModrogEditor.Interface.Editing.TileSet
             File.WriteAllText(fullAssetPath, "{}");
         }
 
-        TextEditor _textEditor;
+        readonly TextEditor _textEditor;
 
         public TileSetEditor(EditorApp @interface, string fullAssetPath)
             : base(@interface, fullAssetPath)
         {
-            var mainLayer = new Panel(this)
+            _textEditor = new TextEditor(_mainLayer)
             {
-                ChildLayout = ChildLayoutMode.Top
+                Padding = 8,
+                LayoutWeight = 1,
+                OnChange = MarkUnsavedChanges
             };
 
-            var topBar = new Panel(mainLayer)
-            {
-                BackgroundPatch = new TexturePatch(0x123456ff),
-                ChildLayout = ChildLayoutMode.Left,
-                VerticalPadding = 8
-            };
-
-            new StyledTextButton(topBar)
-            {
-                Text = "Save",
-                Right = 8,
-                OnActivate = Save
-            };
-
-            _textEditor = new TextEditor(mainLayer) { Padding = 8, LayoutWeight = 1 };
+            Load();
         }
 
         public override void OnMounted()
         {
-            _textEditor.SetText(File.ReadAllText(FullAssetPath));
             Desktop.SetFocusedElement(_textEditor);
         }
 
-        public override void OnUnmounted()
+        protected override bool TryLoad(out string error)
         {
-            Save();
+            try
+            {
+                _textEditor.SetText(File.ReadAllText(FullAssetPath));
+            }
+            catch (Exception exception)
+            {
+                error = "Error while loading tile set: " + exception.Message;
+                return false;
+            }
+
+            error = null;
+            return true;
         }
 
-        void Save()
+        protected override void Unload()
         {
-            File.WriteAllText(FullAssetPath, _textEditor.GetText());
+            // Nothing
+        }
+
+
+        protected override bool TrySave(out string error)
+        {
+            try
+            {
+                File.WriteAllText(FullAssetPath, _textEditor.GetText());
+            }
+            catch (Exception exception)
+            {
+                error = "Error while saving tile set: " + exception.Message;
+                return false;
+            }
+
+            error = null;
+            return true;
         }
     }
 }

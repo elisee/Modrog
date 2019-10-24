@@ -24,15 +24,10 @@ namespace ModrogEditor.Interface.Editing.Map
             file.Write(writer.Buffer, 0, writer.Finish());
         }
 
-        readonly Panel _mainLayer;
         readonly MapViewport _mapViewport;
         readonly TileSelector _tileSelector;
 
         readonly MapSettingsLayer _mapSettingsLayer;
-
-        readonly Panel _errorLayer;
-        readonly Label _errorTitleLabel;
-        readonly Label _errorDetailsLabel;
 
         // Spritesheet
         public string SpritesheetPath { get; private set; }
@@ -64,130 +59,95 @@ namespace ModrogEditor.Interface.Editing.Map
             : base(@interface, fullAssetPath)
         {
             // Main layer
+            _mainLayer.ChildLayout = ChildLayoutMode.Top;
+
+            var topBar = new Panel(_mainLayer)
             {
-                _mainLayer = new Panel(this)
+                BackgroundPatch = new TexturePatch(0x123456ff),
+                ChildLayout = ChildLayoutMode.Left,
+                VerticalPadding = 8
+            };
+
+            new StyledTextButton(topBar)
+            {
+                Text = "Settings",
+                OnActivate = () =>
                 {
-                    ChildLayout = ChildLayoutMode.Top
-                };
-
-                var topBar = new Panel(_mainLayer)
-                {
-                    BackgroundPatch = new TexturePatch(0x123456ff),
-                    ChildLayout = ChildLayoutMode.Left,
-                    VerticalPadding = 8
-                };
-
-                new StyledTextButton(topBar)
-                {
-                    Text = "Save",
-                    Right = 8,
-                    OnActivate = () => Save()
-                };
-
-                new StyledTextButton(topBar)
-                {
-                    Text = "Settings",
-                    OnActivate = () =>
-                    {
-                        _mapSettingsLayer.Visible = true;
-                        _mapSettingsLayer.Layout(_contentRectangle);
-                    }
-                };
-
-                {
-                    var splitter = new Element(_mainLayer) { LayoutWeight = 1, ChildLayout = ChildLayoutMode.Left };
-
-                    _mapViewport = new MapViewport(this, splitter) { LayoutWeight = 1 };
-
-                    var sidebar = new Panel(splitter) { Width = 300, ChildLayout = ChildLayoutMode.Top, Left = 8 };
-
-                    // Layers
-                    var layersPanel = new Panel(sidebar) { ChildLayout = ChildLayoutMode.Top };
-                    new Label(layersPanel) { Text = "LAYERS", Padding = 8, BackgroundPatch = new TexturePatch(0x456456ff) };
-
-                    void SetTileLayer(int layer)
-                    {
-                        _tileLayerButtons[TileLayer].BackgroundPatch = new TexturePatch(0x00000000);
-                        _tileLayerButtons[layer].BackgroundPatch = new TexturePatch(0x228822ff);
-
-                        TileLayer = layer;
-                        BrushTileKindIndex = (short)Math.Min(1, TileKindsByLayer[TileLayer]?.Length ?? 0);
-                    }
-
-                    for (var i = 0; i < (int)ModrogApi.MapLayer.Count; i++)
-                    {
-                        var layer = i;
-
-                        _tileLayerButtons[i] = new TextButton(layersPanel)
-                        {
-                            Text = Enum.GetName(typeof(ModrogApi.MapLayer), i),
-                            Padding = 8,
-                            OnActivate = () => SetTileLayer(layer)
-                        };
-                    }
-
-                    SetTileLayer(0);
-
-                    // Tools
-                    var toolsPanel = new Panel(sidebar) { ChildLayout = ChildLayoutMode.Top };
-                    new Label(toolsPanel) { Text = "TOOLS", Padding = 8, BackgroundPatch = new TexturePatch(0x456456ff) };
-
-                    var toolStrip = new Element(toolsPanel) { ChildLayout = ChildLayoutMode.Left };
-
-                    StyledTextButton MakeButton(string name, Action onActivate)
-                    {
-                        return new StyledTextButton(toolStrip) { LayoutWeight = 1, HorizontalFlow = Flow.Expand, Text = name, OnActivate = onActivate };
-                    }
-
-                    MakeButton("Brush", () => SetBrush(tileIndex: 1));
-                    MakeButton("Picker", () => Tool = MapEditorTool.Picker);
-                    MakeButton("Bucket", () => Tool = MapEditorTool.Bucket);
-
-                    // Tile set
-                    var tileSetPanel = new Panel(sidebar) { ChildLayout = ChildLayoutMode.Top, LayoutWeight = 1 };
-                    new Label(tileSetPanel) { Text = "TILE SET", Padding = 8, BackgroundPatch = new TexturePatch(0x456456ff) };
-
-                    _tileSelector = new TileSelector(this, tileSetPanel) { LayoutWeight = 1 };
+                    _mapSettingsLayer.Visible = true;
+                    _mapSettingsLayer.Layout(_contentRectangle);
                 }
+            };
+
+            {
+                var splitter = new Element(_mainLayer) { LayoutWeight = 1, ChildLayout = ChildLayoutMode.Left };
+
+                _mapViewport = new MapViewport(this, splitter) { LayoutWeight = 1 };
+
+                var sidebar = new Panel(splitter) { Width = 300, ChildLayout = ChildLayoutMode.Top, Left = 8 };
+
+                // Layers
+                var layersPanel = new Panel(sidebar) { ChildLayout = ChildLayoutMode.Top };
+                new Label(layersPanel) { Text = "LAYERS", Padding = 8, BackgroundPatch = new TexturePatch(0x456456ff) };
+
+                void SetTileLayer(int layer)
+                {
+                    _tileLayerButtons[TileLayer].BackgroundPatch = new TexturePatch(0x00000000);
+                    _tileLayerButtons[layer].BackgroundPatch = new TexturePatch(0x228822ff);
+
+                    TileLayer = layer;
+                    BrushTileKindIndex = (short)Math.Min(1, TileKindsByLayer[TileLayer]?.Length ?? 0);
+                }
+
+                for (var i = 0; i < (int)ModrogApi.MapLayer.Count; i++)
+                {
+                    var layer = i;
+
+                    _tileLayerButtons[i] = new TextButton(layersPanel)
+                    {
+                        Text = Enum.GetName(typeof(ModrogApi.MapLayer), i),
+                        Padding = 8,
+                        OnActivate = () => SetTileLayer(layer)
+                    };
+                }
+
+                SetTileLayer(0);
+
+                // Tools
+                var toolsPanel = new Panel(sidebar) { ChildLayout = ChildLayoutMode.Top };
+                new Label(toolsPanel) { Text = "TOOLS", Padding = 8, BackgroundPatch = new TexturePatch(0x456456ff) };
+
+                var toolStrip = new Element(toolsPanel) { ChildLayout = ChildLayoutMode.Left };
+
+                StyledTextButton MakeButton(string name, Action onActivate)
+                {
+                    return new StyledTextButton(toolStrip) { LayoutWeight = 1, HorizontalFlow = Flow.Expand, Text = name, OnActivate = onActivate };
+                }
+
+                MakeButton("Brush", () => SetBrush(tileIndex: 1));
+                MakeButton("Picker", () => Tool = MapEditorTool.Picker);
+                MakeButton("Bucket", () => Tool = MapEditorTool.Bucket);
+
+                // Tile set
+                var tileSetPanel = new Panel(sidebar) { ChildLayout = ChildLayoutMode.Top, LayoutWeight = 1 };
+                new Label(tileSetPanel) { Text = "TILE SET", Padding = 8, BackgroundPatch = new TexturePatch(0x456456ff) };
+
+                _tileSelector = new TileSelector(this, tileSetPanel) { LayoutWeight = 1 };
             }
 
             // Settings popup
             _mapSettingsLayer = new MapSettingsLayer(this) { Visible = false };
 
-            // Error popup
-            {
-                _errorLayer = new Panel(this) { Visible = false, BackgroundPatch = new TexturePatch(0x00000088) };
-
-                var windowPanel = new Panel(_errorLayer)
-                {
-                    BackgroundPatch = new TexturePatch(0x228800ff),
-                    Width = 480,
-                    Flow = Flow.Shrink,
-                    ChildLayout = ChildLayoutMode.Top,
-                };
-
-                var titlePanel = new Panel(windowPanel, new TexturePatch(0x88aa88ff));
-                _errorTitleLabel = new Label(titlePanel) { Flow = Flow.Shrink, Padding = 8 };
-
-                _errorDetailsLabel = new Label(windowPanel)
-                {
-                    Wrap = true,
-                    Padding = 8,
-                };
-            }
+            Load();
         }
 
         public override void OnMounted()
         {
-            void OnError(string details)
-            {
-                _mainLayer.Visible = false;
+            Desktop.SetFocusedElement(_mapViewport);
+        }
 
-                _errorTitleLabel.Text = "Cannot open map";
-                _errorDetailsLabel.Text = details;
-                _errorLayer.Visible = true;
-                Desktop.SetFocusedElement(_errorLayer);
-            }
+        protected override bool TryLoad(out string error)
+        {
+            _mainLayer.Visible = false;
 
             {
                 try
@@ -197,6 +157,7 @@ namespace ModrogEditor.Interface.Editing.Map
                     TileSetPath = reader.ReadByteSizeString();
 
                     var chunksCount = reader.ReadInt();
+                    _mapViewport.Chunks.Clear();
 
                     for (var i = 0; i < chunksCount; i++)
                     {
@@ -214,11 +175,12 @@ namespace ModrogEditor.Interface.Editing.Map
                 }
                 catch (Exception exception)
                 {
-                    OnError("Error while loading map: " + exception.Message);
-                    return;
+                    error = "Error while loading map: " + exception.Message;
+                    return false;
                 }
             }
 
+            if (TileSetPath.Length > 0)
             {
                 JsonElement tileSetJson;
                 try
@@ -260,12 +222,10 @@ namespace ModrogEditor.Interface.Editing.Map
                 }
                 catch (Exception exception)
                 {
-                    OnError("Error while loading tile set: " + exception.Message);
-                    return;
+                    error = "Error while loading tile set: " + exception.Message;
+                    return false;
                 }
-            }
 
-            {
                 try
                 {
                     SpritesheetTexture = SDL_image.IMG_LoadTexture(Desktop.Renderer, Path.Combine(App.State.ActiveScenarioPath, SpritesheetPath));
@@ -273,16 +233,18 @@ namespace ModrogEditor.Interface.Editing.Map
                 }
                 catch (Exception exception)
                 {
-                    OnError("Error while loading spritesheet texture: " + exception.Message);
-                    return;
+                    error = "Error while loading spritesheet texture: " + exception.Message;
+                    return false;
                 }
             }
 
-            _mapViewport.Visible = true;
-            Desktop.SetFocusedElement(_mapViewport);
+            _mainLayer.Visible = true;
+
+            error = null;
+            return true;
         }
 
-        public override void OnUnmounted()
+        protected override void Unload()
         {
             if (SpritesheetTexture != IntPtr.Zero)
             {
@@ -290,10 +252,10 @@ namespace ModrogEditor.Interface.Editing.Map
                 SpritesheetTexture = IntPtr.Zero;
             }
 
-            Save();
+            SpritesheetPath = null;
         }
 
-        void Save()
+        protected override bool TrySave(out string error)
         {
             var writer = new PacketWriter(initialCapacity: 8192, useSizeHeader: false);
             writer.WriteByteSizeString(TileSetPath);
@@ -306,8 +268,19 @@ namespace ModrogEditor.Interface.Editing.Map
                 for (var i = 0; i < (int)ModrogApi.MapLayer.Count; i++) writer.WriteShorts(chunk.TilesPerLayer[i]);
             }
 
-            using var file = File.OpenWrite(FullAssetPath);
-            file.Write(writer.Buffer, 0, writer.Finish());
+            try
+            {
+                using var file = File.OpenWrite(FullAssetPath);
+                file.Write(writer.Buffer, 0, writer.Finish());
+            }
+            catch (Exception exception)
+            {
+                error = "Error while saving map: " + exception.Message;
+                return false;
+            }
+
+            error = null;
+            return true;
         }
 
         internal void SetBrush(short tileIndex)

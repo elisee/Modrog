@@ -7,6 +7,7 @@ using ModrogEditor.Scenario;
 using SwarmCore;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 
 namespace ModrogEditor
@@ -29,7 +30,6 @@ namespace ModrogEditor
         };
 
         public ScenarioEntry ActiveScenarioEntry { get; private set; }
-        public AssetEntry ActiveAssetEntry { get; private set; }
         public string ActiveScenarioPath => Path.Combine(ScenariosPath, ActiveScenarioEntry.Name);
 
         public EditorState(EditorApp app)
@@ -73,16 +73,13 @@ namespace ModrogEditor
             RootAssetEntry.Children.Clear();
             Recurse(RootAssetEntry, ActiveScenarioPath);
 
-            ActiveAssetEntry = RootAssetEntry;
-
             Stage = EditorStage.Editing;
             _app.OnStageChanged();
         }
 
-        public bool TryCreateAsset(string assetName, out AssetEntry assetEntry, out string error)
+        public bool TryCreateAsset(string assetName, AssetEntry parentEntry, out AssetEntry assetEntry, out string error)
         {
-            var parentEntry = ActiveAssetEntry;
-            if (parentEntry.AssetType != AssetType.Folder) parentEntry = parentEntry.Parent;
+            Debug.Assert(parentEntry.AssetType == AssetType.Folder);
 
             var assetPath = Path.Combine(parentEntry.Path, assetName);
             var fullAssetPath = Path.Combine(ActiveScenarioPath, assetPath);
@@ -166,12 +163,6 @@ namespace ModrogEditor
             }
 
             _app.EditingView.OnAssetDeleted(assetEntry);
-        }
-
-        public void OpenAsset(AssetEntry entry)
-        {
-            ActiveAssetEntry = entry;
-            _app.EditingView.OnActiveAssetChanged();
         }
     }
 }

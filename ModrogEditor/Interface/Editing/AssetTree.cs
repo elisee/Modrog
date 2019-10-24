@@ -101,6 +101,8 @@ namespace ModrogEditor.Interface.Editing
             }
         }
 
+        public AssetEntry GetSelectedEntry() => _selectedItem?.Entry;
+
         internal void Internal_ActivateItem(AssetTreeItem item)
         {
             if (item.Entry.AssetType == AssetType.Folder)

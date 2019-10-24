@@ -84,6 +84,8 @@ namespace ModrogEditor.Interface.Editing.Map
                     chunk.TilesPerLayer[_mapEditor.TileLayer][chunkTileCoords.Y * Protocol.MapChunkSide + chunkTileCoords.X] = _mapEditor.BrushTileKindIndex;
                     break;
             }
+
+            _mapEditor.MarkUnsavedChanges();
         }
 
         short GetTileAt(Point position)

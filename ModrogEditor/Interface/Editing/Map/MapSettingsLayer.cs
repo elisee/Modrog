@@ -89,7 +89,14 @@ namespace ModrogEditor.Interface.Editing.Map
 
         public override void Validate()
         {
-            _mapEditor.TileSetPath = _tilesetInput.Value.Trim();
+            var tileSetPath = _tilesetInput.Value.Trim();
+
+            if (tileSetPath != _mapEditor.TileSetPath)
+            {
+                _mapEditor.TileSetPath = tileSetPath;
+                _mapEditor.MarkUnsavedChanges();
+            }
+
             _mapEditor.CloseSettings();
         }
 
