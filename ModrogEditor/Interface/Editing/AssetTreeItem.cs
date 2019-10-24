@@ -112,5 +112,12 @@ namespace ModrogEditor.Interface.Editing
                 if (doubleClick) Tree.Internal_ActivateItem(this);
             }
         }
+
+        protected override void DrawSelf()
+        {
+            base.DrawSelf();
+
+            if (IsHovered) Tree.ItemHoveredPatch.Draw(Desktop.Renderer, _container.LayoutRectangle);
+        }
     }
 }
