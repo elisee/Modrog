@@ -185,7 +185,7 @@ namespace SwarmPlatform.UI
                 ClampScrolling();
                 ClearSelection();
 
-                if (OnChange != null) OnChange.Invoke();
+                OnChange?.Invoke();
             }
 
             void Delete()
@@ -205,7 +205,7 @@ namespace SwarmPlatform.UI
                 ClampScrolling();
                 ClearSelection();
 
-                if (OnChange != null) OnChange.Invoke();
+                OnChange?.Invoke();
             }
 
             void GoToStartOfLine()
@@ -245,7 +245,7 @@ namespace SwarmPlatform.UI
             ClampScrolling();
             ClearSelection();
 
-            if (OnChange != null) OnChange.Invoke();
+            OnChange?.Invoke();
         }
 
         public override void OnMouseDown(int button)

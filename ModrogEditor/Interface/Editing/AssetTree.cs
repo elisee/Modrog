@@ -25,9 +25,7 @@ namespace ModrogEditor.Interface.Editing
         {
             var item = _itemsByEntry[entry] = new AssetTreeItem(this, entry);
 
-            _itemsByEntry.TryGetValue(entry.Parent, out var parentItem);
-
-            if (parentItem != null)
+            if (_itemsByEntry.TryGetValue(entry.Parent, out var parentItem))
             {
                 parentItem.AddChildItem(item);
                 SortChildrenItem(parentItem.ChildrenItem);
@@ -68,10 +66,10 @@ namespace ModrogEditor.Interface.Editing
 
             children.Clear();
 
-            folderItems.Sort((element1, element2) => string.Compare(((AssetTreeItem)element1).GetText(), ((AssetTreeItem)element2).GetText()));
+            folderItems.Sort((a, b) => string.Compare(((AssetTreeItem)a).GetText(), ((AssetTreeItem)b).GetText()));
             foreach (var item in folderItems) children.Add(item);
 
-            otherItems.Sort((element1, element2) => string.Compare(((AssetTreeItem)element1).GetText(), ((AssetTreeItem)element2).GetText()));
+            otherItems.Sort((a, b) => string.Compare(((AssetTreeItem)a).GetText(), ((AssetTreeItem)b).GetText()));
             foreach (var item in otherItems) children.Add(item);
         }
 
@@ -83,11 +81,7 @@ namespace ModrogEditor.Interface.Editing
                 _selectedItem = null;
             }
 
-            if (entry != null && _itemsByEntry.ContainsKey(entry))
-            {
-                _selectedItem = _itemsByEntry[entry];
-                _selectedItem.SetSelected(true);
-            }
+            if (entry != null && _itemsByEntry.TryGetValue(entry, out _selectedItem)) _selectedItem.SetSelected(true);
         }
 
         internal void Internal_ActivateItem(AssetTreeItem item)

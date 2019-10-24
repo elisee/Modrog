@@ -38,10 +38,7 @@ namespace ModrogEditor.Interface.Editing
             _button = new Button(this)
             {
                 ChildLayout = ChildLayoutMode.Left,
-                OnActivate = () =>
-                {
-                    Tree.Internal_ActivateItem(this);
-                },
+                OnActivate = () => Tree.Internal_ActivateItem(this),
                 Padding = 8
             };
 
@@ -80,7 +77,6 @@ namespace ModrogEditor.Interface.Editing
         public void AddChildItem(AssetTreeItem item)
         {
             _childrenPanel.Add(item);
-            _childrenPanel.Children.Sort((element1, element2) => string.Compare(((AssetTreeItem)element1).GetText(), ((AssetTreeItem)element2).GetText()));
 
             UpdateLabel();
         }

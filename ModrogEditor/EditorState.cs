@@ -58,13 +58,13 @@ namespace ModrogEditor
             {
                 foreach (var filePath in Directory.GetFiles(folderPath, "*.*", SearchOption.TopDirectoryOnly))
                 {
-                    var entry = CreateEntry(filePath[(folderPath.Length + 1)..], filePath[(scenarioPath.Length + 1)..].Replace('\\', '/'), parentEntry);
+                    var entry = CreateEntry(filePath[(folderPath.Length + 1)..], filePath[(scenarioPath.Length + 1)..], parentEntry);
                     parentEntry.Children.Add(entry);
                 }
 
                 foreach (var childFolderPath in Directory.GetDirectories(folderPath))
                 {
-                    var folderEntry = CreateEntry(childFolderPath[(folderPath.Length + 1)..], childFolderPath[(scenarioPath.Length + 1)..].Replace('\\', '/'), parentEntry);
+                    var folderEntry = CreateEntry(childFolderPath[(folderPath.Length + 1)..], childFolderPath[(scenarioPath.Length + 1)..], parentEntry);
                     parentEntry.Children.Add(folderEntry);
 
                     Recurse(folderEntry, childFolderPath);
@@ -93,7 +93,7 @@ namespace ModrogEditor
             if (assetEntry.AssetType == AssetType.Unknown)
             {
                 assetEntry = null;
-                error = "File's asset type is unknown.";
+                error = "Could not determine asset type for this filename.";
                 return false;
             }
             else if (assetEntry.AssetType == AssetType.Folder && Directory.Exists(fullAssetPath))
@@ -131,7 +131,7 @@ namespace ModrogEditor
             var entry = new AssetEntry
             {
                 Name = assetName,
-                Path = assetPath,
+                Path = assetPath.Replace('\\', '/'),
                 Parent = parentEntry
             };
 

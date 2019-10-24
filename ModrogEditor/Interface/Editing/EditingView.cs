@@ -46,6 +46,7 @@ namespace ModrogEditor.Interface.Editing
             {
                 Text = "ASSETS",
                 LayoutWeight = 1,
+                VerticalFlow = Flow.Shrink
             };
 
             _newAssetButton = new StyledTextButton(headerBar)
