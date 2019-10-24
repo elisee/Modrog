@@ -39,7 +39,7 @@ namespace SwarmPlatform.UI
             SDL2.SDL.SDL_SetCursor(Cursors.ArrowCursor);
         }
 
-        public override void OnMouseDown(int button)
+        public override void OnMouseDown(int button, int clicks)
         {
             if (button == SDL.SDL_BUTTON_LEFT)
             {
@@ -48,7 +48,7 @@ namespace SwarmPlatform.UI
             }
         }
 
-        public override void OnMouseUp(int button, bool doubleClick)
+        public override void OnMouseUp(int button)
         {
             if (button == SDL.SDL_BUTTON_LEFT && IsPressed)
             {

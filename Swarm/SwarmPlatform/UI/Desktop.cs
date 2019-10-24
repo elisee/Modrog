@@ -19,6 +19,7 @@ namespace SwarmPlatform.UI
         public Element FocusedElement { get; private set; }
         public Element HoveredElement { get; private set; }
         public bool IsHoveredElementPressed { get; private set; }
+        int _hoveredElementLeftClicks;
 
         public int MouseX { get; private set; }
         public int MouseY { get; private set; }
@@ -182,30 +183,26 @@ namespace SwarmPlatform.UI
             }
         }
 
-        public void ClearHoveredElement()
-        {
-            HoveredElement?.OnMouseExit();
-            IsHoveredElementPressed = false;
-            HoveredElement = RootElement.HitTest(MouseX, MouseY);
-            HoveredElement?.OnMouseEnter();
-        }
-
         public void SetHoveredElementPressed(bool pressed)
         {
             Debug.Assert(HoveredElement != null);
             IsHoveredElementPressed = pressed;
 
-            if (!IsHoveredElementPressed) RefreshHoveredElement();
+            if (!IsHoveredElementPressed) RefreshHoveredElement(clearPressed: false);
         }
 
-        void RefreshHoveredElement()
+        public void RefreshHoveredElement(bool clearPressed)
         {
-            Debug.Assert(!IsHoveredElementPressed);
+            Debug.Assert(clearPressed || !IsHoveredElementPressed);
+
+            if (clearPressed) IsHoveredElementPressed = false;
 
             var hitElement = RootElement.HitTest(MouseX, MouseY);
 
             if (hitElement != HoveredElement)
             {
+                _hoveredElementLeftClicks = 0;
+
                 HoveredElement?.OnMouseExit();
                 HoveredElement = hitElement;
                 HoveredElement?.OnMouseEnter();
@@ -275,20 +272,21 @@ namespace SwarmPlatform.UI
                         MouseX = @event.motion.x;
                         MouseY = @event.motion.y;
 
-                        if (!IsHoveredElementPressed) RefreshHoveredElement();
+                        if (!IsHoveredElementPressed) RefreshHoveredElement(clearPressed: false);
                         HoveredElement?.OnMouseMove();
                         break;
                     }
 
                 case SDL.SDL_EventType.SDL_MOUSEBUTTONDOWN:
                     {
-                        HoveredElement?.OnMouseDown(@event.button.button);
+                        _hoveredElementLeftClicks = @event.button.button == SDL.SDL_BUTTON_LEFT && _hoveredElementLeftClicks > 0 ? @event.button.clicks : 1;
+                        HoveredElement?.OnMouseDown(@event.button.button, _hoveredElementLeftClicks);
                         break;
                     }
 
                 case SDL.SDL_EventType.SDL_MOUSEBUTTONUP:
                     {
-                        HoveredElement?.OnMouseUp(@event.button.button, doubleClick: @event.button.clicks > 1);
+                        HoveredElement?.OnMouseUp(@event.button.button);
                         break;
                     }
 

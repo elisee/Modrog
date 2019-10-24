@@ -94,22 +94,21 @@ namespace ModrogEditor.Interface.Editing
 
         public override Element HitTest(int x, int y) => base.HitTest(x, y) ?? (LayoutRectangle.Contains(x, y) ? this : null);
 
-        public override void OnMouseDown(int button)
+        public override void OnMouseDown(int button, int clicks)
         {
             if (button == SDL.SDL_BUTTON_LEFT)
             {
                 Desktop.SetHoveredElementPressed(true);
+                if (clicks >= 2) Tree.Internal_ActivateItem(this);
             }
         }
 
-        public override void OnMouseUp(int button, bool doubleClick)
+        public override void OnMouseUp(int button)
         {
             if (button == SDL.SDL_BUTTON_LEFT && IsPressed)
             {
                 Desktop.SetHoveredElementPressed(false);
-
                 Tree.SetSelectedEntry(Entry);
-                if (doubleClick) Tree.Internal_ActivateItem(this);
             }
         }
 

@@ -159,7 +159,7 @@ namespace ModrogEditor.Interface.Editing.Map
             }
         }
 
-        public override void OnMouseDown(int button)
+        public override void OnMouseDown(int button, int clicks)
         {
             if (_isDraggingScroll || _isPlacingTiles) return;
 
@@ -188,7 +188,7 @@ namespace ModrogEditor.Interface.Editing.Map
             }
         }
 
-        public override void OnMouseUp(int button, bool doubleClick)
+        public override void OnMouseUp(int button)
         {
             if (button == SDL.SDL_BUTTON_LEFT)
             {

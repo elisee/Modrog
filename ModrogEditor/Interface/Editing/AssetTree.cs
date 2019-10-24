@@ -105,7 +105,7 @@ namespace ModrogEditor.Interface.Editing
 
         public override Element HitTest(int x, int y) => base.HitTest(x, y) ?? (LayoutRectangle.Contains(x, y) ? this : null);
 
-        public override void OnMouseUp(int button, bool doubleClick)
+        public override void OnMouseUp(int button)
         {
             if (button == SDL.SDL_BUTTON_LEFT)
             {
