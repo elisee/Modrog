@@ -81,7 +81,11 @@ namespace ModrogEditor.Interface.Editing
                 _selectedItem = null;
             }
 
-            if (entry != null && _itemsByEntry.TryGetValue(entry, out _selectedItem)) _selectedItem.SetSelected(true);
+            if (entry != null)
+            {
+                _selectedItem = _itemsByEntry[entry];
+                _selectedItem.SetSelected(true);
+            }
         }
 
         internal void Internal_ActivateItem(AssetTreeItem item)
