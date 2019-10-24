@@ -248,7 +248,7 @@ namespace SwarmPlatform.UI
             OnChange?.Invoke();
         }
 
-        public override void OnMouseDown(int button)
+        public override void OnMouseDown(int button, int clicks)
         {
             if (button == SDL.SDL_BUTTON_LEFT)
             {

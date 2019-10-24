@@ -1,7 +1,7 @@
-﻿using SwarmBasics;
+﻿using SDL2;
+using SwarmBasics;
 using SwarmBasics.Math;
 using SwarmPlatform.Graphics;
-using SDL2;
 using System;
 using System.Collections.Generic;
 
@@ -479,7 +479,7 @@ namespace SwarmPlatform.UI
             Layout();
         }
 
-        public override void OnMouseDown(int button)
+        public override void OnMouseDown(int button, int clicks)
         {
             if (button == SDL.SDL_BUTTON_LEFT)
             {

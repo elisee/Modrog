@@ -1,4 +1,6 @@
 ﻿using ModrogEditor.Scenario;
+using SDL2;
+using SwarmPlatform.Graphics;
 using SwarmPlatform.UI;
 using System;
 using System.Collections.Generic;
@@ -12,6 +14,8 @@ namespace ModrogEditor.Interface.Editing
         readonly Dictionary<AssetEntry, AssetTreeItem> _itemsByEntry = new Dictionary<AssetEntry, AssetTreeItem>();
 
         AssetTreeItem _selectedItem;
+
+        public TexturePatch ItemHoveredPatch = new TexturePatch(0xffffff20);
 
         public AssetTree(Element parent) : this(parent.Desktop, parent) { }
 
@@ -97,6 +101,16 @@ namespace ModrogEditor.Interface.Editing
             }
 
             OnActivate(item.Entry);
+        }
+
+        public override Element HitTest(int x, int y) => base.HitTest(x, y) ?? (LayoutRectangle.Contains(x, y) ? this : null);
+
+        public override void OnMouseUp(int button)
+        {
+            if (button == SDL.SDL_BUTTON_LEFT)
+            {
+                SetSelectedEntry(null);
+            }
         }
     }
 }

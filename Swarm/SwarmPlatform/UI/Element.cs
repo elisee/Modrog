@@ -41,7 +41,7 @@ namespace SwarmPlatform.UI
                 if (_disabled)
                 {
                     if (Desktop.FocusedElement.IsContainedWithin(this)) Desktop.SetFocusedElement(Desktop.RootElement);
-                    if (Desktop.HoveredElement.IsContainedWithin(this)) Desktop.ClearHoveredAndPressedElement();
+                    if (Desktop.HoveredElement.IsContainedWithin(this)) Desktop.RefreshHoveredElement(clearPressed: true);
                 }
             }
         }
@@ -413,7 +413,7 @@ namespace SwarmPlatform.UI
             IsMounted = false;
 
             if (IsFocused) Desktop.SetFocusedElement(Desktop.RootElement);
-            if (IsHovered) Desktop.ClearHoveredAndPressedElement();
+            if (IsHovered) Desktop.RefreshHoveredElement(clearPressed: true);
 
             foreach (var child in Children) if (child.IsMounted) child.Unmount();
 
@@ -446,7 +446,7 @@ namespace SwarmPlatform.UI
         public virtual void OnMouseExit() { }
         public virtual void OnMouseMove() { }
 
-        public virtual void OnMouseDown(int button) { }
+        public virtual void OnMouseDown(int button, int clicks) { }
         public virtual void OnMouseUp(int button) { }
         public virtual void OnMouseWheel(int dx, int dy)
         {
