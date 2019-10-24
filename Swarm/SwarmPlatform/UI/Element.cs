@@ -1,7 +1,7 @@
-﻿using SwarmBasics;
+﻿using SDL2;
+using SwarmBasics;
 using SwarmBasics.Math;
 using SwarmPlatform.Graphics;
-using SDL2;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -447,7 +447,7 @@ namespace SwarmPlatform.UI
         public virtual void OnMouseMove() { }
 
         public virtual void OnMouseDown(int button) { }
-        public virtual void OnMouseUp(int button) { }
+        public virtual void OnMouseUp(int button, bool doubleClick) { }
         public virtual void OnMouseWheel(int dx, int dy)
         {
             var scrollArea = GetScrollArea();

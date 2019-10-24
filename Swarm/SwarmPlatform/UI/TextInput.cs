@@ -268,7 +268,7 @@ namespace SwarmPlatform.UI
             }
         }
 
-        public override void OnMouseUp(int button)
+        public override void OnMouseUp(int button, bool doubleClick)
         {
             if (button == 1 && IsPressed)
             {

@@ -1,7 +1,7 @@
-﻿using SwarmBasics;
+﻿using SDL2;
+using SwarmBasics;
 using SwarmBasics.Math;
 using SwarmPlatform.Graphics;
-using SDL2;
 using System;
 using System.Collections.Generic;
 
@@ -500,7 +500,7 @@ namespace SwarmPlatform.UI
             }
         }
 
-        public override void OnMouseUp(int button)
+        public override void OnMouseUp(int button, bool doubleClick)
         {
             if (button == SDL.SDL_BUTTON_LEFT && IsPressed)
             {

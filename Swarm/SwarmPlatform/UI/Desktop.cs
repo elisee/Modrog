@@ -1,6 +1,6 @@
-﻿using SwarmBasics.Math;
+﻿using SDL2;
+using SwarmBasics.Math;
 using SwarmPlatform.Graphics;
-using SDL2;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -290,7 +290,7 @@ namespace SwarmPlatform.UI
                 case SDL.SDL_EventType.SDL_MOUSEBUTTONUP:
                     {
                         HoveredElement = IsHoveredElementPressed ? HoveredElement : RootElement.HitTest(@event.button.x, @event.button.y);
-                        HoveredElement?.OnMouseUp(@event.button.button);
+                        HoveredElement?.OnMouseUp(@event.button.button, doubleClick: @event.button.clicks > 1);
                         break;
                     }
 

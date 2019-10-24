@@ -188,7 +188,7 @@ namespace ModrogEditor.Interface.Editing.Map
             }
         }
 
-        public override void OnMouseUp(int button)
+        public override void OnMouseUp(int button, bool doubleClick)
         {
             if (button == SDL.SDL_BUTTON_LEFT)
             {
