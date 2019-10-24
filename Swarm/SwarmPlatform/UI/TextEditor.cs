@@ -14,6 +14,8 @@ namespace SwarmPlatform.UI
         public Color TextColor = new Color(0xffffffff);
         public Point CellSize = new Point(12, 32);
 
+        public Action OnChange;
+
         public readonly List<string> Lines = new List<string> { "" };
         public const int CursorWidth = 2;
 
@@ -140,18 +142,19 @@ namespace SwarmPlatform.UI
                 case SDL.SDL_Keycode.SDLK_PAGEDOWN: GoDown((int)MathF.Ceiling((float)ViewRectangle.Height / CellSize.Y) - 2); break;
 
                 // Edit
-                case SDL.SDL_Keycode.SDLK_BACKSPACE: Erase(); break;
-                case SDL.SDL_Keycode.SDLK_DELETE: Delete(); break;
-                case SDL.SDL_Keycode.SDLK_TAB: Indent(); break;
+                case SDL.SDL_Keycode.SDLK_BACKSPACE: Erase(); OnChange?.Invoke(); break;
+                case SDL.SDL_Keycode.SDLK_DELETE: Delete(); OnChange?.Invoke(); break;
+                case SDL.SDL_Keycode.SDLK_TAB: Indent(); OnChange?.Invoke(); break;
 
                 case SDL.SDL_Keycode.SDLK_RETURN:
                 case SDL.SDL_Keycode.SDLK_KP_ENTER:
                     BreakLine();
+                    OnChange?.Invoke();
                     break;
 
-                case SDL.SDL_Keycode.SDLK_x: Cut(); break;
+                case SDL.SDL_Keycode.SDLK_x: Cut(); OnChange?.Invoke(); break;
                 case SDL.SDL_Keycode.SDLK_c: Copy(); break;
-                case SDL.SDL_Keycode.SDLK_v: Paste(); break;
+                case SDL.SDL_Keycode.SDLK_v: Paste(); OnChange?.Invoke(); break;
 
                 default: base.OnKeyDown(key, repeat); break;
             }
@@ -477,6 +480,8 @@ namespace SwarmPlatform.UI
 
             ScrollCursorIntoView();
             Layout();
+
+            OnChange?.Invoke();
         }
 
         public override void OnMouseDown(int button, int clicks)
