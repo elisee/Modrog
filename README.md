@@ -25,6 +25,7 @@ You'll need .NET Core 3 and Visual Studio 2019. VS Code might work.
 
     - (Editor) Allow renaming assets
     - (Editor) Allow reparenting assets with drag'n'drop (need to add drag'n'drop in UI framework)
+    - (Editor) Implemented tabs, show which tab is active, fallback to previous tab if tab is closed, make sure we don't allow quitting until all tabs are saved, etc.
     - (Map Editor) Trace line segments when using the brush rather than just placing tiles at hovered position. (Can reuse line drawing logic from line of sight)
     - (Map Editor) Bucket fill
     - (Map Editor) Skip empty chunks when saving
@@ -47,10 +48,8 @@ You'll need .NET Core 3 and Visual Studio 2019. VS Code might work.
 ## Visual inspirations
 
   * Zelda: A Link to the Past https://static.hitek.fr/img/up_m/1373484298/Link_to_the_past_poules.jpg
-  * Towerfall http://www.towerfall-game.com/newsite/images/screenshots/Backfire.png
-  * Crypt of the NecroDancer https://cdn.radiofrance.fr/s3/cruiser-production/2019/06/1334e540-005c-4ae4-97a2-0a633f5dfb12/640_2019061413364100-5c78065cd98929d80fe9662ac4a6dda2.jpg
-  * Arclands https://twitter.com/jonkellerdev/status/1187017848004206592/photo/1
+  * Arclands https://pbs.twimg.com/media/EENUKr0W4AEu9cW?format=png&name=medium
   * Worlds MMO https://twitter.com/2Pblog1/status/546067188558221313, https://pbs.twimg.com/media/CoakSQlWIAAfUhJ?format=jpg&name=large
-  * Spelunky Classic https://blog.en.uptodown.com/files/2017/07/spelunky-classic-android-header.jpg
+  * Spelunky Classic https://lh3.googleusercontent.com/SxQKcijZk2wVyhDThNeXj8vfzCDHqegyp4Ar23bS8fAVO--XzLrBm25qfKQGbKhGkhrLMsqhqL0=w640-h400-e365
   * Yokai Dungeon https://twitter.com/Neutronized/status/1187390284117823488
   * Fidel Dungeon Rescue https://img.itch.zone/aW1nLzE2MjEyNjYucG5n/original/KfVMMM.png
