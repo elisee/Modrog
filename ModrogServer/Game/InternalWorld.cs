@@ -1,5 +1,4 @@
-﻿using ModrogApi.Server;
-using ModrogCommon;
+﻿using ModrogCommon;
 using SwarmBasics.Math;
 using System;
 using System.Collections.Generic;
@@ -71,7 +70,7 @@ namespace ModrogServer.Game
 
         public override ModrogApi.Server.Entity SpawnEntity(ModrogApi.Server.EntityKind kind, Point position, ModrogApi.EntityDirection direction, ModrogApi.Server.Player owner)
         {
-            return new InternalEntity(Universe.GetNextEntityId(), this, ((InternalEntityKind)kind).SpriteLocation, position, direction, ((InternalPlayer)owner).Index);
+            return new InternalEntity(Universe.GetNextEntityId(), this, ((InternalEntityKind)kind).SpriteLocation, position, direction, owner != null ? ((InternalPlayer)owner).Index : -1);
         }
 
         internal void Add(InternalEntity entity)
@@ -173,7 +172,7 @@ namespace ModrogServer.Game
             chunk.TilesPerLayer[(int)layer][chunkTileCoords.Y * Protocol.MapChunkSide + chunkTileCoords.X] = (short)(1 + ((InternalTileKind)tileKind).Index);
         }
 
-        public override void InsertMap(int offX, int offY, Map map)
+        public override void InsertMap(int offX, int offY, ModrogApi.Server.Map map)
         {
             var internalMap = (InternalMap)map;
 
