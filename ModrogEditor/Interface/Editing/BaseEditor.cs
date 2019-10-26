@@ -177,8 +177,10 @@ namespace ModrogEditor.Interface.Editing
 
         public override void OnKeyDown(SDL.SDL_Keycode key, bool repeat)
         {
-            if (key == SDL.SDL_Keycode.SDLK_s && Desktop.HasControlKeyModifierAlone) Save();
-            else if (key == SDL.SDL_Keycode.SDLK_w && Desktop.HasControlKeyModifierAlone) _onCloseEditor();
+            if (key == SDL.SDL_Keycode.SDLK_s && Desktop.HasControlKeyModifierAlone) { Save(); return; }
+            if (key == SDL.SDL_Keycode.SDLK_w && Desktop.HasControlKeyModifierAlone) { _onCloseEditor(); return; }
+
+            base.OnKeyDown(key, repeat);
         }
     }
 }
