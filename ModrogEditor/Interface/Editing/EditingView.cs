@@ -103,7 +103,8 @@ namespace ModrogEditor.Interface.Editing
             _tabsBar = new Element(topBar)
             {
                 LayoutWeight = 1,
-                ChildLayout = ChildLayoutMode.Left
+                ChildLayout = ChildLayoutMode.Left,
+                HorizontalFlow = Flow.Scroll
             };
 
             new StyledTextButton(topBar)
