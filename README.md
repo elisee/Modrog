@@ -29,7 +29,6 @@ You'll need .NET Core 3 and Visual Studio 2019. VS Code might work.
     - (Editor) Allow saving active editor with Ctrl+S
     - (Editor) Allow closing active editor with Ctrl+W
     - (Editor) Move "Save changes" popup out of BaseEditor into EditingView so it is modal
-    - (Editor) Handle deleting an open asset properly
     - (Map Editor) Trace line segments when using the brush rather than just placing tiles at hovered position. (Can reuse line drawing logic from line of sight)
     - (Map Editor) Bucket fill
     - (Map Editor) Skip empty chunks when saving

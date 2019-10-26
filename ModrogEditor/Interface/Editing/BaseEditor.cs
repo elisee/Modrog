@@ -76,6 +76,8 @@ namespace ModrogEditor.Interface.Editing
             }
         }
 
+        public void ForceUnload() => Unload();
+
         public void MaybeUnload(Action onUnloaded)
         {
             if (_loadAndSaveErrorLayer.Visible) return;
@@ -117,12 +119,6 @@ namespace ModrogEditor.Interface.Editing
                 Unload();
                 onUnloaded();
             };
-        }
-
-        void CancelUnload()
-        {
-            _saveBeforeClosingLayer.Visible = false;
-            Desktop.SetFocusedElement(this);
         }
 
         internal void MarkUnsavedChanges()

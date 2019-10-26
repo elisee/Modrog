@@ -186,19 +186,21 @@ namespace ModrogEditor.Interface.Editing
         {
             if (!_openEditorUIsByEntry.TryGetValue(entry, out var assetUI)) return;
 
-            assetUI.Editor.MaybeUnload(() =>
+            assetUI.Editor.MaybeUnload(() => RemoveEditor(entry, assetUI));
+        }
+
+        void RemoveEditor(AssetEntry entry, EditorUI assetUI)
+        {
+            _openEditorUIsByEntry.Remove(entry);
+
+            _tabsBar.Remove(assetUI.Tab);
+            _tabsBar.Layout();
+
+            if (assetUI.Editor.IsMounted)
             {
-                _openEditorUIsByEntry.Remove(entry);
-
-                _tabsBar.Remove(assetUI.Tab);
-                _tabsBar.Layout();
-
-                if (assetUI.Editor.IsMounted)
-                {
-                    // TODO: Make another asset active
-                    _activeEditorContainer.Clear();
-                }
-            });
+                // TODO: Make another asset active
+                _activeEditorContainer.Clear();
+            }
         }
 
         public void OnAssetCreated(AssetEntry entry)
@@ -214,6 +216,24 @@ namespace ModrogEditor.Interface.Editing
         {
             _assetTree.DeleteEntry(entry);
             _assetTree.Layout();
+
+            TryCloseAssetEditor(entry);
+
+            void TryCloseAssetEditor(AssetEntry entry)
+            {
+                if (entry.AssetType == AssetType.Folder)
+                {
+                    foreach (var childEntry in entry.Children) TryCloseAssetEditor(childEntry);
+                }
+                else
+                {
+                    if (_openEditorUIsByEntry.TryGetValue(entry, out var assetUI))
+                    {
+                        assetUI.Editor.ForceUnload();
+                        RemoveEditor(entry, assetUI);
+                    };
+                }
+            }
         }
     }
 }
