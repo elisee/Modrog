@@ -214,13 +214,26 @@ namespace ModrogEditor.Interface.Editing
         {
             _openEditorUIsByEntry.Remove(entry);
 
+            var tabIndex = assetUI.Tab.Parent.Children.IndexOf(assetUI.Tab);
+
             _tabsBar.Remove(assetUI.Tab);
             _tabsBar.Layout();
 
             if (assetUI.Editor.IsMounted)
             {
-                // TODO: Make another asset active
                 _activeEditorContainer.Clear();
+                _activeEditorUI = null;
+
+                if (_tabsBar.Children.Count > 0)
+                {
+                    var siblingTab = (EditorTabButton)_tabsBar.Children[Math.Min(tabIndex, _tabsBar.Children.Count - 1)];
+                    siblingTab.SetActive(true);
+
+                    _activeEditorUI = _openEditorUIsByEntry[siblingTab.Entry];
+                    _activeEditorContainer.Add(_activeEditorUI.Editor);
+                    _activeEditorContainer.Layout();
+                }
+
             }
         }
 

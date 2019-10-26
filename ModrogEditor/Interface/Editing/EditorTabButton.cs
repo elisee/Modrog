@@ -8,6 +8,7 @@ namespace ModrogEditor.Interface.Editing
 {
     class EditorTabButton : Button
     {
+        public readonly AssetEntry Entry;
         public Action OnClose { set => _closeButton.OnActivate = value; }
 
         readonly TextButton _closeButton;
@@ -15,6 +16,8 @@ namespace ModrogEditor.Interface.Editing
         public EditorTabButton(Element parent, AssetEntry entry)
             : base(parent)
         {
+            Entry = entry;
+
             HorizontalFlow = Flow.Shrink;
             ChildLayout = ChildLayoutMode.Left;
             BackgroundPatch = new TexturePatch(0x44aa44ff);
