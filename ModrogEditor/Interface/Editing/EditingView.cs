@@ -140,6 +140,24 @@ namespace ModrogEditor.Interface.Editing
                 return;
             }
 
+            if (key == SDL.SDL_Keycode.SDLK_TAB && (Desktop.IsCtrlOnlyDown || Desktop.IsCtrlShiftDown))
+            {
+                if (_tabsBar.Children.Count > 0)
+                {
+                    _activeEditorUI.Tab.SetActive(false);
+                    _activeEditorContainer.Clear();
+
+                    var tabIndex = _tabsBar.Children.IndexOf(_activeEditorUI.Tab);
+                    var newTabIndex = (tabIndex + _tabsBar.Children.Count + (Desktop.IsShiftDown ? -1 : 1)) % _tabsBar.Children.Count;
+                    var siblingTab = (EditorTabButton)_tabsBar.Children[newTabIndex];
+
+                    siblingTab.SetActive(true);
+                    _activeEditorUI = _openEditorUIsByEntry[siblingTab.Entry];
+                    _activeEditorContainer.Add(_activeEditorUI.Editor);
+                    _activeEditorContainer.Layout();
+                }
+            }
+
             base.OnKeyDown(key, repeat);
         }
 
