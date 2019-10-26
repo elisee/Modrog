@@ -161,6 +161,25 @@ namespace ModrogEditor.Interface.Editing
             base.OnKeyDown(key, repeat);
         }
 
+        public void MaybeClose(Action onClose)
+        {
+            foreach (var openEditorUI in _openEditorUIsByEntry.Values)
+            {
+                if (openEditorUI.Editor.HasUnsavedChanges)
+                {
+                    OpenOrFocusEditor(openEditorUI.Tab.Entry);
+                    openEditorUI.Editor.MaybeUnload(() =>
+                    {
+                        RemoveEditor(openEditorUI);
+                        MaybeClose(onClose);
+                    });
+                    return;
+                }
+            }
+
+            onClose();
+        }
+
         void RunScenario()
         {
             var clientExePath = Path.Combine(FileHelper.FindAppFolder(
@@ -226,12 +245,12 @@ namespace ModrogEditor.Interface.Editing
             if (!_openEditorUIsByEntry.TryGetValue(entry, out var assetUI)) return;
 
             OpenOrFocusEditor(entry);
-            assetUI.Editor.MaybeUnload(() => RemoveEditor(entry, assetUI));
+            assetUI.Editor.MaybeUnload(() => RemoveEditor(assetUI));
         }
 
-        void RemoveEditor(AssetEntry entry, EditorUI assetUI)
+        void RemoveEditor(EditorUI assetUI)
         {
-            _openEditorUIsByEntry.Remove(entry);
+            _openEditorUIsByEntry.Remove(assetUI.Tab.Entry);
 
             var tabIndex = _tabsBar.Children.IndexOf(assetUI.Tab);
 
@@ -282,7 +301,7 @@ namespace ModrogEditor.Interface.Editing
                     if (_openEditorUIsByEntry.TryGetValue(entry, out var assetUI))
                     {
                         assetUI.Editor.ForceUnload();
-                        RemoveEditor(entry, assetUI);
+                        RemoveEditor(assetUI);
                     };
                 }
             }

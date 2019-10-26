@@ -40,8 +40,18 @@ namespace ModrogEditor
             ScenarioEntries = ScenarioEntry.ReadScenarioEntries(ScenariosPath);
         }
 
-        public void Stop()
+        public void MaybeStop()
         {
+            if (Stage == EditorStage.Editing)
+            {
+                _app.EditingView.MaybeClose(() =>
+                {
+                    Stage = EditorStage.Exited;
+                });
+
+                return;
+            }
+
             Stage = EditorStage.Exited;
         }
 

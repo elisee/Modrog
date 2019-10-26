@@ -100,11 +100,11 @@ namespace ModrogEditor
                     switch (@event.type)
                     {
                         case SDL.SDL_EventType.SDL_QUIT:
-                            State.Stop();
+                            State.MaybeStop();
                             break;
 
                         case SDL.SDL_EventType.SDL_WINDOWEVENT:
-                            if (@event.window.windowEvent == SDL.SDL_WindowEventID.SDL_WINDOWEVENT_CLOSE) State.Stop();
+                            if (@event.window.windowEvent == SDL.SDL_WindowEventID.SDL_WINDOWEVENT_CLOSE) State.MaybeStop();
                             else Desktop.HandleSDLEvent(@event);
                             break;
 

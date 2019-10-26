@@ -3,6 +3,7 @@ using SwarmPlatform.Graphics;
 using SwarmPlatform.Interface;
 using SwarmPlatform.UI;
 using System;
+using System.Diagnostics;
 
 namespace ModrogEditor.Interface.Editing
 {
@@ -13,7 +14,7 @@ namespace ModrogEditor.Interface.Editing
         Action _onCloseEditor;
         Action<bool> _onChangeUnsavedStatus;
 
-        bool _hasUnsavedChanges;
+        public bool HasUnsavedChanges { get; private set; }
 
         protected readonly Panel _mainLayer;
         readonly ErrorLayer _loadAndSaveErrorLayer;
@@ -86,13 +87,15 @@ namespace ModrogEditor.Interface.Editing
 
         public void MaybeUnload(Action onUnloaded)
         {
+            Debug.Assert(IsMounted);
+
             if (_loadAndSaveErrorLayer.Visible)
             {
                 Desktop.SetFocusedElement(_loadAndSaveErrorLayer);
                 return;
             }
 
-            if (!_hasUnsavedChanges)
+            if (!HasUnsavedChanges)
             {
                 Unload();
                 onUnloaded();
@@ -133,8 +136,8 @@ namespace ModrogEditor.Interface.Editing
 
         internal void MarkUnsavedChanges()
         {
-            _hasUnsavedChanges = true;
-            _onChangeUnsavedStatus(_hasUnsavedChanges);
+            HasUnsavedChanges = true;
+            _onChangeUnsavedStatus(HasUnsavedChanges);
         }
 
         protected void Load()
@@ -157,7 +160,7 @@ namespace ModrogEditor.Interface.Editing
 
         void Save()
         {
-            if (!_hasUnsavedChanges) return;
+            if (!HasUnsavedChanges) return;
 
             _loadAndSaveErrorLayer.Visible = false;
 
@@ -168,8 +171,8 @@ namespace ModrogEditor.Interface.Editing
                 return;
             }
 
-            _hasUnsavedChanges = false;
-            _onChangeUnsavedStatus(_hasUnsavedChanges);
+            HasUnsavedChanges = false;
+            _onChangeUnsavedStatus(HasUnsavedChanges);
         }
 
         protected abstract bool TryLoad(out string error);
