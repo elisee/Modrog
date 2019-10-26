@@ -205,6 +205,8 @@ namespace ModrogEditor.Interface.Editing
         {
             _assetTree.AddEntry(entry);
             _assetTree.ShowEntry(entry);
+            _assetTree.SetSelectedEntry(entry);
+
             _assetTree.Layout();
         }
 
