@@ -105,7 +105,8 @@ namespace ModrogEditor.Interface.Editing
             {
                 LayoutWeight = 1,
                 ChildLayout = ChildLayoutMode.Left,
-                HorizontalFlow = Flow.Scroll
+                HorizontalFlow = Flow.Scroll,
+                ScrollbarThickness = 4,
             };
 
             new StyledTextButton(topBar) { Text = "Run", OnActivate = RunScenario };
