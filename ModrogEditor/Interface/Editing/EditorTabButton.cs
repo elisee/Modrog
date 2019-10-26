@@ -30,6 +30,12 @@ namespace ModrogEditor.Interface.Editing
             BackgroundPatch = new TexturePatch((uint)(active ? 0x44aa44ff : 0x226622ff));
         }
 
+        public void SetUnsavedChanges(bool hasUnsavedChanges)
+        {
+            _closeButton.Text = hasUnsavedChanges ? "(*)" : "(x)";
+            _closeButton.Layout();
+        }
+
         public override void OnMouseDown(int button, int clicks)
         {
             if (button == SDL.SDL_BUTTON_MIDDLE)

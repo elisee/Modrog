@@ -1,4 +1,5 @@
-﻿using SwarmPlatform.Graphics;
+﻿using SDL2;
+using SwarmPlatform.Graphics;
 using SwarmPlatform.Interface;
 using SwarmPlatform.UI;
 using System;
@@ -9,6 +10,7 @@ namespace ModrogEditor.Interface.Editing
     {
         public readonly string FullAssetPath;
 
+        readonly EditorTabButton _tab;
         bool _hasUnsavedChanges;
 
         protected readonly Panel _mainLayer;
@@ -19,10 +21,11 @@ namespace ModrogEditor.Interface.Editing
         readonly Button _saveBeforeClosingButton;
         readonly Button _discardBeforeClosingButton;
 
-        public BaseEditor(EditorApp @interface, string fullAssetPath)
+        public BaseEditor(EditorApp @interface, string fullAssetPath, EditorTabButton tab)
             : base(@interface, null)
         {
             FullAssetPath = fullAssetPath;
+            _tab = tab;
 
             _mainLayer = new Panel(this);
             _loadAndSaveErrorLayer = new ErrorLayer(this) { Visible = false };
@@ -124,7 +127,7 @@ namespace ModrogEditor.Interface.Editing
         internal void MarkUnsavedChanges()
         {
             _hasUnsavedChanges = true;
-            // TODO: Update tab title with a star or something
+            _tab.SetUnsavedChanges(true);
         }
 
         protected void Load()
@@ -157,6 +160,8 @@ namespace ModrogEditor.Interface.Editing
                 Layout();
                 return;
             }
+
+            _tab.SetUnsavedChanges(false);
         }
 
         protected abstract bool TryLoad(out string error);

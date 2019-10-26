@@ -14,8 +14,8 @@ namespace ModrogEditor.Interface.Editing.Image
             // TODO
         }
 
-        public ImageEditor(EditorApp @interface, string fullAssetPath)
-            : base(@interface, fullAssetPath)
+        public ImageEditor(EditorApp @interface, string fullAssetPath, EditorTabButton tab)
+            : base(@interface, fullAssetPath, tab)
         {
             Load();
         }

@@ -13,8 +13,8 @@ namespace ModrogEditor.Interface.Editing.TileSet
 
         readonly TextEditor _textEditor;
 
-        public TileSetEditor(EditorApp @interface, string fullAssetPath)
-            : base(@interface, fullAssetPath)
+        public TileSetEditor(EditorApp @interface, string fullAssetPath, EditorTabButton tab)
+            : base(@interface, fullAssetPath, tab)
         {
             _textEditor = new TextEditor(_mainLayer)
             {

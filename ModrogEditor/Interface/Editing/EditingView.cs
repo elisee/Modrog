@@ -177,11 +177,11 @@ namespace ModrogEditor.Interface.Editing
 
                 switch (entry.AssetType)
                 {
-                    case AssetType.Manifest: editor = new Manifest.ManifestEditor(App, fullAssetPath); break;
-                    case AssetType.TileSet: editor = new TileSet.TileSetEditor(App, fullAssetPath); break;
-                    case AssetType.Script: editor = new Script.ScriptEditor(App, fullAssetPath); break;
-                    case AssetType.Image: editor = new Image.ImageEditor(App, fullAssetPath); break;
-                    case AssetType.Map: editor = new Map.MapEditor(App, fullAssetPath); break;
+                    case AssetType.Manifest: editor = new Manifest.ManifestEditor(App, fullAssetPath, tab); break;
+                    case AssetType.TileSet: editor = new TileSet.TileSetEditor(App, fullAssetPath, tab); break;
+                    case AssetType.Script: editor = new Script.ScriptEditor(App, fullAssetPath, tab); break;
+                    case AssetType.Image: editor = new Image.ImageEditor(App, fullAssetPath, tab); break;
+                    case AssetType.Map: editor = new Map.MapEditor(App, fullAssetPath, tab); break;
                     default: throw new NotSupportedException();
                 }
 
