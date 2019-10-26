@@ -1,4 +1,5 @@
 ﻿using ModrogEditor.Scenario;
+using SDL2;
 using SwarmCore;
 using SwarmPlatform.Graphics;
 using SwarmPlatform.Interface;
@@ -107,15 +108,7 @@ namespace ModrogEditor.Interface.Editing
                 HorizontalFlow = Flow.Scroll
             };
 
-            new StyledTextButton(topBar)
-            {
-                Text = "Run",
-                OnActivate = () =>
-                {
-                    var clientExePath = Path.Combine(FileHelper.FindAppFolder("ModrogClient-Debug"), "netcoreapp3.0", "ModrogClient.exe");
-                    Process.Start(clientExePath, "--scenario " + App.State.ActiveScenarioEntry.Name);
-                }
-            };
+            new StyledTextButton(topBar) { Text = "Run", OnActivate = RunScenario };
 
             _activeEditorContainer = new Element(_mainPanel) { LayoutWeight = 1 };
         }
@@ -136,6 +129,23 @@ namespace ModrogEditor.Interface.Editing
             MakeAssetChildrenEntries(App.State.RootAssetEntry);
 
             Desktop.SetFocusedElement(this);
+        }
+
+        public override void OnKeyDown(SDL.SDL_Keycode key, bool repeat)
+        {
+            if (key == SDL.SDL_Keycode.SDLK_F5 && !repeat && Desktop.HasNoKeyModifier)
+            {
+                RunScenario();
+                return;
+            }
+
+            base.OnKeyDown(key, repeat);
+        }
+
+        void RunScenario()
+        {
+            var clientExePath = Path.Combine(FileHelper.FindAppFolder("ModrogClient-Debug"), "netcoreapp3.0", "ModrogClient.exe");
+            Process.Start(clientExePath, "--scenario " + App.State.ActiveScenarioEntry.Name);
         }
 
         internal AssetEntry GetSelectedAssetTreeFolderEntry()
