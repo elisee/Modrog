@@ -1,6 +1,7 @@
 ﻿using SDL2;
 using SwarmBasics.Math;
 using SwarmCore;
+using SwarmPlatform.Graphics;
 using SwarmPlatform.UI;
 using System;
 using System.Diagnostics;
@@ -55,10 +56,11 @@ namespace ModrogClient
             State = new ClientState(this);
 
             // Window & Rendering
+            WindowsDpiHelper.TryEnableDpiAwareness();
             SDL.SDL_Init(SDL.SDL_INIT_VIDEO);
-            SDL.SDL_CreateWindowAndRenderer(MinimumWindowSize.X, MinimumWindowSize.Y, 0, out _window, out _renderer);
+            var flags = SDL.SDL_WindowFlags.SDL_WINDOW_RESIZABLE | SDL.SDL_WindowFlags.SDL_WINDOW_ALLOW_HIGHDPI;
+            SDL.SDL_CreateWindowAndRenderer(MinimumWindowSize.X, MinimumWindowSize.Y, flags, out _window, out _renderer);
             SDL.SDL_SetWindowTitle(_window, "Modrog");
-            SDL.SDL_SetWindowResizable(_window, SDL.SDL_bool.SDL_TRUE);
             SDL.SDL_SetWindowMinimumSize(_window, MinimumWindowSize.X, MinimumWindowSize.Y);
 
             SDL.SDL_GetWindowSize(_window, out var initialWidth, out var initialHeight);
