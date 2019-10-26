@@ -144,7 +144,13 @@ namespace ModrogEditor.Interface.Editing
 
         void RunScenario()
         {
-            var clientExePath = Path.Combine(FileHelper.FindAppFolder("ModrogClient-Debug"), "netcoreapp3.0", "ModrogClient.exe");
+            var clientExePath = Path.Combine(FileHelper.FindAppFolder(
+#if DEBUG
+                "ModrogClient-Debug"
+#else  
+                "ModrogClient-Release"
+#endif
+                ), "netcoreapp3.0", "ModrogClient.exe");
             Process.Start(clientExePath, "--scenario " + App.State.ActiveScenarioEntry.Name);
         }
 

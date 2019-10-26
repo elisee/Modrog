@@ -198,7 +198,13 @@ namespace ModrogClient
 
         public void StartServer(string scenario)
         {
-            var serverExePath = Path.Combine(FileHelper.FindAppFolder("ModrogServer-Debug"), "netcoreapp3.0", "ModrogServer.exe");
+            var serverExePath = Path.Combine(FileHelper.FindAppFolder(
+#if DEBUG
+                "ModrogServer-Debug"
+#else
+                "ModrogServer-Release"
+#endif
+                ), "netcoreapp3.0", "ModrogServer.exe");
             _serverProcess = Process.Start(new ProcessStartInfo(serverExePath));
 
             Connect("127.0.0.1", Protocol.Port, scenario);
