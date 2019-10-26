@@ -207,6 +207,7 @@ namespace ModrogEditor.Interface.Editing
         {
             if (!_openEditorUIsByEntry.TryGetValue(entry, out var assetUI)) return;
 
+            OpenOrFocusEditor(entry);
             assetUI.Editor.MaybeUnload(() => RemoveEditor(entry, assetUI));
         }
 

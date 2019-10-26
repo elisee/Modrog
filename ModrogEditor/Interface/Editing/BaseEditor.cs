@@ -86,7 +86,11 @@ namespace ModrogEditor.Interface.Editing
 
         public void MaybeUnload(Action onUnloaded)
         {
-            if (_loadAndSaveErrorLayer.Visible) return;
+            if (_loadAndSaveErrorLayer.Visible)
+            {
+                Desktop.SetFocusedElement(_loadAndSaveErrorLayer);
+                return;
+            }
 
             if (!_hasUnsavedChanges)
             {

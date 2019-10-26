@@ -142,7 +142,7 @@ namespace ModrogEditor.Interface.Editing.Map
 
         public override void OnMounted()
         {
-            Desktop.SetFocusedElement(_mapViewport);
+            if (_mapViewport.IsMounted) Desktop.SetFocusedElement(_mapViewport);
         }
 
         protected override bool TryLoad(out string error)
