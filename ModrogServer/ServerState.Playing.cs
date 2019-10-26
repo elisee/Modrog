@@ -94,7 +94,7 @@ namespace ModrogServer
                             var isInView =
                                 squaredDistance <= squaredOmniViewRadius ||
                                 (squaredDistance <= squaredDirectionalViewRadius &&
-                                Math.Abs(MathHelper.WrapAngle(angle - directionAngle)) < ownedEntity.HalfFieldOfView);
+                                Math.Abs(MathHelper.WrapAngle(angle - directionAngle)) < ownedEntity.HalfFieldOfViewAngle);
 
                             if (!isInView) continue;
 

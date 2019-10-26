@@ -18,7 +18,7 @@ namespace ModrogServer.Game
 
         public int OmniViewRadius = 2;
         public int DirectionalViewRadius = 8;
-        public float HalfFieldOfView = MathF.PI / 3f;
+        public float HalfFieldOfViewAngle = MathF.PI / 3f;
 
         public InternalEntity(int id, InternalWorld world, Point spriteLocation, Point position, EntityDirection direction, int playerIndex)
         {
@@ -35,6 +35,13 @@ namespace ModrogServer.Game
             }
 
             world.Add(this);
+        }
+
+        public override void SetView(int omniViewRadius, int directionalViewRadius, float fieldOfViewAngle)
+        {
+            OmniViewRadius = omniViewRadius;
+            DirectionalViewRadius = directionalViewRadius;
+            HalfFieldOfViewAngle = fieldOfViewAngle / 2f;
         }
 
         internal float GetDirectionAngle() => Direction switch
