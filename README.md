@@ -25,7 +25,11 @@ You'll need .NET Core 3 and Visual Studio 2019. VS Code might work.
 
     - (Editor) Allow renaming assets
     - (Editor) Allow reparenting assets with drag'n'drop (need to add drag'n'drop in UI framework)
-    - (Editor) Implemented tabs, show which tab is active, fallback to previous tab if tab is closed, make sure we don't allow quitting until all tabs are saved, etc.
+    - (Editor) Make sure we don't allow quitting until all tabs are saved, etc.
+    - (Editor) Allow saving active editor with Ctrl+S
+    - (Editor) Allow closing active editor with Ctrl+W
+    - (Editor) Move "Save changes" popup out of BaseEditor into EditingView so it is modal
+    - (Editor) Handle deleting an open asset properly
     - (Map Editor) Trace line segments when using the brush rather than just placing tiles at hovered position. (Can reuse line drawing logic from line of sight)
     - (Map Editor) Bucket fill
     - (Map Editor) Skip empty chunks when saving
