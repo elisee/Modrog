@@ -460,7 +460,7 @@ namespace SwarmPlatform.UI
             var scrollArea = GetScrollArea();
 
             var newContentScroll = new Point(
-                Math.Clamp(_contentScroll.X - dx * _scrollMultiplier, 0, scrollArea.X),
+                Math.Clamp(_contentScroll.X + dx * _scrollMultiplier, 0, scrollArea.X),
                 Math.Clamp(_contentScroll.Y - dy * _scrollMultiplier, 0, scrollArea.Y));
 
             // Allow scrolling horizontally with vertical mouse wheel in the proper conditions
