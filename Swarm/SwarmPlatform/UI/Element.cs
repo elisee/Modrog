@@ -456,6 +456,12 @@ namespace SwarmPlatform.UI
                 Math.Clamp(_contentScroll.X - dx * _scrollMultiplier, 0, scrollArea.X),
                 Math.Clamp(_contentScroll.Y - dy * _scrollMultiplier, 0, scrollArea.Y));
 
+            // Allow scrolling horizontally with vertical mouse wheel in the proper conditions
+            if (dx == 0 && dy != 0 && HorizontalFlow == Flow.Scroll && VerticalFlow != Flow.Scroll)
+            {
+                newContentScroll = new Point(Math.Clamp(_contentScroll.X - dy * _scrollMultiplier, 0, scrollArea.X), 0);
+            }
+
             var scrollOffset = newContentScroll - _contentScroll;
 
             if (scrollOffset == Point.Zero)
