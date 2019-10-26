@@ -458,16 +458,12 @@ namespace ModrogClient.Interface.Playing
                 var h = 1;
 
                 var left = ViewRectangle.X + (int)(x * _zoom * Protocol.MapTileSize) - (int)(viewportScroll.X * _zoom);
-                var right = ViewRectangle.X + (int)(((x + w) * Protocol.MapTileSize - 1) * _zoom) - (int)(viewportScroll.X * _zoom);
+                var right = ViewRectangle.X + (int)(((x + w) * Protocol.MapTileSize) * _zoom) - (int)(viewportScroll.X * _zoom);
                 var top = ViewRectangle.Y + (int)(y * _zoom * Protocol.MapTileSize) - (int)(viewportScroll.Y * _zoom);
-                var bottom = ViewRectangle.Y + (int)(((y + h) * Protocol.MapTileSize - 1) * _zoom) - (int)(viewportScroll.Y * _zoom);
+                var bottom = ViewRectangle.Y + (int)(((y + h) * Protocol.MapTileSize) * _zoom) - (int)(viewportScroll.Y * _zoom);
 
-                var rect = new Rectangle(left, top, right - left, bottom - top);
-
-                SDL.SDL_RenderDrawLine(Desktop.Renderer, rect.X, rect.Y, rect.X + rect.Width, rect.Y);
-                SDL.SDL_RenderDrawLine(Desktop.Renderer, rect.X + rect.Width, rect.Y, rect.X + rect.Width, rect.Y + rect.Height);
-                SDL.SDL_RenderDrawLine(Desktop.Renderer, rect.X + rect.Width, rect.Y + rect.Height, rect.X, rect.Y + rect.Height);
-                SDL.SDL_RenderDrawLine(Desktop.Renderer, rect.X, rect.Y + rect.Height, rect.X, rect.Y);
+                var rect = new Rectangle(left, top, right - left, bottom - top).ToSDL_Rect();
+                SDL.SDL_RenderDrawRect(Desktop.Renderer, ref rect);
             }
         }
         #endregion

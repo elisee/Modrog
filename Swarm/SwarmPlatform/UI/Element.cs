@@ -548,10 +548,8 @@ namespace SwarmPlatform.UI
         {
             Debug.Assert(IsMounted);
 
-            SDL.SDL_RenderDrawLine(Desktop.Renderer, LayoutRectangle.Left, LayoutRectangle.Top, LayoutRectangle.Right - 1, LayoutRectangle.Top);
-            SDL.SDL_RenderDrawLine(Desktop.Renderer, LayoutRectangle.Right - 1, LayoutRectangle.Top, LayoutRectangle.Right - 1, LayoutRectangle.Bottom - 1);
-            SDL.SDL_RenderDrawLine(Desktop.Renderer, LayoutRectangle.Right - 1, LayoutRectangle.Bottom - 1, LayoutRectangle.Left, LayoutRectangle.Bottom - 1);
-            SDL.SDL_RenderDrawLine(Desktop.Renderer, LayoutRectangle.Left, LayoutRectangle.Bottom - 1, LayoutRectangle.Left, LayoutRectangle.Top);
+            var rect = new Rectangle(LayoutRectangle.X, LayoutRectangle.Y, LayoutRectangle.Width, LayoutRectangle.Height).ToSDL_Rect();
+            SDL.SDL_RenderDrawRect(Desktop.Renderer, ref rect);
         }
 
         protected virtual void DrawSelf()

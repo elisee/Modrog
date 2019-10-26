@@ -78,12 +78,8 @@ namespace ModrogEditor.Interface.Editing.Map
                 var renderX = ViewRectangle.X + (int)(x * Protocol.MapTileSize);
                 var renderY = ViewRectangle.Y + (int)(y * Protocol.MapTileSize);
 
-                var rect = new Rectangle(renderX, renderY, (int)(w * Protocol.MapTileSize), (int)(h * Protocol.MapTileSize));
-
-                SDL.SDL_RenderDrawLine(Desktop.Renderer, rect.X, rect.Y, rect.X + rect.Width, rect.Y);
-                SDL.SDL_RenderDrawLine(Desktop.Renderer, rect.X + rect.Width, rect.Y, rect.X + rect.Width, rect.Y + rect.Height);
-                SDL.SDL_RenderDrawLine(Desktop.Renderer, rect.X + rect.Width, rect.Y + rect.Height, rect.X, rect.Y + rect.Height);
-                SDL.SDL_RenderDrawLine(Desktop.Renderer, rect.X, rect.Y + rect.Height, rect.X, rect.Y);
+                var rect = new Rectangle(renderX, renderY, (int)(w * Protocol.MapTileSize), (int)(h * Protocol.MapTileSize)).ToSDL_Rect();
+                SDL.SDL_RenderDrawRect(Desktop.Renderer, ref rect);
             }
         }
     }

@@ -319,12 +319,9 @@ namespace ModrogEditor.Interface.Editing.Map
                 var renderX = ViewRectangle.X + (int)(x * _zoom * Protocol.MapTileSize) - (int)(viewportScroll.X * _zoom);
                 var renderY = ViewRectangle.Y + (int)(y * _zoom * Protocol.MapTileSize) - (int)(viewportScroll.Y * _zoom);
 
-                var rect = new Rectangle(renderX, renderY, (int)(w * Protocol.MapTileSize * _zoom), (int)(h * Protocol.MapTileSize * _zoom));
+                var rect = new Rectangle(renderX, renderY, (int)(w * Protocol.MapTileSize * _zoom), (int)(h * Protocol.MapTileSize * _zoom)).ToSDL_Rect();
 
-                SDL.SDL_RenderDrawLine(Desktop.Renderer, rect.X, rect.Y, rect.X + rect.Width, rect.Y);
-                SDL.SDL_RenderDrawLine(Desktop.Renderer, rect.X + rect.Width, rect.Y, rect.X + rect.Width, rect.Y + rect.Height);
-                SDL.SDL_RenderDrawLine(Desktop.Renderer, rect.X + rect.Width, rect.Y + rect.Height, rect.X, rect.Y + rect.Height);
-                SDL.SDL_RenderDrawLine(Desktop.Renderer, rect.X, rect.Y + rect.Height, rect.X, rect.Y);
+                SDL.SDL_RenderDrawRect(Desktop.Renderer, ref rect);
             }
 
             Desktop.PopClipRect();
