@@ -4,7 +4,7 @@ using System.IO;
 
 namespace ModrogEditor.Interface.Editing.TileSet
 {
-    class TileSetEditor : BaseAssetEditor
+    class TileSetEditor : BaseEditor
     {
         public static void CreateEmptyFile(string fullAssetPath)
         {

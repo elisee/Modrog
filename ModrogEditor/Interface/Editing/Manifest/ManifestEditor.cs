@@ -6,7 +6,7 @@ using System.Text.Json;
 
 namespace ModrogEditor.Interface.Editing.Manifest
 {
-    class ManifestEditor : BaseAssetEditor
+    class ManifestEditor : BaseEditor
     {
         readonly Label _nameLabel;
         readonly TextInput _titleInput;

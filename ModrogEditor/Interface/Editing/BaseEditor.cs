@@ -5,7 +5,7 @@ using System;
 
 namespace ModrogEditor.Interface.Editing
 {
-    abstract class BaseAssetEditor : EditorElement
+    abstract class BaseEditor : EditorElement
     {
         public readonly string FullAssetPath;
 
@@ -19,7 +19,7 @@ namespace ModrogEditor.Interface.Editing
         readonly Button _saveBeforeClosingButton;
         readonly Button _discardBeforeClosingButton;
 
-        public BaseAssetEditor(EditorApp @interface, string fullAssetPath)
+        public BaseEditor(EditorApp @interface, string fullAssetPath)
             : base(@interface, null)
         {
             FullAssetPath = fullAssetPath;

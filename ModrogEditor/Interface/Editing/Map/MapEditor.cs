@@ -12,7 +12,7 @@ using System.Text.Json;
 
 namespace ModrogEditor.Interface.Editing.Map
 {
-    class MapEditor : BaseAssetEditor
+    class MapEditor : BaseEditor
     {
         public static void CreateEmptyFile(string fullAssetPath)
         {

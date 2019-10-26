@@ -23,8 +23,9 @@ namespace ModrogEditor.Interface.Editing
         readonly Element _tabsBar;
         public Element _activeEditorContainer;
 
-        class OpenAssetUI { public Element Tab; public BaseAssetEditor Editor; }
-        readonly Dictionary<AssetEntry, OpenAssetUI> _openAssetUIsByEntry = new Dictionary<AssetEntry, OpenAssetUI>();
+        class EditorUI { public EditorTabButton Tab; public BaseEditor Editor; }
+        readonly Dictionary<AssetEntry, EditorUI> _openEditorUIsByEntry = new Dictionary<AssetEntry, EditorUI>();
+        EditorUI _activeEditorUI;
 
         public EditingView(EditorApp @interface)
             : base(@interface, null)
@@ -76,7 +77,7 @@ namespace ModrogEditor.Interface.Editing
                 Padding = 8,
                 OnActivate = (entry) =>
                 {
-                    if (entry.AssetType != AssetType.Folder && entry.AssetType != AssetType.Unknown) OpenAsset(entry);
+                    if (entry.AssetType != AssetType.Folder && entry.AssetType != AssetType.Unknown) OpenOrFocusEditor(entry);
                 },
                 OnDeleteSelectedAsset = (entry) =>
                  {
@@ -142,27 +143,20 @@ namespace ModrogEditor.Interface.Editing
             return entry.AssetType == AssetType.Folder ? entry : entry.Parent;
         }
 
-        internal void OpenAsset(AssetEntry entry)
+        internal void OpenOrFocusEditor(AssetEntry entry)
         {
-            if (!_openAssetUIsByEntry.TryGetValue(entry, out var assetUI))
+            if (!_openEditorUIsByEntry.TryGetValue(entry, out var assetEditorUI))
             {
-                var tab = new Button(_tabsBar)
+                var tab = new EditorTabButton(_tabsBar, entry)
                 {
-                    HorizontalFlow = Flow.Shrink,
-                    ChildLayout = ChildLayoutMode.Left,
-                    BackgroundPatch = new TexturePatch(0x226622ff),
-                    Padding = 8,
-                    Right = 8,
-                    OnActivate = () => OpenAsset(entry)
+                    OnActivate = () => OpenOrFocusEditor(entry),
+                    OnClose = () => CloseEditor(entry)
                 };
-
-                new Label(tab) { Flow = Flow.Shrink, Text = entry.Path };
-                new TextButton(tab) { Left = 8, Text = "(x)", OnActivate = () => CloseAsset(entry) };
 
                 _tabsBar.Layout();
 
                 var fullAssetPath = Path.Combine(App.State.ActiveScenarioPath, entry.Path);
-                BaseAssetEditor editor;
+                BaseEditor editor;
 
                 switch (entry.AssetType)
                 {
@@ -174,27 +168,26 @@ namespace ModrogEditor.Interface.Editing
                     default: throw new NotSupportedException();
                 }
 
-                assetUI = new OpenAssetUI { Tab = tab, Editor = editor };
-                _openAssetUIsByEntry.Add(entry, assetUI);
+                assetEditorUI = new EditorUI { Tab = tab, Editor = editor };
+                _openEditorUIsByEntry.Add(entry, assetEditorUI);
             }
 
-            // TODO:
-            // _activeAssetUI?.Tab.SetActive(false);
-            // _activeAssetUI = assetUI;
-            // _activeAssetUI.Tab.SetActive(true);
+            _activeEditorUI?.Tab.SetActive(false);
+            _activeEditorUI = assetEditorUI;
+            _activeEditorUI.Tab.SetActive(true);
 
             _activeEditorContainer.Clear();
-            _activeEditorContainer.Add(assetUI.Editor);
+            _activeEditorContainer.Add(assetEditorUI.Editor);
             _activeEditorContainer.Layout();
         }
 
-        void CloseAsset(AssetEntry entry)
+        void CloseEditor(AssetEntry entry)
         {
-            if (!_openAssetUIsByEntry.TryGetValue(entry, out var assetUI)) return;
+            if (!_openEditorUIsByEntry.TryGetValue(entry, out var assetUI)) return;
 
             assetUI.Editor.MaybeUnload(() =>
             {
-                _openAssetUIsByEntry.Remove(entry);
+                _openEditorUIsByEntry.Remove(entry);
 
                 _tabsBar.Remove(assetUI.Tab);
                 _tabsBar.Layout();

@@ -5,7 +5,7 @@ using System;
 
 namespace ModrogEditor.Interface.Editing.Image
 {
-    class ImageEditor : BaseAssetEditor
+    class ImageEditor : BaseEditor
     {
         TextureArea _textureArea;
 

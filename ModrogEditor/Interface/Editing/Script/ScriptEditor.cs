@@ -4,7 +4,7 @@ using System.IO;
 
 namespace ModrogEditor.Interface.Editing.Script
 {
-    class ScriptEditor : BaseAssetEditor
+    class ScriptEditor : BaseEditor
     {
         public static void CreateEmptyFile(string fullAssetPath)
         {

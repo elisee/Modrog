@@ -80,7 +80,7 @@ namespace ModrogEditor.Interface.Editing
             else
             {
                 Visible = false;
-                _editingView.OpenAsset(assetEntry);
+                _editingView.OpenOrFocusEditor(assetEntry);
             }
         }
 
