@@ -30,11 +30,21 @@ namespace SwarmPlatform.UI
         readonly List<Action<float>> _removedAnimationActions = new List<Action<float>>();
 
         // Input
-        bool _leftShiftDown = false;
-        bool _rightShiftDown = false;
+        SDL.SDL_Keymod _controlAltShiftGuiModifiers;
 
-        bool _leftCtrlDown = false;
-        bool _rightCtrlDown = false;
+        public bool HasNoKeyModifier => _controlAltShiftGuiModifiers == 0;
+
+        public bool HasControlKeyModifier => (_controlAltShiftGuiModifiers & SDL.SDL_Keymod.KMOD_CTRL) != 0;
+        public bool HasControlKeyModifierAlone => HasControlKeyModifier && (_controlAltShiftGuiModifiers & ~SDL.SDL_Keymod.KMOD_CTRL) == 0;
+
+        public bool HasAltKeyModifier => (_controlAltShiftGuiModifiers & SDL.SDL_Keymod.KMOD_ALT) != 0;
+        public bool HasAltKeyModifierAlone => HasAltKeyModifier && (_controlAltShiftGuiModifiers & ~SDL.SDL_Keymod.KMOD_ALT) == 0;
+
+        public bool HasShiftKeyModifier => (_controlAltShiftGuiModifiers & SDL.SDL_Keymod.KMOD_SHIFT) != 0;
+        public bool HasShiftKeyModifierAlone => HasShiftKeyModifier && (_controlAltShiftGuiModifiers & ~SDL.SDL_Keymod.KMOD_SHIFT) == 0;
+
+        public bool HasGuiKeyModifier => (_controlAltShiftGuiModifiers & SDL.SDL_Keymod.KMOD_GUI) != 0;
+        public bool HasGuiKeyModifierAlone => HasGuiKeyModifier && (_controlAltShiftGuiModifiers & ~SDL.SDL_Keymod.KMOD_GUI) == 0;
 
         // Drawing
         readonly Stack<SDL.SDL_Rect> _clipStack = new Stack<SDL.SDL_Rect>();
@@ -243,25 +253,22 @@ namespace SwarmPlatform.UI
                                 RefreshHoveredElement(clearPressed: true);
                             }
                             break;
+
+                        case SDL.SDL_WindowEventID.SDL_WINDOWEVENT_FOCUS_LOST:
+                            _controlAltShiftGuiModifiers = SDL.SDL_Keymod.KMOD_NONE;
+                            RefreshHoveredElement(clearPressed: true);
+                            break;
                     }
 
                     break;
 
                 case SDL.SDL_EventType.SDL_KEYDOWN:
-                    if (@event.key.keysym.sym == SDL.SDL_Keycode.SDLK_LSHIFT) _leftShiftDown = true;
-                    if (@event.key.keysym.sym == SDL.SDL_Keycode.SDLK_RSHIFT) _rightShiftDown = true;
-                    if (@event.key.keysym.sym == SDL.SDL_Keycode.SDLK_LCTRL) _leftCtrlDown = true;
-                    if (@event.key.keysym.sym == SDL.SDL_Keycode.SDLK_RCTRL) _rightCtrlDown = true;
-
+                    _controlAltShiftGuiModifiers = @event.key.keysym.mod & (SDL.SDL_Keymod.KMOD_CTRL | SDL.SDL_Keymod.KMOD_ALT | SDL.SDL_Keymod.KMOD_SHIFT | SDL.SDL_Keymod.KMOD_GUI);
                     FocusedElement.OnKeyDown(@event.key.keysym.sym, repeat: @event.key.repeat != 0);
                     break;
 
                 case SDL.SDL_EventType.SDL_KEYUP:
-                    if (@event.key.keysym.sym == SDL.SDL_Keycode.SDLK_LSHIFT) _leftShiftDown = false;
-                    if (@event.key.keysym.sym == SDL.SDL_Keycode.SDLK_RSHIFT) _rightShiftDown = false;
-                    if (@event.key.keysym.sym == SDL.SDL_Keycode.SDLK_LCTRL) _leftCtrlDown = false;
-                    if (@event.key.keysym.sym == SDL.SDL_Keycode.SDLK_RCTRL) _rightCtrlDown = false;
-
+                    _controlAltShiftGuiModifiers = @event.key.keysym.mod & (SDL.SDL_Keymod.KMOD_CTRL | SDL.SDL_Keymod.KMOD_ALT | SDL.SDL_Keymod.KMOD_SHIFT | SDL.SDL_Keymod.KMOD_GUI);
                     FocusedElement.OnKeyUp(@event.key.keysym.sym);
                     break;
 
@@ -321,10 +328,6 @@ namespace SwarmPlatform.UI
 
             foreach (var action in _animationActions) action(deltaTime);
         }
-
-        public bool IsShiftDown => _leftShiftDown || _rightShiftDown;
-
-        public bool IsCtrlDown => _rightCtrlDown || _leftCtrlDown;
 
         public void Draw()
         {

@@ -128,21 +128,18 @@ namespace SwarmPlatform.UI
         {
             switch (key)
             {
+                // Navigate
                 case SDL.SDL_Keycode.SDLK_LEFT: GoLeft(); break;
                 case SDL.SDL_Keycode.SDLK_RIGHT: GoRight(); break;
-                case SDL.SDL_Keycode.SDLK_BACKSPACE: Erase(); break;
-                case SDL.SDL_Keycode.SDLK_DELETE: Delete(); break;
                 case SDL.SDL_Keycode.SDLK_HOME: GoToStartOfLine(); break;
                 case SDL.SDL_Keycode.SDLK_END: GoToEndOfLine(); break;
-                default: base.OnKeyDown(key, repeat); break;
-            }
+                case SDL.SDL_Keycode.SDLK_a: if (Desktop.HasControlKeyModifierAlone) SelectAll(); break;
 
-            if (Desktop.IsCtrlDown)
-            {
-                switch (key)
-                {
-                    case SDL.SDL_Keycode.SDLK_a: SelectAll(); break;
-                }
+                // Edit
+                case SDL.SDL_Keycode.SDLK_BACKSPACE: Erase(); break;
+                case SDL.SDL_Keycode.SDLK_DELETE: Delete(); break;
+
+                default: base.OnKeyDown(key, repeat); break;
             }
 
             void GoLeft()
@@ -222,7 +219,7 @@ namespace SwarmPlatform.UI
 
             void ClearSelectionUnlessShiftDown()
             {
-                if (!Desktop.IsShiftDown) ClearSelection();
+                if (!Desktop.HasShiftKeyModifier) ClearSelection();
                 _cursorTimer = 0f;
             }
 

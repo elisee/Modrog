@@ -427,13 +427,16 @@ namespace SwarmPlatform.UI
 
         public virtual void OnKeyDown(SDL.SDL_Keycode key, bool repeat)
         {
-            if (!repeat)
+            if (!repeat && Desktop.HasNoKeyModifier)
             {
                 if (key == SDL.SDL_Keycode.SDLK_RETURN || key == SDL.SDL_Keycode.SDLK_KP_ENTER) { Validate(); return; }
                 else if (key == SDL.SDL_Keycode.SDLK_ESCAPE) { Dismiss(); return; }
             }
 
-            if (key == SDL.SDL_Keycode.SDLK_TAB) { Desktop.MoveFocus(backwards: Desktop.IsShiftDown); return; }
+            if (key == SDL.SDL_Keycode.SDLK_TAB && (Desktop.HasNoKeyModifier || Desktop.HasControlKeyModifierAlone))
+            {
+                Desktop.MoveFocus(backwards: Desktop.HasControlKeyModifier); return;
+            }
         }
 
         public virtual void OnKeyUp(SDL.SDL_Keycode key) { }
