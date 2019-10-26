@@ -1,7 +1,15 @@
 using ModrogApi;
 using ModrogApi.Server;
 using SwarmBasics.Math;
+using System;
 using System.Collections.Generic;
+
+/*
+    TODO:
+        - Text to explain the context
+        - Enemies in the forest
+        - Robot
+*/
 
 class ScenarioScript : IScenarioScript
 {
@@ -10,10 +18,22 @@ class ScenarioScript : IScenarioScript
     public readonly World ForestWorld;
     public readonly World UndergroundWorld;
 
-    public readonly EntityKind KnightEntityKind;
     public readonly Player Player;
 
+    public readonly EntityKind KnightEntityKind;
+    public readonly EntityKind RobotEntityKind;
+    public readonly EntityKind SkeletonEntityKind;
+
     public readonly Entity Knight;
+    public readonly Entity Robot;
+    readonly List<Entity> _skeletons = new List<Entity>();
+
+    readonly Point _forestStartCoords = new Point(-60, -25);
+    readonly Point _cryptEntranceCoords = new Point(13, -10);
+
+    readonly Point _forestToCryptStairsCoords = new Point(13, -16);
+    readonly Point _cryptToForestStairsCoords = new Point(-4, -1);
+
     public ScenarioScript(Universe universe)
     {
         Universe = universe;
@@ -26,35 +46,68 @@ class ScenarioScript : IScenarioScript
         UndergroundWorld = Universe.CreateWorld();
         UndergroundWorld.InsertMap(0, 0, Universe.LoadMap("Maps/Underground.map"));
 
-        KnightEntityKind = Universe.CreateEntityKind(spriteLocation: new Point(0, 1));
+        KnightEntityKind = Universe.CreateEntityKind(spriteLocation: new Point(0, 6));
         KnightEntityKind.SetManualControlScheme(ManualControlScheme.Default);
         KnightEntityKind.SetCapabilities(EntityCapabilities.Move);
 
-        Player = Universe.GetPlayers()[0];
-        Knight = ForestWorld.SpawnEntity(KnightEntityKind, new Point(8, 8), EntityDirection.Down, owner: Player);
+        RobotEntityKind = Universe.CreateEntityKind(spriteLocation: new Point(4, 6));
+        RobotEntityKind.SetManualControlScheme(ManualControlScheme.Default);
+        RobotEntityKind.SetCapabilities(EntityCapabilities.Move);
 
-        // TODO: Build an API that allows taking control of player cameras for cutscenes?
-        Player.Teleport(ForestWorld, new Point(8, 8));
-        Player.ShowTip("Enter the crypt! Select the Knight and move it with WASD.");
+        SkeletonEntityKind = Universe.CreateEntityKind(spriteLocation: new Point(0, 7));
+
+        Player = Universe.GetPlayers()[0];
+
+        var spawnCoords = _forestStartCoords;
+        // spawnCoords = _cryptEntranceCoords;
+
+        // Forest
+        Knight = ForestWorld.SpawnEntity(KnightEntityKind, spawnCoords, EntityDirection.Right, owner: Player);
+
+        _skeletons.Add(ForestWorld.SpawnEntity(SkeletonEntityKind, spawnCoords + new Point(10, 3), EntityDirection.Left, owner: null));
+        _skeletons.Add(ForestWorld.SpawnEntity(SkeletonEntityKind, spawnCoords + new Point(12, 4), EntityDirection.Left, owner: null));
+
+        SetupForestView();
+        Player.Teleport(ForestWorld, spawnCoords);
+        Player.ShowTip("The crypt is not very far... To walk your knight there, click on it then use WASD.");
+
+        // Crypt
     }
 
     public void Tick()
     {
         if (Knight.GetWorld() == ForestWorld)
         {
-            if (Knight.GetPosition() == new Point(13, -16))
+            if (Knight.GetPosition() == _forestToCryptStairsCoords)
             {
-                // Knight has reached the crypt entrance
-                // Teleport the knight and the player
-                Knight.Teleport(UndergroundWorld, new Point(-3, 2), EntityDirection.Up);
-                Player.Teleport(UndergroundWorld, new Point(-3, 2));
+                SetupCryptView();
+                Knight.Teleport(UndergroundWorld, _cryptToForestStairsCoords + new Point(0, -1), EntityDirection.Up);
+                Player.Teleport(UndergroundWorld, _cryptToForestStairsCoords + new Point(0, -1));
+            }
 
-                // TODO: Spawn other entities I suppose?
+            foreach (var skeleton in _skeletons)
+            {
+                // skeleton.PlanMove(EntityMove.Forward);
             }
         }
         else
         {
-            // TODO: Detect when puzzles are being completed and trigger doors being open / enemies spawning, etc.
+            if (Knight.GetPosition() == _cryptToForestStairsCoords)
+            {
+                SetupForestView();
+                Knight.Teleport(ForestWorld, _forestToCryptStairsCoords + new Point(0, 1), EntityDirection.Down);
+                Player.Teleport(ForestWorld, _forestToCryptStairsCoords + new Point(0, 1));
+            }
         }
+    }
+
+    void SetupForestView()
+    {
+        Knight.SetView(16, 0, MathF.PI * 2f / 3f);
+    }
+
+    void SetupCryptView()
+    {
+        Knight.SetView(4, 12, MathF.PI * 2f / 3f);
     }
 }

@@ -5,7 +5,6 @@
             {
                 "name": "Grass",
                 "spriteLocation": [ 0, 0 ],
-                "flags": []
             },
 
             {
@@ -17,14 +16,33 @@
             {
                 "name": "Castle Floor",
                 "spriteLocation": [ 3, 0 ],
-                "flags": []
+            },
+
+            {
+                "name": "Castle Floor 2",
+                "spriteLocation": [ 4, 1 ],
+            },
+
+            {
+                "name": "Stairs Down",
+                "spriteLocation": [ 6, 0 ],
+            },
+
+            {
+                "name": "Stairs Up",
+                "spriteLocation": [ 6, 1 ],
             },
         ],
 
         "Fluid": [
             {
-                "name": "Water",
+                "name": "Deep Water",
                 "spriteLocation": [ 2, 0 ]
+            },
+
+            {
+                "name": "Shallow Water",
+                "spriteLocation": [ 5, 1 ]
             }
         ],
 
@@ -39,7 +57,23 @@
                 "name": "Castle Wall",
                 "spriteLocation": [ 0, 1 ],
                 "flags": [],
-            }
+            },
+
+            {
+                "name": "Tree",
+                "spriteLocation": [ 5, 0 ],
+            },
+
+            { "name": "StatueTop", "spriteLocation": [ 4, 2 ] },
+            { "name": "StatueBottom", "spriteLocation": [ 4, 3 ] },
+
+            {
+                "name": "Broken Castle Wall",
+                "spriteLocation": [ 0, 5 ],
+                "flags": [],
+            },
+
+            { "name": "Chest", "spriteLocation": [ 7, 0 ] },
         ]
     }
 }
