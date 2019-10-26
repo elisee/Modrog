@@ -37,7 +37,7 @@ You'll need .NET Core 3 and Visual Studio 2019. VS Code might work.
     - (Gameplay) Add back client-side script editing and display script errors somewhere
     - (Gameplay) Add light checkerboard pattern on the floor?
     - (UI Desktop) Show focus outline only after navigating with keyboard once to avoid distracting players and hide after clicking with mouse
-    - (UI Element) Implement scrollbars
+    - (UI Element) Allow dragging scrollbars
     - (UI Element) Implement ChildLayout.Bottom (use for chat box), .Right
     - (UI TextEditor)/ TextInput: Undo/redo support
     - (UI TextEditor)/ TextInput: Quick navigation with Ctrl

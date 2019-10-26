@@ -79,6 +79,7 @@ namespace SwarmPlatform.UI
         protected Rectangle _contentRectangle { get; private set; }
         protected Point _contentScroll;
         protected int _scrollMultiplier = 30;
+        public int ScrollbarThickness = 8;
 
         // Child layout
         public enum ChildLayoutMode { Stack, Overlay, Left, Right, Top, Bottom }
@@ -542,6 +543,37 @@ namespace SwarmPlatform.UI
                 foreach (var child in Children) if (child.IsMounted) child.Draw();
                 if (shouldClip) Desktop.PopClipRect();
             }
+
+            var hasHorizontalScrollbar = HorizontalFlow == Flow.Scroll && ViewRectangle.Width < _contentRectangle.Width;
+            var hasVerticalScrollbar = VerticalFlow == Flow.Scroll && ViewRectangle.Height < _contentRectangle.Height;
+
+            SDL.SDL_SetRenderDrawBlendMode(Desktop.Renderer, SDL.SDL_BlendMode.SDL_BLENDMODE_BLEND);
+            new Color(0xffffff60).UseAsDrawColor(Desktop.Renderer);
+
+            if (hasVerticalScrollbar)
+            {
+                var trackHeight = LayoutRectangle.Height - (hasHorizontalScrollbar ? ScrollbarThickness : 0);
+                var thumbHeight = Math.Max(ScrollbarThickness, trackHeight * ViewRectangle.Height / _contentRectangle.Height);
+                var travel = trackHeight - thumbHeight;
+                var y = travel * _contentScroll.Y / (_contentRectangle.Height - ViewRectangle.Height);
+
+                var verticalRect = new SDL.SDL_Rect { x = LayoutRectangle.Right - ScrollbarThickness, y = LayoutRectangle.Y + y, w = ScrollbarThickness, h = thumbHeight };
+                SDL.SDL_RenderFillRect(Desktop.Renderer, ref verticalRect);
+            }
+
+            if (hasHorizontalScrollbar)
+            {
+                var trackWidth = LayoutRectangle.Width - (hasVerticalScrollbar ? ScrollbarThickness : 0);
+                var thumbWidth = Math.Max(ScrollbarThickness, trackWidth * ViewRectangle.Width / _contentRectangle.Width);
+                var travel = trackWidth - thumbWidth;
+                var x = travel * _contentScroll.X / (_contentRectangle.Width - ViewRectangle.Width);
+
+                var verticalRect = new SDL.SDL_Rect { x = LayoutRectangle.X + x, y = LayoutRectangle.Bottom - ScrollbarThickness, w = thumbWidth, h = ScrollbarThickness };
+                SDL.SDL_RenderFillRect(Desktop.Renderer, ref verticalRect);
+            }
+
+            SDL.SDL_SetRenderDrawBlendMode(Desktop.Renderer, SDL.SDL_BlendMode.SDL_BLENDMODE_NONE);
+            new Color(0xffffffff).UseAsDrawColor(Desktop.Renderer);
         }
 
         public void DrawOutline()
