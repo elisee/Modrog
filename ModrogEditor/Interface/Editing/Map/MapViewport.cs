@@ -206,9 +206,9 @@ namespace ModrogEditor.Interface.Editing.Map
 
         public override void OnMouseWheel(int dx, int dy)
         {
-            if (Desktop.HasNoKeyModifier || Desktop.HasShiftKeyModifierAlone)
+            if (Desktop.HasNoKeyModifier || Desktop.IsShiftOnlyDown)
             {
-                if (!Desktop.HasShiftKeyModifier) _zoom = Math.Clamp(_zoom + dy / 10f, MinZoom, MaxZoom);
+                if (!Desktop.IsShiftDown) _zoom = Math.Clamp(_zoom + dy / 10f, MinZoom, MaxZoom);
                 else _scroll = new Vector2(_scroll.X + dx * 24 / _zoom, _scroll.Y - dy * 24 / _zoom);
             }
         }

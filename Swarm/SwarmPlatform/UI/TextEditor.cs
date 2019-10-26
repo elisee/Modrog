@@ -165,25 +165,33 @@ namespace SwarmPlatform.UI
             switch (key)
             {
                 // Navigate
-                case SDL.SDL_Keycode.SDLK_LEFT: GoLeft(); break;
-                case SDL.SDL_Keycode.SDLK_RIGHT: GoRight(); break;
-                case SDL.SDL_Keycode.SDLK_UP: GoUp(1); break;
-                case SDL.SDL_Keycode.SDLK_DOWN: GoDown(1); break;
-                case SDL.SDL_Keycode.SDLK_HOME: GoToStartOfLine(); break;
-                case SDL.SDL_Keycode.SDLK_END: GoToEndOfLine(); break;
-                case SDL.SDL_Keycode.SDLK_a: if (Desktop.HasControlKeyModifierAlone) SelectAll(); break;
-                case SDL.SDL_Keycode.SDLK_PAGEUP: GoUp((int)MathF.Ceiling((float)ViewRectangle.Height / CellSize.Y) - 2); break;
-                case SDL.SDL_Keycode.SDLK_PAGEDOWN: GoDown((int)MathF.Ceiling((float)ViewRectangle.Height / CellSize.Y) - 2); break;
+                case SDL.SDL_Keycode.SDLK_LEFT: GoLeft(); return;
+                case SDL.SDL_Keycode.SDLK_RIGHT: GoRight(); return;
+                case SDL.SDL_Keycode.SDLK_UP: GoUp(1); return;
+                case SDL.SDL_Keycode.SDLK_DOWN: GoDown(1); return;
+                case SDL.SDL_Keycode.SDLK_HOME: GoToStartOfLine(); return;
+                case SDL.SDL_Keycode.SDLK_END: GoToEndOfLine(); return;
+                case SDL.SDL_Keycode.SDLK_PAGEUP: GoUp((int)MathF.Ceiling((float)ViewRectangle.Height / CellSize.Y) - 2); return;
+                case SDL.SDL_Keycode.SDLK_PAGEDOWN: GoDown((int)MathF.Ceiling((float)ViewRectangle.Height / CellSize.Y) - 2); return;
+
+                case SDL.SDL_Keycode.SDLK_a:
+                    if (Desktop.IsCtrlOnlyDown)
+                    {
+                        SelectAll();
+                        return;
+                    }
+                    break;
 
                 // Edit
-                case SDL.SDL_Keycode.SDLK_BACKSPACE: Erase(); OnChange?.Invoke(); break;
-                case SDL.SDL_Keycode.SDLK_DELETE: Delete(); OnChange?.Invoke(); break;
+                case SDL.SDL_Keycode.SDLK_BACKSPACE: Erase(); OnChange?.Invoke(); return;
+                case SDL.SDL_Keycode.SDLK_DELETE: Delete(); OnChange?.Invoke(); return;
 
                 case SDL.SDL_Keycode.SDLK_TAB:
-                    if (Desktop.HasNoKeyModifier || Desktop.HasShiftKeyModifierAlone)
+                    if (Desktop.HasNoKeyModifier || Desktop.IsShiftOnlyDown)
                     {
                         Indent();
                         OnChange?.Invoke();
+                        return;
                     }
                     break;
 
@@ -193,13 +201,14 @@ namespace SwarmPlatform.UI
                     {
                         BreakLine();
                         OnChange?.Invoke();
+                        return;
                     }
                     break;
 
                 case SDL.SDL_Keycode.SDLK_x:
                 case SDL.SDL_Keycode.SDLK_c:
                 case SDL.SDL_Keycode.SDLK_v:
-                    if (Desktop.HasControlKeyModifierAlone)
+                    if (Desktop.IsCtrlOnlyDown)
                     {
                         switch (key)
                         {
@@ -209,12 +218,13 @@ namespace SwarmPlatform.UI
                         }
 
                         OnChange?.Invoke();
+                        return;
                     }
 
                     break;
-
-                default: base.OnKeyDown(key, repeat); break;
             }
+
+            base.OnKeyDown(key, repeat);
 
             #region Navigate
             void GoLeft()
@@ -229,7 +239,7 @@ namespace SwarmPlatform.UI
                     _cursor.X = Lines[_cursor.Y].Length;
                 }
 
-                if (Desktop.HasControlKeyModifier)
+                if (Desktop.IsCtrlDown)
                 {
                     var line = Lines[_cursor.Y];
                     var sourceChar = _cursor.X >= 0 && _cursor.X < line.Length ? line[_cursor.X].ToString() : " ";
@@ -238,7 +248,7 @@ namespace SwarmPlatform.UI
                     var regex = WordRegex.IsMatch(sourceChar) ? WordRegex : (SpacesRegex.IsMatch(sourceChar) ? SpacesRegex : OthersRegex);
                     _cursor.X = GetStartOfWord(_cursor, regex);
                 }
-                if (!Desktop.HasShiftKeyModifier) _selectionAnchor = _cursor;
+                if (!Desktop.IsShiftDown) _selectionAnchor = _cursor;
 
                 ScrollCursorIntoView();
             }
@@ -255,7 +265,7 @@ namespace SwarmPlatform.UI
                     _cursor.X = 0;
                 }
 
-                if (Desktop.HasControlKeyModifier)
+                if (Desktop.IsCtrlDown)
                 {
                     var line = Lines[_cursor.Y];
                     var sourceChar = _cursor.X - 1 >= 0 && _cursor.X - 1 < line.Length ? line[_cursor.X - 1].ToString() : " ";
@@ -264,7 +274,7 @@ namespace SwarmPlatform.UI
                     var regex = WordRegex.IsMatch(sourceChar) ? WordRegex : (SpacesRegex.IsMatch(sourceChar) ? SpacesRegex : OthersRegex);
                     _cursor.X = GetEndOfWord(_cursor, regex);
                 }
-                if (!Desktop.HasShiftKeyModifier) _selectionAnchor = _cursor;
+                if (!Desktop.IsShiftDown) _selectionAnchor = _cursor;
 
                 ScrollCursorIntoView();
             }
@@ -282,7 +292,7 @@ namespace SwarmPlatform.UI
                     _cursor.X = 0;
                 }
 
-                if (!Desktop.HasShiftKeyModifier) _selectionAnchor = _cursor;
+                if (!Desktop.IsShiftDown) _selectionAnchor = _cursor;
 
                 ScrollCursorIntoView();
             }
@@ -300,7 +310,7 @@ namespace SwarmPlatform.UI
                     _cursor.X = Lines[_cursor.Y].Length;
                 }
 
-                if (!Desktop.HasShiftKeyModifier) _selectionAnchor = _cursor;
+                if (!Desktop.IsShiftDown) _selectionAnchor = _cursor;
 
                 ScrollCursorIntoView();
             }
@@ -308,7 +318,7 @@ namespace SwarmPlatform.UI
             void GoToStartOfLine()
             {
                 _cursor.X = 0;
-                if (!Desktop.HasShiftKeyModifier) _selectionAnchor = _cursor;
+                if (!Desktop.IsShiftDown) _selectionAnchor = _cursor;
 
                 ScrollCursorIntoView();
             }
@@ -316,7 +326,7 @@ namespace SwarmPlatform.UI
             void GoToEndOfLine()
             {
                 _cursor.X = Lines[_cursor.Y].Length;
-                if (!Desktop.HasShiftKeyModifier) _selectionAnchor = _cursor;
+                if (!Desktop.IsShiftDown) _selectionAnchor = _cursor;
 
                 ScrollCursorIntoView();
             }
@@ -428,7 +438,7 @@ namespace SwarmPlatform.UI
                 {
                     var startX = Math.Min(_cursor.X, _selectionAnchor.X);
 
-                    if (!Desktop.HasShiftKeyModifier)
+                    if (!Desktop.IsShiftDown)
                     {
                         var spacesToInsert = TabSpaceCount - startX % TabSpaceCount;
 
@@ -457,7 +467,7 @@ namespace SwarmPlatform.UI
                 }
                 else
                 {
-                    if (!Desktop.HasShiftKeyModifier)
+                    if (!Desktop.IsShiftDown)
                     {
                         var insert = new string(' ', TabSpaceCount);
                         for (var y = startY; y <= endY; y++)

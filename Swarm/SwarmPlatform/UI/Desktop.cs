@@ -34,17 +34,20 @@ namespace SwarmPlatform.UI
 
         public bool HasNoKeyModifier => _controlAltShiftGuiModifiers == 0;
 
-        public bool HasControlKeyModifier => (_controlAltShiftGuiModifiers & SDL.SDL_Keymod.KMOD_CTRL) != 0;
-        public bool HasControlKeyModifierAlone => HasControlKeyModifier && (_controlAltShiftGuiModifiers & ~SDL.SDL_Keymod.KMOD_CTRL) == 0;
+        public bool IsCtrlDown => (_controlAltShiftGuiModifiers & SDL.SDL_Keymod.KMOD_CTRL) != 0;
+        public bool IsCtrlOnlyDown => IsCtrlDown && (_controlAltShiftGuiModifiers & ~SDL.SDL_Keymod.KMOD_CTRL) == 0;
 
-        public bool HasAltKeyModifier => (_controlAltShiftGuiModifiers & SDL.SDL_Keymod.KMOD_ALT) != 0;
-        public bool HasAltKeyModifierAlone => HasAltKeyModifier && (_controlAltShiftGuiModifiers & ~SDL.SDL_Keymod.KMOD_ALT) == 0;
+        public bool IsAltDown => (_controlAltShiftGuiModifiers & SDL.SDL_Keymod.KMOD_ALT) != 0;
+        public bool IsAltOnlyDown => IsAltDown && (_controlAltShiftGuiModifiers & ~SDL.SDL_Keymod.KMOD_ALT) == 0;
 
-        public bool HasShiftKeyModifier => (_controlAltShiftGuiModifiers & SDL.SDL_Keymod.KMOD_SHIFT) != 0;
-        public bool HasShiftKeyModifierAlone => HasShiftKeyModifier && (_controlAltShiftGuiModifiers & ~SDL.SDL_Keymod.KMOD_SHIFT) == 0;
+        public bool IsCtrlShiftDown => IsCtrlDown && IsShiftDown;
+        public bool IsCtrlShiftOnlyDown => IsCtrlDown && IsShiftDown && !IsAltDown && !IsGuiDown;
 
-        public bool HasGuiKeyModifier => (_controlAltShiftGuiModifiers & SDL.SDL_Keymod.KMOD_GUI) != 0;
-        public bool HasGuiKeyModifierAlone => HasGuiKeyModifier && (_controlAltShiftGuiModifiers & ~SDL.SDL_Keymod.KMOD_GUI) == 0;
+        public bool IsShiftDown => (_controlAltShiftGuiModifiers & SDL.SDL_Keymod.KMOD_SHIFT) != 0;
+        public bool IsShiftOnlyDown => IsShiftDown && (_controlAltShiftGuiModifiers & ~SDL.SDL_Keymod.KMOD_SHIFT) == 0;
+
+        public bool IsGuiDown => (_controlAltShiftGuiModifiers & SDL.SDL_Keymod.KMOD_GUI) != 0;
+        public bool IsGuiOnlyDown => IsGuiDown && (_controlAltShiftGuiModifiers & ~SDL.SDL_Keymod.KMOD_GUI) == 0;
 
         // Drawing
         readonly Stack<SDL.SDL_Rect> _clipStack = new Stack<SDL.SDL_Rect>();

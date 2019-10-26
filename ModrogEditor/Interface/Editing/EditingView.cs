@@ -215,7 +215,7 @@ namespace ModrogEditor.Interface.Editing
         {
             _openEditorUIsByEntry.Remove(entry);
 
-            var tabIndex = assetUI.Tab.Parent.Children.IndexOf(assetUI.Tab);
+            var tabIndex = _tabsBar.Children.IndexOf(assetUI.Tab);
 
             _tabsBar.Remove(assetUI.Tab);
             _tabsBar.Layout();
@@ -234,7 +234,6 @@ namespace ModrogEditor.Interface.Editing
                     _activeEditorContainer.Add(_activeEditorUI.Editor);
                     _activeEditorContainer.Layout();
                 }
-
             }
         }
 

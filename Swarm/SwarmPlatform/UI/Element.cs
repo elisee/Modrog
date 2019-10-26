@@ -434,9 +434,9 @@ namespace SwarmPlatform.UI
                 else if (key == SDL.SDL_Keycode.SDLK_ESCAPE) { Dismiss(); return; }
             }
 
-            if (key == SDL.SDL_Keycode.SDLK_TAB && (Desktop.HasNoKeyModifier || Desktop.HasControlKeyModifierAlone))
+            if (key == SDL.SDL_Keycode.SDLK_TAB && (Desktop.HasNoKeyModifier || Desktop.IsShiftOnlyDown))
             {
-                Desktop.MoveFocus(backwards: Desktop.HasControlKeyModifier);
+                Desktop.MoveFocus(backwards: Desktop.IsShiftOnlyDown);
                 return;
             }
 

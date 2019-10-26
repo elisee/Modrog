@@ -206,9 +206,9 @@ namespace ModrogClient.Interface.Playing
 
         public override void OnMouseWheel(int dx, int dy)
         {
-            if (Desktop.HasNoKeyModifier || Desktop.HasShiftKeyModifierAlone)
+            if (Desktop.HasNoKeyModifier || Desktop.IsShiftOnlyDown)
             {
-                if (!Desktop.HasShiftKeyModifier) _zoom = Math.Clamp(_zoom + dy / 10f, MinZoom, MaxZoom);
+                if (!Desktop.IsShiftDown) _zoom = Math.Clamp(_zoom + dy / 10f, MinZoom, MaxZoom);
                 else Scroll = new Vector2(Scroll.X + dx * 24 / _zoom, Scroll.Y - dy * 24 / _zoom);
             }
         }

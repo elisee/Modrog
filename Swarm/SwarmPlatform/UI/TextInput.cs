@@ -161,18 +161,24 @@ namespace SwarmPlatform.UI
             switch (key)
             {
                 // Navigate
-                case SDL.SDL_Keycode.SDLK_LEFT: GoLeft(); break;
-                case SDL.SDL_Keycode.SDLK_RIGHT: GoRight(); break;
-                case SDL.SDL_Keycode.SDLK_HOME: GoToStartOfLine(); break;
-                case SDL.SDL_Keycode.SDLK_END: GoToEndOfLine(); break;
-                case SDL.SDL_Keycode.SDLK_a: if (Desktop.HasControlKeyModifierAlone) SelectAll(); break;
+                case SDL.SDL_Keycode.SDLK_LEFT: GoLeft(); return;
+                case SDL.SDL_Keycode.SDLK_RIGHT: GoRight(); return;
+                case SDL.SDL_Keycode.SDLK_HOME: GoToStartOfLine(); return;
+                case SDL.SDL_Keycode.SDLK_END: GoToEndOfLine(); return;
+                case SDL.SDL_Keycode.SDLK_a:
+                    if (Desktop.IsCtrlOnlyDown)
+                    {
+                        SelectAll();
+                        return;
+                    }
+                    break;
 
                 // Edit
-                case SDL.SDL_Keycode.SDLK_BACKSPACE: Erase(); break;
-                case SDL.SDL_Keycode.SDLK_DELETE: Delete(); break;
-
-                default: base.OnKeyDown(key, repeat); break;
+                case SDL.SDL_Keycode.SDLK_BACKSPACE: Erase(); return;
+                case SDL.SDL_Keycode.SDLK_DELETE: Delete(); return;
             }
+
+            base.OnKeyDown(key, repeat);
 
             void GoLeft()
             {
@@ -182,7 +188,7 @@ namespace SwarmPlatform.UI
                     ClampScrolling();
                 }
 
-                if (Desktop.HasControlKeyModifier)
+                if (Desktop.IsCtrlDown)
                 {
                     var sourceChar = _cursorX >= 0 && _cursorX < Value.Length ? Value[_cursorX].ToString() : " ";
                     if (sourceChar == "." || sourceChar == " ") sourceChar = _cursorX - 1 >= 0 && _cursorX - 1 < Value.Length ? Value[_cursorX - 1].ToString() : " ";
@@ -201,7 +207,7 @@ namespace SwarmPlatform.UI
                     ClampScrolling();
                 }
 
-                if (Desktop.HasControlKeyModifier)
+                if (Desktop.IsCtrlDown)
                 {
                     var sourceChar = _cursorX - 1 >= 0 && _cursorX - 1 < Value.Length ? Value[_cursorX - 1].ToString() : " ";
                     if (sourceChar == "." || sourceChar == " ") sourceChar = _cursorX >= 0 && _cursorX < Value.Length ? Value[_cursorX].ToString() : " ";
@@ -267,7 +273,7 @@ namespace SwarmPlatform.UI
 
             void ClearSelectionUnlessShiftDown()
             {
-                if (!Desktop.HasShiftKeyModifier) ClearSelection();
+                if (!Desktop.IsShiftDown) ClearSelection();
                 _cursorTimer = 0f;
             }
 
