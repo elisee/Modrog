@@ -164,10 +164,12 @@ namespace ModrogEditor.Interface.Editing
         {
             if (!_openEditorUIsByEntry.TryGetValue(entry, out var assetEditorUI))
             {
+                void onCloseEditor() => CloseEditor(entry);
+
                 var tab = new EditorTabButton(_tabsBar, entry)
                 {
                     OnActivate = () => OpenOrFocusEditor(entry),
-                    OnClose = () => CloseEditor(entry)
+                    OnClose = onCloseEditor
                 };
 
                 _tabsBar.Layout();
@@ -175,13 +177,15 @@ namespace ModrogEditor.Interface.Editing
                 var fullAssetPath = Path.Combine(App.State.ActiveScenarioPath, entry.Path);
                 BaseEditor editor;
 
+                void onChangeUnsavedStatus(bool hasUnsavedChanges) => tab.SetUnsavedChanges(hasUnsavedChanges);
+
                 switch (entry.AssetType)
                 {
-                    case AssetType.Manifest: editor = new Manifest.ManifestEditor(App, fullAssetPath, tab); break;
-                    case AssetType.TileSet: editor = new TileSet.TileSetEditor(App, fullAssetPath, tab); break;
-                    case AssetType.Script: editor = new Script.ScriptEditor(App, fullAssetPath, tab); break;
-                    case AssetType.Image: editor = new Image.ImageEditor(App, fullAssetPath, tab); break;
-                    case AssetType.Map: editor = new Map.MapEditor(App, fullAssetPath, tab); break;
+                    case AssetType.Manifest: editor = new Manifest.ManifestEditor(App, fullAssetPath, onCloseEditor, onChangeUnsavedStatus); break;
+                    case AssetType.TileSet: editor = new TileSet.TileSetEditor(App, fullAssetPath, onCloseEditor, onChangeUnsavedStatus); break;
+                    case AssetType.Script: editor = new Script.ScriptEditor(App, fullAssetPath, onCloseEditor, onChangeUnsavedStatus); break;
+                    case AssetType.Image: editor = new Image.ImageEditor(App, fullAssetPath, onCloseEditor, onChangeUnsavedStatus); break;
+                    case AssetType.Map: editor = new Map.MapEditor(App, fullAssetPath, onCloseEditor, onChangeUnsavedStatus); break;
                     default: throw new NotSupportedException();
                 }
 

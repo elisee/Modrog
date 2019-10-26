@@ -14,8 +14,8 @@ namespace ModrogEditor.Interface.Editing.Image
             // TODO
         }
 
-        public ImageEditor(EditorApp @interface, string fullAssetPath, EditorTabButton tab)
-            : base(@interface, fullAssetPath, tab)
+        public ImageEditor(EditorApp @interface, string fullAssetPath, Action onCloseEditor, Action<bool> onChangeUnsavedStatus)
+            : base(@interface, fullAssetPath, onCloseEditor, onChangeUnsavedStatus)
         {
             Load();
         }

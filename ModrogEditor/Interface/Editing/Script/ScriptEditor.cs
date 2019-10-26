@@ -13,8 +13,8 @@ namespace ModrogEditor.Interface.Editing.Script
 
         readonly TextEditor _textEditor;
 
-        public ScriptEditor(EditorApp @interface, string fullAssetPath, EditorTabButton tab)
-            : base(@interface, fullAssetPath, tab)
+        public ScriptEditor(EditorApp @interface, string fullAssetPath, Action onCloseEditor, Action<bool> onChangeUnsavedStatus)
+            : base(@interface, fullAssetPath, onCloseEditor, onChangeUnsavedStatus)
         {
             _textEditor = new TextEditor(_mainLayer)
             {

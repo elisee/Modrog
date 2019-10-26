@@ -10,7 +10,9 @@ namespace ModrogEditor.Interface.Editing
     {
         public readonly string FullAssetPath;
 
-        readonly EditorTabButton _tab;
+        Action _onCloseEditor;
+        Action<bool> _onChangeUnsavedStatus;
+
         bool _hasUnsavedChanges;
 
         protected readonly Panel _mainLayer;
@@ -21,11 +23,12 @@ namespace ModrogEditor.Interface.Editing
         readonly Button _saveBeforeClosingButton;
         readonly Button _discardBeforeClosingButton;
 
-        public BaseEditor(EditorApp @interface, string fullAssetPath, EditorTabButton tab)
+        public BaseEditor(EditorApp @interface, string fullAssetPath, Action onCloseEditor, Action<bool> onChangeUnsavedStatus)
             : base(@interface, null)
         {
             FullAssetPath = fullAssetPath;
-            _tab = tab;
+            _onCloseEditor = onCloseEditor;
+            _onChangeUnsavedStatus = onChangeUnsavedStatus;
 
             _mainLayer = new Panel(this);
             _loadAndSaveErrorLayer = new ErrorLayer(this) { Visible = false };
@@ -127,7 +130,7 @@ namespace ModrogEditor.Interface.Editing
         internal void MarkUnsavedChanges()
         {
             _hasUnsavedChanges = true;
-            _tab.SetUnsavedChanges(true);
+            _onChangeUnsavedStatus(_hasUnsavedChanges);
         }
 
         protected void Load()
@@ -161,10 +164,17 @@ namespace ModrogEditor.Interface.Editing
                 return;
             }
 
-            _tab.SetUnsavedChanges(false);
+            _hasUnsavedChanges = false;
+            _onChangeUnsavedStatus(_hasUnsavedChanges);
         }
 
         protected abstract bool TryLoad(out string error);
         protected abstract bool TrySave(out string error);
+
+        public override void OnKeyDown(SDL.SDL_Keycode key, bool repeat)
+        {
+            if (key == SDL.SDL_Keycode.SDLK_s && Desktop.HasControlKeyModifierAlone) Save();
+            else if (key == SDL.SDL_Keycode.SDLK_w && Desktop.HasControlKeyModifierAlone) _onCloseEditor();
+        }
     }
 }

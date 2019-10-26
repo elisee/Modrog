@@ -12,8 +12,8 @@ namespace ModrogEditor.Interface.Editing.Manifest
         readonly TextInput _titleInput;
         readonly TextEditor _descriptionEditor;
 
-        public ManifestEditor(EditorApp @interface, string fullAssetPath, EditorTabButton tab)
-            : base(@interface, fullAssetPath, tab)
+        public ManifestEditor(EditorApp @interface, string fullAssetPath, Action onCloseEditor, Action<bool> onChangeUnsavedStatus)
+            : base(@interface, fullAssetPath, onCloseEditor, onChangeUnsavedStatus)
         {
             ChildLayout = ChildLayoutMode.Top;
             Padding = 8;

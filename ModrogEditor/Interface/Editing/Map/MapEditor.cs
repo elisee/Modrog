@@ -55,8 +55,8 @@ namespace ModrogEditor.Interface.Editing.Map
         public bool BrushShouldErase = false;
         public int BrushSize = 1;
 
-        public MapEditor(EditorApp @interface, string fullAssetPath, EditorTabButton tab)
-            : base(@interface, fullAssetPath, tab)
+        public MapEditor(EditorApp @interface, string fullAssetPath, Action onCloseEditor, Action<bool> onChangeUnsavedStatus)
+            : base(@interface, fullAssetPath, onCloseEditor, onChangeUnsavedStatus)
         {
             // Main layer
             _mainLayer.ChildLayout = ChildLayoutMode.Top;
