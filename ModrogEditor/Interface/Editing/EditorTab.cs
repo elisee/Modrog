@@ -19,7 +19,7 @@ namespace ModrogEditor.Interface.Editing
             ChildLayout = ChildLayoutMode.Left;
             BackgroundPatch = new TexturePatch(0x44aa44ff);
             Padding = 8;
-            Right = 8;
+            Right = 1;
 
             new Label(this) { Flow = Flow.Shrink, Text = entry.Path };
             _closeButton = new TextButton(this) { Left = 8, Text = "(x)" };

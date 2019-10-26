@@ -97,7 +97,7 @@ namespace ModrogEditor.Interface.Editing
             var topBar = new Panel(_mainPanel)
             {
                 ChildLayout = ChildLayoutMode.Left,
-                BackgroundPatch = new TexturePatch(0x654321ff),
+                BackgroundPatch = new TexturePatch(0x001234ff),
             };
 
             _tabsBar = new Element(topBar)
