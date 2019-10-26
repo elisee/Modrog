@@ -435,11 +435,14 @@ namespace SwarmPlatform.UI
 
             if (key == SDL.SDL_Keycode.SDLK_TAB && (Desktop.HasNoKeyModifier || Desktop.HasControlKeyModifierAlone))
             {
-                Desktop.MoveFocus(backwards: Desktop.HasControlKeyModifier); return;
+                Desktop.MoveFocus(backwards: Desktop.HasControlKeyModifier);
+                return;
             }
+
+            Parent?.OnKeyDown(key, repeat);
         }
 
-        public virtual void OnKeyUp(SDL.SDL_Keycode key) { }
+        public virtual void OnKeyUp(SDL.SDL_Keycode key) { Parent?.OnKeyUp(key); }
         public virtual void OnTextEntered(string text) { }
 
         public virtual void OnBlur() { }
