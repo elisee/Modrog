@@ -37,7 +37,7 @@ namespace ModrogEditor.Interface.Editing.Map
         {
             if (button == SDL.SDL_BUTTON_LEFT)
             {
-                _mapEditor.BrushTileKindIndex = (short)(1 + _hoveredTileKindCoords.Y * GetTilesPerRow() + _hoveredTileKindCoords.X);
+                _mapEditor.BrushTileKindIndex = (short)(_hoveredTileKindCoords.Y * GetTilesPerRow() + _hoveredTileKindCoords.X);
             }
         }
 
@@ -54,15 +54,31 @@ namespace ModrogEditor.Interface.Editing.Map
             var tileKinds = _mapEditor.TileKindsByLayer[_mapEditor.TileLayer];
             var tilesPerRow = GetTilesPerRow();
 
+            // Empty tile
+            {
+                var sourceRect = new SDL.SDL_Rect { x = 0 * Protocol.MapTileSize, y = 0 * Protocol.MapTileSize, w = Protocol.MapTileSize, h = Protocol.MapTileSize };
+                var destRect = new SDL.SDL_Rect { x = _contentRectangle.X + 0 * Protocol.MapTileSize, y = _contentRectangle.Y + 0 * Protocol.MapTileSize, w = Protocol.MapTileSize, h = Protocol.MapTileSize };
+                SDL.SDL_RenderCopy(Desktop.Renderer, _mapEditor.TileMarkersSpritesheet, ref sourceRect, ref destRect);
+            }
+
             for (var i = 0; i < tileKinds.Length; i++)
             {
-                var x = i % tilesPerRow;
-                var y = i / tilesPerRow;
+                var x = (i + 1) % tilesPerRow;
+                var y = (i + 1) / tilesPerRow;
 
                 var spriteLocation = tileKinds[i].SpriteLocation;
                 var sourceRect = new SDL.SDL_Rect { x = spriteLocation.X * Protocol.MapTileSize, y = spriteLocation.Y * Protocol.MapTileSize, w = Protocol.MapTileSize, h = Protocol.MapTileSize };
                 var destRect = new SDL.SDL_Rect { x = _contentRectangle.X + x * Protocol.MapTileSize, y = _contentRectangle.Y + y * Protocol.MapTileSize, w = Protocol.MapTileSize, h = Protocol.MapTileSize };
                 SDL.SDL_RenderCopy(Desktop.Renderer, _mapEditor.SpritesheetTexture, ref sourceRect, ref destRect);
+            }
+
+            // Selected tile
+            {
+                var sourceRect = new SDL.SDL_Rect { x = 1 * Protocol.MapTileSize, y = 0 * Protocol.MapTileSize, w = Protocol.MapTileSize, h = Protocol.MapTileSize };
+                var x = _mapEditor.BrushTileKindIndex % tilesPerRow;
+                var y = _mapEditor.BrushTileKindIndex / tilesPerRow;
+                var destRect = new SDL.SDL_Rect { x = _contentRectangle.X + x * Protocol.MapTileSize, y = _contentRectangle.Y + y * Protocol.MapTileSize, w = Protocol.MapTileSize, h = Protocol.MapTileSize };
+                SDL.SDL_RenderCopy(Desktop.Renderer, _mapEditor.TileMarkersSpritesheet, ref sourceRect, ref destRect);
             }
 
             if (IsHovered)
