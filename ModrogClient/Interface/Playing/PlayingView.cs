@@ -116,7 +116,7 @@ namespace ModrogClient.Interface.Playing
 
             var state = App.State;
 
-            if (state.SelectedEntity != null)
+            if (state.SelectedEntity != null && state.SelectedEntity.PlayerIndex == state.SelfPlayerIndex)
             {
                 if (key == SDL.SDL_Keycode.SDLK_a || key == SDL.SDL_Keycode.SDLK_q) state.SetMoveTowards(ModrogApi.EntityDirection.Left);
                 if (key == SDL.SDL_Keycode.SDLK_d) state.SetMoveTowards(ModrogApi.EntityDirection.Right);
