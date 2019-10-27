@@ -31,7 +31,8 @@ You'll need .NET Core 3 and Visual Studio 2019. VS Code might work.
     - (Map Editor) Trace line segments when using the brush rather than just placing tiles at hovered position. (Can reuse line drawing logic from line of sight)
     - (Map Editor) Bucket fill
     - (Map Editor) Skip empty chunks when saving
-    - (Map Editor) Support entities
+    - (Tile Set Editor) Support marker tile kinds
+    - (Map Editor) Support placing markers on their own special sparse layer? Maybe have two modes for chunk storage?
     - (Tile Set Editor) Replace JSON editor with visual editor, and maybe switch to binary format
     - (Team) Find a pixel artist! Waiting on mockups from Timothée
     - (Tutorial) Build it!
