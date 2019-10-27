@@ -31,6 +31,7 @@ namespace ModrogCommon
             SetupCountdown,
 
             // Playing
+            SetPlayerIndex,
             SetPeerOnline,
             UniverseSetup,
             Tick,

@@ -24,6 +24,10 @@ namespace ModrogServer
                 peers[i] = _peersBySocket[_identifiedPeerSockets[i]];
                 peers[i].Identity.PlayerIndex = i;
                 players[i] = new Game.InternalPlayer { Index = i, Name = peers[i].Identity.Name };
+
+                _packetWriter.WriteByte((byte)Protocol.ServerPacketType.SetPlayerIndex);
+                _packetWriter.WriteInt(peers[i].Identity.PlayerIndex);
+                Send(peers[i].Socket);
             }
 
             BroadcastPeerList();

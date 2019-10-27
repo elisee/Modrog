@@ -68,6 +68,11 @@ namespace ModrogClient
                             ReadSetupCountdown();
                             break;
 
+                        case ServerPacketType.SetPlayerIndex:
+                            if (!EnsureStage(ClientStage.Lobby)) break;
+                            ReadSetPlayerIndex();
+                            break;
+
                         case ServerPacketType.UniverseSetup:
                             if (!EnsureStage(ClientStage.Lobby)) break;
                             ReadUniverseSetup();
@@ -202,6 +207,11 @@ namespace ModrogClient
         {
             IsCountingDown = _packetReader.ReadByte() != 0;
             _app.LobbyView.OnIsCountingDownChanged();
+        }
+
+        void ReadSetPlayerIndex()
+        {
+            SelfPlayerIndex = _packetReader.ReadInt();
         }
 
         void ReadUniverseSetup()

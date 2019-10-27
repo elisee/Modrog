@@ -34,6 +34,7 @@ namespace ModrogClient
         // Identity
         public Guid SelfGuid;
         public string SelfPlayerName;
+        public int SelfPlayerIndex;
 
         // Settings
         public readonly string SettingsFilePath;
