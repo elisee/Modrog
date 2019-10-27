@@ -1,6 +1,6 @@
-﻿using SwarmBasics.Math;
+﻿using Microsoft.CodeAnalysis;
 using ModrogCommon;
-using Microsoft.CodeAnalysis;
+using SwarmBasics.Math;
 using System;
 using System.Linq;
 
@@ -140,6 +140,8 @@ namespace ModrogServer
                     break;
 
                 case ServerStage.Playing:
+                    _packetWriter.WriteInt(peer.Identity.PlayerIndex);
+
                     WriteUniverseSetup();
                     break;
             }

@@ -141,6 +141,8 @@ namespace ModrogClient
             }
             else
             {
+                SelfPlayerIndex = _packetReader.ReadInt();
+
                 WorldChunks.Clear();
                 FogChunks.Clear();
                 SeenEntities.Clear();
