@@ -37,7 +37,9 @@ namespace ModrogEditor.Interface.Editing.Map
         {
             if (button == SDL.SDL_BUTTON_LEFT)
             {
-                _mapEditor.BrushTileKindIndex = (short)(_hoveredTileKindCoords.Y * GetTilesPerRow() + _hoveredTileKindCoords.X);
+                var hoveredTileIndex = (short)(_hoveredTileKindCoords.Y * GetTilesPerRow() + _hoveredTileKindCoords.X);
+                if (hoveredTileIndex <= _mapEditor.TileKindsByLayer[_mapEditor.TileLayer].Length) _mapEditor.BrushTileKindIndex = hoveredTileIndex;
+                else _mapEditor.BrushTileKindIndex = 0;
             }
         }
 
