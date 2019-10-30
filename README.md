@@ -23,9 +23,9 @@ You'll need .NET Core 3 and Visual Studio 2019. VS Code might work.
 
 ## Tasks
 
+    - (Gameplay) Implement Rogventure-style combat with hits & projectiles, see if entities having to turn around works well with it (We can allow some entities to turn instantly and others not I guess)
     - (Editor) Allow renaming assets
     - (Editor) Allow reparenting assets with drag'n'drop (need to add drag'n'drop in UI framework)
-    - (Editor) Move "Save changes" popup out of BaseEditor into EditingView so it is modal
     - (Map Editor) Allow switching layers with 1, 2, 3
     - (Map Editor) Display all tileset layers in the sidebar at once
     - (Map Editor) Trace line segments when using the brush rather than just placing tiles at hovered position. (Can reuse line drawing logic from line of sight)
