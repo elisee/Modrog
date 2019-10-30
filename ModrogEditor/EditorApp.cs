@@ -29,7 +29,7 @@ namespace ModrogEditor
         readonly IntPtr _renderer;
 
         // Assets
-        readonly string _assetsPath;
+        public readonly string AssetsPath;
         public readonly Font TitleFont;
         public readonly Font HeaderFont;
         public readonly FontStyle HeaderFontStyle;
@@ -63,15 +63,15 @@ namespace ModrogEditor
             _viewport = new Rectangle(0, 0, initialWidth, initialHeight);
 
             // Assets
-            _assetsPath = FileHelper.FindAppFolder("Assets");
+            AssetsPath = FileHelper.FindAppFolder("Assets");
             if (SDL_image.IMG_Init(SDL_image.IMG_InitFlags.IMG_INIT_PNG) != (int)SDL_image.IMG_InitFlags.IMG_INIT_PNG) throw new Exception();
 
-            TitleFont = Font.LoadFromChevyRayFolder(_renderer, Path.Combine(_assetsPath, "Fonts", "ChevyRay - Roundabout"));
-            HeaderFont = Font.LoadFromChevyRayFolder(_renderer, Path.Combine(_assetsPath, "Fonts", "ChevyRay - Skullboy"));
+            TitleFont = Font.LoadFromChevyRayFolder(_renderer, Path.Combine(AssetsPath, "Fonts", "ChevyRay - Roundabout"));
+            HeaderFont = Font.LoadFromChevyRayFolder(_renderer, Path.Combine(AssetsPath, "Fonts", "ChevyRay - Skullboy"));
             HeaderFontStyle = new FontStyle(HeaderFont) { Scale = 2, LetterSpacing = 1, LineSpacing = 8 };
 
-            MainFont = Font.LoadFromChevyRayFolder(_renderer, Path.Combine(_assetsPath, "Fonts", "ChevyRay - Softsquare"));
-            MonoFont = Font.LoadFromChevyRayFolder(_renderer, Path.Combine(_assetsPath, "Fonts", "ChevyRay - Softsquare Mono"));
+            MainFont = Font.LoadFromChevyRayFolder(_renderer, Path.Combine(AssetsPath, "Fonts", "ChevyRay - Softsquare"));
+            MonoFont = Font.LoadFromChevyRayFolder(_renderer, Path.Combine(AssetsPath, "Fonts", "ChevyRay - Softsquare Mono"));
 
             // Interface
             Desktop = new Desktop(_renderer,

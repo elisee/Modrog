@@ -138,8 +138,7 @@ namespace ModrogEditor.Interface.Editing.Map
             // Settings popup
             _mapSettingsLayer = new MapSettingsLayer(this) { Visible = false };
 
-            var modrogEditorFolder = FileHelper.FindAppFolder("ModrogEditor");
-            var tileMarkersSpritesheetPath = Path.Combine(modrogEditorFolder, "Interface", "Editing", "Map", "TileMarkers.png");
+            var tileMarkersSpritesheetPath = Path.Combine(App.AssetsPath, "Editor", "MapTileMarkers.png");
             TileMarkersSpritesheet = SDL_image.IMG_LoadTexture(Desktop.Renderer, tileMarkersSpritesheetPath);
 
             Load();
