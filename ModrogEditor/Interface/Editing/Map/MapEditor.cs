@@ -45,8 +45,7 @@ namespace ModrogEditor.Interface.Editing.Map
         }
 
         public readonly EditorTileKind[][] TileKindsByLayer = new EditorTileKind[(int)ModrogApi.MapLayer.Count][];
-
-        TextButton[] _tileLayerButtons = new TextButton[(int)ModrogApi.MapLayer.Count];
+        readonly TextButton[] _tileLayerButtons = new TextButton[(int)ModrogApi.MapLayer.Count];
 
         // Tools
         public enum MapEditorTool { Brush, Picker, Bucket }
@@ -57,8 +56,8 @@ namespace ModrogEditor.Interface.Editing.Map
         public bool BrushShouldErase = false;
         public int BrushSize = 1;
 
-        public MapEditor(EditorApp @interface, string fullAssetPath, Action onCloseEditor, Action<bool> onChangeUnsavedStatus)
-            : base(@interface, fullAssetPath, onCloseEditor, onChangeUnsavedStatus)
+        public MapEditor(EditorApp @interface, string fullAssetPath, Action onUnsavedStatusChanged)
+            : base(@interface, fullAssetPath, onUnsavedStatusChanged)
         {
             // Main layer
             _mainLayer.ChildLayout = ChildLayoutMode.Top;
@@ -261,7 +260,7 @@ namespace ModrogEditor.Interface.Editing.Map
             SpritesheetPath = null;
         }
 
-        protected override bool TrySave(out string error)
+        protected override bool TrySave_Internal(out string error)
         {
             var writer = new PacketWriter(initialCapacity: 8192, useSizeHeader: false);
             writer.WriteByteSizeString(TileSetPath);

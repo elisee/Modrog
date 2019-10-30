@@ -16,6 +16,7 @@ namespace ModrogEditor.Interface.Editing
             _editingView = editingView;
 
             BackgroundPatch = new TexturePatch(0x00000088);
+            Visible = false;
 
             var windowPanel = new Panel(this)
             {

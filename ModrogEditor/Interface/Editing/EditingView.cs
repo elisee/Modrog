@@ -16,15 +16,16 @@ namespace ModrogEditor.Interface.Editing
         readonly Panel _sidebarPanel;
         readonly AssetTree _assetTree;
 
-        readonly StyledTextButton _newAssetButton;
         readonly NewAssetLayer _newAssetLayer;
         readonly DeleteAssetLayer _deleteAssetLayer;
+        readonly ConfirmCloseLayer _confirmCloseLayer;
+        readonly ErrorLayer _errorLayer;
 
         readonly Panel _mainPanel;
         readonly Element _tabsBar;
         public Element _activeEditorContainer;
 
-        class EditorUI { public EditorTabButton Tab; public BaseEditor Editor; }
+        public class EditorUI { public EditorTabButton Tab; public BaseEditor Editor; }
         readonly Dictionary<AssetEntry, EditorUI> _openEditorUIsByEntry = new Dictionary<AssetEntry, EditorUI>();
         EditorUI _activeEditorUI;
 
@@ -57,7 +58,7 @@ namespace ModrogEditor.Interface.Editing
                 VerticalFlow = Flow.Shrink
             };
 
-            _newAssetButton = new StyledTextButton(headerBar)
+            new StyledTextButton(headerBar)
             {
                 Text = "New",
                 OnActivate = () =>
@@ -67,8 +68,8 @@ namespace ModrogEditor.Interface.Editing
                 }
             };
 
-            _newAssetLayer = new NewAssetLayer(this) { Visible = false };
-            _deleteAssetLayer = new DeleteAssetLayer(this) { Visible = false };
+            _newAssetLayer = new NewAssetLayer(this);
+            _deleteAssetLayer = new DeleteAssetLayer(this);
 
             _assetTree = new AssetTree(_sidebarPanel)
             {
@@ -112,6 +113,9 @@ namespace ModrogEditor.Interface.Editing
             new StyledTextButton(topBar) { Text = "Run", OnActivate = RunScenario };
 
             _activeEditorContainer = new Element(_mainPanel) { LayoutWeight = 1 };
+
+            _confirmCloseLayer = new ConfirmCloseLayer(this);
+            _errorLayer = new ErrorLayer(this);
         }
 
         public override void OnMounted()
@@ -134,6 +138,24 @@ namespace ModrogEditor.Interface.Editing
 
         public override void OnKeyDown(SDL.SDL_Keycode key, bool repeat)
         {
+            if (key == SDL.SDL_Keycode.SDLK_s && Desktop.IsCtrlOnlyDown)
+            {
+                if (_activeEditorUI != null)
+                {
+                    SaveEditor(_activeEditorUI.Editor);
+                    return;
+                }
+            }
+
+            if (key == SDL.SDL_Keycode.SDLK_w && Desktop.IsCtrlOnlyDown)
+            {
+                if (_activeEditorUI != null)
+                {
+                    ConfirmCloseEditor(_activeEditorUI, onEditorClosed: null);
+                    return;
+                }
+            }
+
             if (key == SDL.SDL_Keycode.SDLK_F5 && !repeat && Desktop.HasNoKeyModifier)
             {
                 RunScenario();
@@ -161,31 +183,12 @@ namespace ModrogEditor.Interface.Editing
             base.OnKeyDown(key, repeat);
         }
 
-        public void MaybeClose(Action onClose)
-        {
-            foreach (var openEditorUI in _openEditorUIsByEntry.Values)
-            {
-                if (openEditorUI.Editor.HasUnsavedChanges)
-                {
-                    OpenOrFocusEditor(openEditorUI.Tab.Entry);
-                    openEditorUI.Editor.MaybeUnload(() =>
-                    {
-                        RemoveEditor(openEditorUI);
-                        MaybeClose(onClose);
-                    });
-                    return;
-                }
-            }
-
-            onClose();
-        }
-
         void RunScenario()
         {
             var clientExePath = Path.Combine(FileHelper.FindAppFolder(
 #if DEBUG
                 "ModrogClient-Debug"
-#else  
+#else
                 "ModrogClient-Release"
 #endif
                 ), "netcoreapp3.0", "ModrogClient.exe");
@@ -200,9 +203,9 @@ namespace ModrogEditor.Interface.Editing
 
         internal void OpenOrFocusEditor(AssetEntry entry)
         {
-            if (!_openEditorUIsByEntry.TryGetValue(entry, out var assetEditorUI))
+            if (!_openEditorUIsByEntry.TryGetValue(entry, out var editorUI))
             {
-                void onCloseEditor() => CloseEditor(entry);
+                void onCloseEditor() => ConfirmCloseEditor(editorUI, onEditorClosed: null);
 
                 var tab = new EditorTabButton(_tabsBar, entry)
                 {
@@ -213,51 +216,85 @@ namespace ModrogEditor.Interface.Editing
                 _tabsBar.Layout();
 
                 var fullAssetPath = Path.Combine(App.State.ActiveScenarioPath, entry.Path);
-                BaseEditor editor;
+                void onUnsavedStatusChanged() => tab.SetUnsavedChanges(editorUI.Editor.HasUnsavedChanges);
 
-                void onChangeUnsavedStatus(bool hasUnsavedChanges) => tab.SetUnsavedChanges(hasUnsavedChanges);
-
-                switch (entry.AssetType)
+                BaseEditor editor = entry.AssetType switch
                 {
-                    case AssetType.Manifest: editor = new Manifest.ManifestEditor(App, fullAssetPath, onCloseEditor, onChangeUnsavedStatus); break;
-                    case AssetType.TileSet: editor = new TileSet.TileSetEditor(App, fullAssetPath, onCloseEditor, onChangeUnsavedStatus); break;
-                    case AssetType.Script: editor = new Script.ScriptEditor(App, fullAssetPath, onCloseEditor, onChangeUnsavedStatus); break;
-                    case AssetType.Image: editor = new Image.ImageEditor(App, fullAssetPath, onCloseEditor, onChangeUnsavedStatus); break;
-                    case AssetType.Map: editor = new Map.MapEditor(App, fullAssetPath, onCloseEditor, onChangeUnsavedStatus); break;
-                    default: throw new NotSupportedException();
-                }
+                    AssetType.Manifest => new Manifest.ManifestEditor(App, fullAssetPath, onUnsavedStatusChanged),
+                    AssetType.TileSet => new TileSet.TileSetEditor(App, fullAssetPath, onUnsavedStatusChanged),
+                    AssetType.Script => new Script.ScriptEditor(App, fullAssetPath, onUnsavedStatusChanged),
+                    AssetType.Image => new Image.ImageEditor(App, fullAssetPath, onUnsavedStatusChanged),
+                    AssetType.Map => new Map.MapEditor(App, fullAssetPath, onUnsavedStatusChanged),
+                    _ => throw new NotSupportedException(),
+                };
 
-                assetEditorUI = new EditorUI { Tab = tab, Editor = editor };
-                _openEditorUIsByEntry.Add(entry, assetEditorUI);
+                editorUI = new EditorUI { Tab = tab, Editor = editor };
+                _openEditorUIsByEntry.Add(entry, editorUI);
             }
 
             _activeEditorUI?.Tab.SetActive(false);
-            _activeEditorUI = assetEditorUI;
+            _activeEditorUI = editorUI;
             _activeEditorUI.Tab.SetActive(true);
 
             _activeEditorContainer.Clear();
-            _activeEditorContainer.Add(assetEditorUI.Editor);
+            _activeEditorContainer.Add(editorUI.Editor);
             _activeEditorContainer.Layout();
         }
 
-        void CloseEditor(AssetEntry entry)
+        public void ConfirmCloseAllEditors(Action onAllEditorsClosed)
         {
-            if (!_openEditorUIsByEntry.TryGetValue(entry, out var assetUI)) return;
+            void TryAgainAfterClosingEditor() => ConfirmCloseAllEditors(onAllEditorsClosed);
 
-            OpenOrFocusEditor(entry);
-            assetUI.Editor.MaybeUnload(() => RemoveEditor(assetUI));
+            if (_activeEditorUI != null)
+            {
+                ConfirmCloseEditor(_activeEditorUI, TryAgainAfterClosingEditor);
+                return;
+            }
+
+            onAllEditorsClosed?.Invoke();
         }
 
-        void RemoveEditor(EditorUI assetUI)
+        void SaveEditor(BaseEditor editor)
         {
-            _openEditorUIsByEntry.Remove(assetUI.Tab.Entry);
+            if (!editor.TrySave(out var error))
+            {
+                _errorLayer.Open("Failed to save", "Error while saving asset: " + error, onTryAgain: () => SaveEditor(editor));
+                _errorLayer.Layout(_contentRectangle);
+                Desktop.SetFocusedElement(_errorLayer);
+            }
+        }
 
-            var tabIndex = _tabsBar.Children.IndexOf(assetUI.Tab);
+        void ConfirmCloseEditor(EditorUI editorUI, Action onEditorClosed)
+        {
+            if (!editorUI.Editor.HasUnsavedChanges)
+            {
+                RemoveEditor(editorUI);
+                onEditorClosed?.Invoke();
+                return;
+            }
 
-            _tabsBar.Remove(assetUI.Tab);
+            OpenOrFocusEditor(editorUI.Tab.Entry);
+
+            _confirmCloseLayer.Open(editorUI, onClose: () =>
+            {
+                RemoveEditor(editorUI);
+                onEditorClosed?.Invoke();
+            });
+
+            _confirmCloseLayer.Layout(_contentRectangle);
+            Desktop.SetFocusedElement(_confirmCloseLayer);
+        }
+
+        void RemoveEditor(EditorUI editorUI)
+        {
+            _openEditorUIsByEntry.Remove(editorUI.Tab.Entry);
+
+            var tabIndex = _tabsBar.Children.IndexOf(editorUI.Tab);
+
+            _tabsBar.Remove(editorUI.Tab);
             _tabsBar.Layout();
 
-            if (assetUI.Editor.IsMounted)
+            if (editorUI.Editor.IsMounted)
             {
                 _activeEditorContainer.Clear();
                 _activeEditorUI = null;
@@ -298,10 +335,10 @@ namespace ModrogEditor.Interface.Editing
                 }
                 else
                 {
-                    if (_openEditorUIsByEntry.TryGetValue(entry, out var assetUI))
+                    if (_openEditorUIsByEntry.TryGetValue(entry, out var editorUI))
                     {
-                        assetUI.Editor.ForceUnload();
-                        RemoveEditor(assetUI);
+                        editorUI.Editor.ForceUnload();
+                        RemoveEditor(editorUI);
                     };
                 }
             }

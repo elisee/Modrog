@@ -44,7 +44,7 @@ namespace ModrogEditor
         {
             if (Stage == EditorStage.Editing)
             {
-                _app.EditingView.MaybeClose(() =>
+                _app.EditingView.ConfirmCloseAllEditors(() =>
                 {
                     Stage = EditorStage.Exited;
                 });
@@ -154,7 +154,7 @@ namespace ModrogEditor
 
         public void DeleteAsset(AssetEntry assetEntry)
         {
-            void DeleteFolder(string folderPath)
+            static void DeleteFolder(string folderPath)
             {
                 foreach (var childFilePath in Directory.GetFiles(folderPath, "*.*", SearchOption.TopDirectoryOnly)) File.Delete(childFilePath);
                 foreach (var childFolderPath in Directory.GetDirectories(folderPath)) DeleteFolder(childFolderPath);

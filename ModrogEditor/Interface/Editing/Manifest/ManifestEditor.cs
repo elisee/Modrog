@@ -12,8 +12,8 @@ namespace ModrogEditor.Interface.Editing.Manifest
         readonly TextInput _titleInput;
         readonly TextEditor _descriptionEditor;
 
-        public ManifestEditor(EditorApp @interface, string fullAssetPath, Action onCloseEditor, Action<bool> onChangeUnsavedStatus)
-            : base(@interface, fullAssetPath, onCloseEditor, onChangeUnsavedStatus)
+        public ManifestEditor(EditorApp @interface, string fullAssetPath, Action onUnsavedStatusChanged)
+            : base(@interface, fullAssetPath, onUnsavedStatusChanged)
         {
             ChildLayout = ChildLayoutMode.Top;
             Padding = 8;
@@ -72,29 +72,28 @@ namespace ModrogEditor.Interface.Editing.Manifest
             // Nothing
         }
 
-        protected override bool TrySave(out string error)
+        protected override bool TrySave_Internal(out string error)
         {
             var title = App.State.ActiveScenarioEntry.Title = _titleInput.Value.Trim();
             var description = App.State.ActiveScenarioEntry.Description = _descriptionEditor.GetText().Trim();
 
             try
             {
-                using (var stream = File.OpenWrite(FullAssetPath))
-                using (var writer = new Utf8JsonWriter(stream, new JsonWriterOptions { Indented = true }))
-                {
-                    writer.WriteStartObject();
+                using var stream = File.OpenWrite(FullAssetPath);
+                using var writer = new Utf8JsonWriter(stream, new JsonWriterOptions { Indented = true });
 
-                    writer.WriteString("title", title);
-                    writer.WriteString("description", description);
+                writer.WriteStartObject();
 
-                    writer.WritePropertyName("minMaxPlayers");
-                    writer.WriteStartArray();
-                    writer.WriteNumberValue(1);
-                    writer.WriteNumberValue(1);
-                    writer.WriteEndArray();
+                writer.WriteString("title", title);
+                writer.WriteString("description", description);
 
-                    writer.WriteEndObject();
-                }
+                writer.WritePropertyName("minMaxPlayers");
+                writer.WriteStartArray();
+                writer.WriteNumberValue(1);
+                writer.WriteNumberValue(1);
+                writer.WriteEndArray();
+
+                writer.WriteEndObject();
             }
             catch (Exception exception)
             {

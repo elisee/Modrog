@@ -13,8 +13,8 @@ namespace ModrogEditor.Interface.Editing.Script
 
         readonly TextEditor _textEditor;
 
-        public ScriptEditor(EditorApp @interface, string fullAssetPath, Action onCloseEditor, Action<bool> onChangeUnsavedStatus)
-            : base(@interface, fullAssetPath, onCloseEditor, onChangeUnsavedStatus)
+        public ScriptEditor(EditorApp @interface, string fullAssetPath, Action onUnsavedStatusChanged)
+            : base(@interface, fullAssetPath, onUnsavedStatusChanged)
         {
             _textEditor = new TextEditor(_mainLayer)
             {
@@ -52,7 +52,7 @@ namespace ModrogEditor.Interface.Editing.Script
             // Nothing
         }
 
-        protected override bool TrySave(out string error)
+        protected override bool TrySave_Internal(out string error)
         {
             try
             {

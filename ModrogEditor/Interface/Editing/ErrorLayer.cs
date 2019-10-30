@@ -16,6 +16,7 @@ namespace ModrogEditor.Interface.Editing
         public ErrorLayer(Element parent) : base(parent)
         {
             BackgroundPatch = new TexturePatch(0x00000088);
+            Visible = false;
 
             var windowPanel = new Panel(this)
             {
@@ -45,7 +46,7 @@ namespace ModrogEditor.Interface.Editing
             new StyledTextButton(_buttonsContainer) { Text = "Close", OnActivate = Close };
         }
 
-        public void Show(string title, string details, Action onTryAgain = null)
+        public void Open(string title, string details, Action onTryAgain = null)
         {
             Visible = true;
 

@@ -14,8 +14,8 @@ namespace ModrogEditor.Interface.Editing.Image
             // TODO
         }
 
-        public ImageEditor(EditorApp @interface, string fullAssetPath, Action onCloseEditor, Action<bool> onChangeUnsavedStatus)
-            : base(@interface, fullAssetPath, onCloseEditor, onChangeUnsavedStatus)
+        public ImageEditor(EditorApp @interface, string fullAssetPath, Action onUnsavedStatusChanged)
+            : base(@interface, fullAssetPath, onUnsavedStatusChanged)
         {
             Load();
         }
@@ -51,7 +51,7 @@ namespace ModrogEditor.Interface.Editing.Image
             return true;
         }
 
-        protected override bool TrySave(out string error)
+        protected override bool TrySave_Internal(out string error)
         {
             // Nothing for now
             error = null;
