@@ -240,7 +240,7 @@ namespace ModrogEditor.Interface.Editing.Map
             return true;
         }
 
-        protected override void Unload()
+        public override void Unload()
         {
             if (SpritesheetTexture != IntPtr.Zero)
             {

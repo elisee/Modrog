@@ -23,8 +23,6 @@ namespace ModrogEditor.Interface.Editing
             _loadErrorLayer = new ErrorLayer(this);
         }
 
-        public void ForceUnload() => Unload();
-
         internal void MarkUnsavedChanges()
         {
             HasUnsavedChanges = true;
@@ -47,8 +45,7 @@ namespace ModrogEditor.Interface.Editing
             Layout();
         }
 
-        protected abstract void Unload();
-
+        public abstract void Unload();
 
         protected abstract bool TryLoad(out string error);
         protected abstract bool TrySave_Internal(out string error);

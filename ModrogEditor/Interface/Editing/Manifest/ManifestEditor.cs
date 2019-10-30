@@ -67,7 +67,7 @@ namespace ModrogEditor.Interface.Editing.Manifest
             return true;
         }
 
-        protected override void Unload()
+        public override void Unload()
         {
             // Nothing
         }

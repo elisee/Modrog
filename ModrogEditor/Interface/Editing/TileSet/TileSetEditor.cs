@@ -47,7 +47,7 @@ namespace ModrogEditor.Interface.Editing.TileSet
             return true;
         }
 
-        protected override void Unload()
+        public override void Unload()
         {
             // Nothing
         }

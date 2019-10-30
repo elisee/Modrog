@@ -47,7 +47,7 @@ namespace ModrogEditor.Interface.Editing.Script
             return true;
         }
 
-        protected override void Unload()
+        public override void Unload()
         {
             // Nothing
         }

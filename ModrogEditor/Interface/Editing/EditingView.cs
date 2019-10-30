@@ -287,6 +287,8 @@ namespace ModrogEditor.Interface.Editing
 
         void RemoveEditor(EditorUI editorUI)
         {
+            editorUI.Editor.Unload();
+
             _openEditorUIsByEntry.Remove(editorUI.Tab.Entry);
 
             var tabIndex = _tabsBar.Children.IndexOf(editorUI.Tab);
@@ -335,11 +337,7 @@ namespace ModrogEditor.Interface.Editing
                 }
                 else
                 {
-                    if (_openEditorUIsByEntry.TryGetValue(entry, out var editorUI))
-                    {
-                        editorUI.Editor.ForceUnload();
-                        RemoveEditor(editorUI);
-                    };
+                    if (_openEditorUIsByEntry.TryGetValue(entry, out var editorUI)) RemoveEditor(editorUI);
                 }
             }
         }

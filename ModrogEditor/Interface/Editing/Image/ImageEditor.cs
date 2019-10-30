@@ -25,7 +25,7 @@ namespace ModrogEditor.Interface.Editing.Image
             Desktop.SetFocusedElement(_mainLayer);
         }
 
-        protected override void Unload()
+        public override void Unload()
         {
             if (_textureArea != null)
             {
