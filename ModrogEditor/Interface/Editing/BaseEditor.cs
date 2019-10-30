@@ -8,7 +8,7 @@ namespace ModrogEditor.Interface.Editing
         public readonly string FullAssetPath;
 
         public bool HasUnsavedChanges { get; private set; }
-        Action _onUnsavedStatusChanged;
+        readonly Action _onUnsavedStatusChanged;
 
         protected readonly Panel _mainLayer;
         readonly ErrorLayer _loadErrorLayer;

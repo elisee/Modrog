@@ -29,12 +29,14 @@ namespace ModrogEditor
         readonly IntPtr _renderer;
 
         // Assets
-        public readonly string AssetsPath;
+        readonly string _assetsPath;
         public readonly Font TitleFont;
         public readonly Font HeaderFont;
         public readonly FontStyle HeaderFontStyle;
         public readonly Font MainFont;
         public readonly Font MonoFont;
+
+        public readonly IntPtr TileMarkersSpritesheet;
 
         // Interface
         public readonly Desktop Desktop;
@@ -63,15 +65,18 @@ namespace ModrogEditor
             _viewport = new Rectangle(0, 0, initialWidth, initialHeight);
 
             // Assets
-            AssetsPath = FileHelper.FindAppFolder("Assets");
+            _assetsPath = FileHelper.FindAppFolder("Assets");
             if (SDL_image.IMG_Init(SDL_image.IMG_InitFlags.IMG_INIT_PNG) != (int)SDL_image.IMG_InitFlags.IMG_INIT_PNG) throw new Exception();
 
-            TitleFont = Font.LoadFromChevyRayFolder(_renderer, Path.Combine(AssetsPath, "Fonts", "ChevyRay - Roundabout"));
-            HeaderFont = Font.LoadFromChevyRayFolder(_renderer, Path.Combine(AssetsPath, "Fonts", "ChevyRay - Skullboy"));
+            TitleFont = Font.LoadFromChevyRayFolder(_renderer, Path.Combine(_assetsPath, "Fonts", "ChevyRay - Roundabout"));
+            HeaderFont = Font.LoadFromChevyRayFolder(_renderer, Path.Combine(_assetsPath, "Fonts", "ChevyRay - Skullboy"));
             HeaderFontStyle = new FontStyle(HeaderFont) { Scale = 2, LetterSpacing = 1, LineSpacing = 8 };
 
-            MainFont = Font.LoadFromChevyRayFolder(_renderer, Path.Combine(AssetsPath, "Fonts", "ChevyRay - Softsquare"));
-            MonoFont = Font.LoadFromChevyRayFolder(_renderer, Path.Combine(AssetsPath, "Fonts", "ChevyRay - Softsquare Mono"));
+            MainFont = Font.LoadFromChevyRayFolder(_renderer, Path.Combine(_assetsPath, "Fonts", "ChevyRay - Softsquare"));
+            MonoFont = Font.LoadFromChevyRayFolder(_renderer, Path.Combine(_assetsPath, "Fonts", "ChevyRay - Softsquare Mono"));
+
+            var tileMarkersSpritesheetPath = Path.Combine(_assetsPath, "Editor", "MapTileMarkers.png");
+            TileMarkersSpritesheet = SDL_image.IMG_LoadTexture(_renderer, tileMarkersSpritesheetPath);
 
             // Interface
             Desktop = new Desktop(_renderer,

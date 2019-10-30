@@ -25,11 +25,7 @@ namespace ModrogEditor.Interface.Editing.Map
         }
 
         readonly MapViewport _mapViewport;
-        readonly TileSelector _tileSelector;
-
         readonly MapSettingsLayer _mapSettingsLayer;
-
-        public readonly IntPtr TileMarkersSpritesheet;
 
         // Spritesheet
         public string SpritesheetPath { get; private set; }
@@ -131,15 +127,11 @@ namespace ModrogEditor.Interface.Editing.Map
                 // Tile set
                 var tileSetPanel = new Panel(sidebar) { ChildLayout = ChildLayoutMode.Top, LayoutWeight = 1 };
                 new Label(tileSetPanel) { Text = "TILE SET", Padding = 8, BackgroundPatch = new TexturePatch(0x456456ff) };
-
-                _tileSelector = new TileSelector(this, tileSetPanel) { LayoutWeight = 1 };
+                new TileSelector(this, tileSetPanel) { LayoutWeight = 1 };
             }
 
             // Settings popup
             _mapSettingsLayer = new MapSettingsLayer(this) { Visible = false };
-
-            var tileMarkersSpritesheetPath = Path.Combine(App.AssetsPath, "Editor", "MapTileMarkers.png");
-            TileMarkersSpritesheet = SDL_image.IMG_LoadTexture(Desktop.Renderer, tileMarkersSpritesheetPath);
 
             Load();
         }

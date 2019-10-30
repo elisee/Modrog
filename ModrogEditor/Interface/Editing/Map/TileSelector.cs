@@ -60,7 +60,7 @@ namespace ModrogEditor.Interface.Editing.Map
             {
                 var sourceRect = new SDL.SDL_Rect { x = 0 * Protocol.MapTileSize, y = 0 * Protocol.MapTileSize, w = Protocol.MapTileSize, h = Protocol.MapTileSize };
                 var destRect = new SDL.SDL_Rect { x = _contentRectangle.X + 0 * Protocol.MapTileSize, y = _contentRectangle.Y + 0 * Protocol.MapTileSize, w = Protocol.MapTileSize, h = Protocol.MapTileSize };
-                SDL.SDL_RenderCopy(Desktop.Renderer, _mapEditor.TileMarkersSpritesheet, ref sourceRect, ref destRect);
+                SDL.SDL_RenderCopy(Desktop.Renderer, _mapEditor.App.TileMarkersSpritesheet, ref sourceRect, ref destRect);
             }
 
             for (var i = 0; i < tileKinds.Length; i++)
@@ -80,7 +80,7 @@ namespace ModrogEditor.Interface.Editing.Map
                 var x = _mapEditor.BrushTileKindIndex % tilesPerRow;
                 var y = _mapEditor.BrushTileKindIndex / tilesPerRow;
                 var destRect = new SDL.SDL_Rect { x = _contentRectangle.X + x * Protocol.MapTileSize, y = _contentRectangle.Y + y * Protocol.MapTileSize, w = Protocol.MapTileSize, h = Protocol.MapTileSize };
-                SDL.SDL_RenderCopy(Desktop.Renderer, _mapEditor.TileMarkersSpritesheet, ref sourceRect, ref destRect);
+                SDL.SDL_RenderCopy(Desktop.Renderer, _mapEditor.App.TileMarkersSpritesheet, ref sourceRect, ref destRect);
             }
 
             if (IsHovered)
