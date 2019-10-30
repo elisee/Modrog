@@ -7,13 +7,13 @@ namespace ModrogClient
     {
         static void Main(string[] args)
         {
-            var engine = new ClientApp();
+            var app = new ClientApp();
 
             if (args.Length >= 1)
             {
                 if (args[0] == "--scenario")
                 {
-                    engine.State.StartServer(args[1]);
+                    app.State.StartServer(args[1]);
                 }
                 else
                 {
@@ -21,11 +21,11 @@ namespace ModrogClient
                     var hostname = pieces[0];
                     var port = pieces.Length > 1 ? int.Parse(pieces[1], CultureInfo.InvariantCulture) : Protocol.Port;
                     var scenario = args.Length == 2 ? args[1] : null;
-                    engine.State.Connect(hostname, port, scenario);
+                    app.State.Connect(hostname, port, scenario);
                 }
             }
 
-            engine.Run();
+            app.Run();
         }
     }
 }

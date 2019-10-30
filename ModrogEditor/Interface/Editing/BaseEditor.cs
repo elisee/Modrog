@@ -49,26 +49,6 @@ namespace ModrogEditor.Interface.Editing
 
         protected abstract void Unload();
 
-        /* bool TrySave(out string error)
-        {
-            if (!HasUnsavedChanges)
-            {
-                error = null;
-                return true;
-            }
-
-            _loadAndSaveErrorLayer.Visible = false;
-
-            if (!TrySave(out var error))
-            {
-                _loadAndSaveErrorLayer.Show("Cannot save asset", error, onTryAgain: Save);
-                Layout();
-                return;
-            }
-
-            HasUnsavedChanges = false;
-            _onChangeUnsavedStatus(HasUnsavedChanges);
-        } */
 
         protected abstract bool TryLoad(out string error);
         protected abstract bool TrySave_Internal(out string error);
