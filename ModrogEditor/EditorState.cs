@@ -44,11 +44,7 @@ namespace ModrogEditor
         {
             if (Stage == EditorStage.Editing)
             {
-                _app.EditingView.ConfirmCloseAllEditors(() =>
-                {
-                    Stage = EditorStage.Exited;
-                });
-
+                _app.EditingView.ConfirmCloseAllEditors(() => Stage = EditorStage.Exited);
                 return;
             }
 

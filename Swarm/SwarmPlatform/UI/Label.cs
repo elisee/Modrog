@@ -86,8 +86,7 @@ namespace SwarmPlatform.UI
                 }
                 else
                 {
-                    // TODO: Compute length of all words and return length of longest one
-                    throw new NotImplementedException();
+                    throw new NotImplementedException("Wrapped labels with no minimum width are not supported");
                 }
             }
             else

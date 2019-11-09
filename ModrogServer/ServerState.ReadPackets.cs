@@ -15,6 +15,8 @@ namespace ModrogServer
             if (peer.Identity == null)
             {
                 if (packetType != Protocol.ClientPacketType.Hello) throw new PacketException($"Invalid packet type, expected {nameof(Protocol.ClientPacketType.Hello)}, got {packetType}.");
+                Console.WriteLine($"{peer.Socket.RemoteEndPoint} - Got {nameof(Protocol.ClientPacketType.Hello)} packet.");
+
                 ReadHello(peer);
                 return;
             }

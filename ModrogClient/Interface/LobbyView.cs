@@ -8,7 +8,6 @@ namespace ModrogClient.Interface
     {
         readonly Panel _playerListPanel;
         readonly Panel _scenarioListPanel;
-        readonly Panel _savedGamesListPanel;
 
         readonly Label _noGameSelectedLabel;
         readonly Panel _scenarioInfoContainer;
@@ -57,20 +56,6 @@ namespace ModrogClient.Interface
                     };
 
                     _scenarioListPanel = new Panel(gameSelectionPanel)
-                    {
-                        LayoutWeight = 1,
-                        ChildLayout = ChildLayoutMode.Top,
-                        VerticalFlow = Flow.Scroll
-                    };
-
-                    new Label(gameSelectionPanel)
-                    {
-                        Padding = 8,
-                        Text = "Saved Games",
-                        BackgroundPatch = new TexturePatch(0x112345ff),
-                    };
-
-                    _savedGamesListPanel = new Panel(gameSelectionPanel)
                     {
                         LayoutWeight = 1,
                         ChildLayout = ChildLayoutMode.Top,
@@ -131,8 +116,6 @@ namespace ModrogClient.Interface
             }
 
             {
-                // TODO: Move this in the lower part of the game info panel and separate players between known identities & unknown if loading a saved game
-                // TODO: Add chat box
                 var playerListArea = new Panel(playerListAndMainPanelContainer, new TexturePatch(0xaa0000ff))
                 {
                     Width = 200,
@@ -154,9 +137,6 @@ namespace ModrogClient.Interface
                 new StyledTextButton(actionsContainer) { Text = "Start Game", Right = 8, OnActivate = () => App.State.StartGame() };
                 new StyledTextButton(actionsContainer) { Text = "Leave", Right = 8, OnActivate = () => App.State.Disconnect() };
             }
-
-            // TODO: Display saved games & scenarios to choose from
-            // TODO: Add buttons for readying up and starting the game
         }
 
         public override void OnMounted()
@@ -174,20 +154,6 @@ namespace ModrogClient.Interface
                 }.Label.Ellipsize = true;
             }
             _scenarioListPanel.Layout();
-
-            /*
-            _savedGamesListPanel.Clear();
-            foreach (var entry in App.State.SavedGameEntries)
-            {
-                // TODO: Add date last played and stuff like that
-                new TextButton(_scenarioListPanel)
-                {
-                    Padding = 8,
-                    Text = entry.ScenarioName,
-                    OnActivate = () => { TODO }
-                };
-            }
-            */
 
             Desktop.SetFocusedElement(_chatInput);
         }

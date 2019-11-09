@@ -25,7 +25,7 @@ namespace ModrogClient
         readonly PacketReader _packetReader = new PacketReader();
         Process _serverProcess;
 
-        public string SavedServerHostname = "localhost"; // TODO: Save and load from settings
+        public string SavedServerHostname = "localhost";
         public int SavedServerPort = Protocol.Port;
 
         public string ErrorMessage { get; private set; }
