@@ -2,6 +2,7 @@
 using ModrogCommon;
 using SwarmBasics.Math;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace ModrogServer
@@ -46,8 +47,8 @@ namespace ModrogServer
                 case ServerStage.Playing:
                     switch (packetType)
                     {
-                        case Protocol.ClientPacketType.SetPosition: ReadPosition(peer); break;
-                        case Protocol.ClientPacketType.PlanMoves: ReadPlanMoves(peer); break;
+                        case Protocol.ClientPacketType.SetPlayerPosition: ReadPlayerPosition(peer); break;
+                        case Protocol.ClientPacketType.SetEntityIntents: ReadSetEntityIntents(peer); break;
                     }
 
                     break;
@@ -77,7 +78,6 @@ namespace ModrogServer
             {
                 if (peer.Identity.IsOnline) throw new PacketException($"There is already someone connected with that player identity.");
                 peer.Identity.IsOnline = true;
-                _universe.Players[peer.Identity.PlayerIndex].WasJustTeleported = true;
 
                 if (_stage != ServerStage.Lobby)
                 {
@@ -142,9 +142,14 @@ namespace ModrogServer
                     break;
 
                 case ServerStage.Playing:
-                    _packetWriter.WriteInt(peer.Identity.PlayerIndex);
+                    var player = _universe.Players[peer.Identity.PlayerIndex];
+
+                    _packetWriter.WriteInt(player.Index);
+                    _packetWriter.WriteShort((short)player.Position.X);
+                    _packetWriter.WriteShort((short)player.Position.Y);
 
                     WriteUniverseSetup();
+                    WriteNewEntitiesInSight(player.EntitiesInSight);
                     break;
             }
 
@@ -238,32 +243,49 @@ namespace ModrogServer
         #endregion
 
         #region Playing Stage
-        void ReadPosition(Peer peer)
+        void WriteNewEntitiesInSight(ICollection<Game.InternalEntity> entities)
+        {
+            _packetWriter.WriteShort((short)entities.Count);
+            foreach (var entity in entities)
+            {
+                _packetWriter.WriteInt(entity.Id);
+                _packetWriter.WriteShort((short)entity.SpriteLocation.X);
+                _packetWriter.WriteShort((short)entity.SpriteLocation.Y);
+
+                _packetWriter.WriteByte((byte)entity.PlayerIndex);
+
+                // We send the previous tick position so the client can interpolate after applying the action below
+                _packetWriter.WriteShort((short)entity.PreviousTickPosition.X);
+                _packetWriter.WriteShort((short)entity.PreviousTickPosition.Y);
+            }
+        }
+
+        void ReadPlayerPosition(Peer peer)
         {
             var player = _universe.Players[peer.Identity.PlayerIndex];
             player.Position = new Point(_packetReader.ReadShort(), _packetReader.ReadShort());
         }
 
-        void ReadPlanMoves(Peer peer)
+        void ReadSetEntityIntents(Peer peer)
         {
             var clientTickIndex = _packetReader.ReadInt();
             if (clientTickIndex != _universe.TickIndex)
             {
-                Console.WriteLine($"{peer.Socket.RemoteEndPoint} - Ignoring {nameof(Protocol.ClientPacketType.PlanMoves)} packet from tick {clientTickIndex}, we're at {_universe.TickIndex}.");
+                Console.WriteLine($"{peer.Socket.RemoteEndPoint} - Ignoring {nameof(Protocol.ClientPacketType.SetEntityIntents)} packet from tick {clientTickIndex}, we're at {_universe.TickIndex}.");
                 return;
             }
 
             var player = _universe.Players[peer.Identity.PlayerIndex];
 
-            var moveCount = _packetReader.ReadShort();
-            for (var i = 0; i < moveCount; i++)
+            var intentCount = _packetReader.ReadShort();
+            for (var i = 0; i < intentCount; i++)
             {
                 var entityId = _packetReader.ReadInt();
-                var move = (ModrogApi.EntityMove)_packetReader.ReadByte();
+                var intent = (ModrogApi.EntityIntent)_packetReader.ReadByte();
 
-                if (!player.OwnedEntitiesById.TryGetValue(entityId, out var entity)) throw new PacketException($"Invalid entity id in {nameof(Protocol.ClientPacketType.PlanMoves)} packet.");
+                if (!player.OwnedEntitiesById.TryGetValue(entityId, out var entity)) throw new PacketException($"Invalid entity id in {nameof(Protocol.ClientPacketType.SetEntityIntents)} packet.");
 
-                entity.UpcomingMove = move;
+                entity.UpcomingIntent = intent;
             }
         }
         #endregion

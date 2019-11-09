@@ -33,7 +33,7 @@ namespace ModrogCommon.Scripting
             {
                 syntaxTrees[i] = CSharpSyntaxTree.ParseText(fileContents[i], CSharpParseOptions.Default.WithLanguageVersion(LanguageVersion.CSharp8));
 
-                // TODO: Analyze the script for dangerous accesses that we might want to prevent?
+                // Here we could analyze the script for dangerous accesses that we might want to prevent?
                 // maybe CSharpSyntaxWalker, see https://docs.microsoft.com/en-us/dotnet/csharp/roslyn-sdk/get-started/syntax-analysis
                 // var root = syntaxTrees[i].GetCompilationUnitRoot();
             }

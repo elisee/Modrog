@@ -16,7 +16,7 @@ namespace ModrogEditor.Interface.Editing.Map
     {
         public static void CreateEmptyFile(string fullAssetPath)
         {
-            var writer = new PacketWriter(initialCapacity: 8192, useSizeHeader: false);
+            var writer = new PacketWriter(initialCapacity: 32, useSizeHeader: false);
             writer.WriteByteSizeString("");
             writer.WriteInt(0);
 

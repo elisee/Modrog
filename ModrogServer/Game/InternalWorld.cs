@@ -23,54 +23,61 @@ namespace ModrogServer.Game
         {
             foreach (var entity in _entities)
             {
-                switch (entity.UpcomingMove)
+                entity.PreviousTickPosition = entity.Position;
+
+                var intent = entity.UpcomingIntent;
+                entity.UpcomingIntent = ModrogApi.EntityIntent.Idle;
+                entity.EffectiveAction = ModrogApi.EntityAction.Idle;
+
+                switch (intent)
                 {
-                    case ModrogApi.EntityMove.RotateCW:
-                        entity.Direction = (ModrogApi.EntityDirection)((int)(entity.Direction + 1) % 4);
-                        break;
-                    case ModrogApi.EntityMove.RotateCCW:
-                        entity.Direction = (ModrogApi.EntityDirection)((int)(entity.Direction + 3) % 4);
-                        break;
-
-                    case ModrogApi.EntityMove.Forward:
+                    case ModrogApi.EntityIntent.MoveRight:
+                    case ModrogApi.EntityIntent.MoveDown:
+                    case ModrogApi.EntityIntent.MoveLeft:
+                    case ModrogApi.EntityIntent.MoveUp:
                         {
-                            var newX = entity.Position.X;
-                            var newY = entity.Position.Y;
+                            var newPosition = entity.Position;
 
-                            switch (entity.Direction)
+                            switch (intent)
                             {
-                                case ModrogApi.EntityDirection.Right: newX++; break;
-                                case ModrogApi.EntityDirection.Down: newY++; break;
-                                case ModrogApi.EntityDirection.Left: newX--; break;
-                                case ModrogApi.EntityDirection.Up: newY--; break;
+                                case ModrogApi.EntityIntent.MoveRight: newPosition.X++; break;
+                                case ModrogApi.EntityIntent.MoveDown: newPosition.Y++; break;
+                                case ModrogApi.EntityIntent.MoveLeft: newPosition.X--; break;
+                                case ModrogApi.EntityIntent.MoveUp: newPosition.Y--; break;
                             }
 
                             // TODO: Need to check each layer for various flags
-                            var targetTile = PeekTile(ModrogApi.MapLayer.Wall, newX, newY);
+                            var targetTile = PeekTile(ModrogApi.MapLayer.Wall, newPosition.X, newPosition.Y);
                             if (targetTile != 0)
                             {
                                 // Can't move
                                 break;
                             }
 
-                            entity.Position = new Point(newX, newY);
+                            switch (intent)
+                            {
+                                case ModrogApi.EntityIntent.MoveRight: entity.EffectiveAction = ModrogApi.EntityAction.MoveRight; break;
+                                case ModrogApi.EntityIntent.MoveDown: entity.EffectiveAction = ModrogApi.EntityAction.MoveDown; break;
+                                case ModrogApi.EntityIntent.MoveLeft: entity.EffectiveAction = ModrogApi.EntityAction.MoveLeft; break;
+                                case ModrogApi.EntityIntent.MoveUp: entity.EffectiveAction = ModrogApi.EntityAction.MoveUp; break;
+                            }
+
+                            entity.Position = newPosition;
 
                             // TODO: Dig, push, collect, etc.
                             // TODO: Check for interactions with entities
                         }
                         break;
 
-                    case ModrogApi.EntityMove.Idle:
+                    case ModrogApi.EntityIntent.Idle:
                         break;
                 }
-
-                entity.UpcomingMove = ModrogApi.EntityMove.Idle;
             }
         }
 
-        public override ModrogApi.Server.Entity SpawnEntity(ModrogApi.Server.EntityKind kind, Point position, ModrogApi.EntityDirection direction, ModrogApi.Server.Player owner)
+        public override ModrogApi.Server.Entity SpawnEntity(ModrogApi.Server.EntityKind kind, Point position, ModrogApi.Server.Player owner)
         {
-            return new InternalEntity(Universe.GetNextEntityId(), this, ((InternalEntityKind)kind).SpriteLocation, position, direction, owner != null ? ((InternalPlayer)owner).Index : -1);
+            return new InternalEntity(Universe.GetNextEntityId(), this, ((InternalEntityKind)kind).SpriteLocation, position, owner != null ? ((InternalPlayer)owner).Index : -1);
         }
 
         internal void Add(InternalEntity entity)

@@ -14,7 +14,8 @@ namespace ModrogServer.Game
 
         internal readonly List<InternalEntity> OwnedEntities = new List<InternalEntity>();
         internal readonly Dictionary<int, InternalEntity> OwnedEntitiesById = new Dictionary<int, InternalEntity>();
-        internal readonly HashSet<InternalEntity> TrackedEntities = new HashSet<InternalEntity>();
+
+        internal readonly HashSet<InternalEntity> EntitiesInSight = new HashSet<InternalEntity>();
 
         #region API
         public override void Teleport(ModrogApi.Server.World world, Point position)
@@ -22,6 +23,7 @@ namespace ModrogServer.Game
             World = (InternalWorld)world;
             Position = position;
             WasJustTeleported = true;
+            EntitiesInSight.Clear();
         }
 
         public override void ShowTip(string tip)

@@ -118,16 +118,6 @@ namespace ModrogClient
                 });
             }
 
-
-            /*
-            var savedGamesCount = _packetReader.ReadByte();
-            SavedGameEntries.Clear();
-            for (var i = 0; i < savedGamesCount; i++)
-            {
-                throw new NotImplementedException();
-            }
-            */
-
             ReadSetScenario();
 
             if (!isPlaying)
@@ -142,12 +132,15 @@ namespace ModrogClient
             else
             {
                 SelfPlayerIndex = _packetReader.ReadInt();
+                ReadSelfLocation();
 
                 WorldChunks.Clear();
                 FogChunks.Clear();
-                SeenEntities.Clear();
+                EntitiesInSight.Clear();
+                EntitiesInSightById.Clear();
 
                 ReadUniverseSetup();
+                ReadNewEntitiesInSight();
             }
 
             _app.OnStageChanged();
@@ -236,6 +229,7 @@ namespace ModrogClient
                 }
             }
         }
+
         #endregion
 
         #region Playing Stage
@@ -248,37 +242,38 @@ namespace ModrogClient
             }
 
             TickIndex = _packetReader.ReadInt();
-            SeenEntities.Clear();
 
             var wasTeleported = _packetReader.ReadByte() != 0;
             if (wasTeleported)
             {
                 WorldChunks.Clear();
+                EntitiesInSight.Clear();
+                EntitiesInSightById.Clear();
 
-                var location = new Point(_packetReader.ReadShort(), _packetReader.ReadShort());
-                _app.PlayingView.OnTeleported(location);
+                ReadSelfLocation();
             }
 
             FogChunks.Clear();
 
-            Game.ClientEntity newSelectedEntity = null;
-
-            var entitiesCount = (int)_packetReader.ReadShort();
-            for (var i = 0; i < entitiesCount; i++)
+            var outOfSightEntitiesCount = (int)_packetReader.ReadShort();
+            for (var i = 0; i < outOfSightEntitiesCount; i++)
             {
                 var id = _packetReader.ReadInt();
-                var spriteLocation = new Point(_packetReader.ReadShort(), _packetReader.ReadShort());
-                var position = new Point(_packetReader.ReadShort(), _packetReader.ReadShort());
-                var direction = (EntityDirection)_packetReader.ReadByte();
-                var playerIndex = _packetReader.ReadShort();
-
-                var entity = new Game.ClientEntity(id) { SpriteLocation = spriteLocation, Position = position, Direction = direction, PlayerIndex = playerIndex };
-                SeenEntities.Add(entity);
-
-                if (SelectedEntity?.Id == entity.Id) newSelectedEntity = entity;
+                EntitiesInSightById.Remove(id, out var entity);
+                EntitiesInSight.Remove(entity);
             }
 
-            SelectedEntity = newSelectedEntity;
+            ReadNewEntitiesInSight();
+
+            if (SelectedEntity != null) EntitiesInSightById.TryGetValue(SelectedEntity.Id, out SelectedEntity);
+
+            var entitiesWithActionCount = (int)_packetReader.ReadShort();
+
+            for (var i = 0; i < entitiesWithActionCount; i++)
+            {
+                var id = _packetReader.ReadInt();
+                EntitiesInSightById[id].ApplyTickAction((EntityAction)_packetReader.ReadByte());
+            }
 
             var tileStacksCount = (int)_packetReader.ReadShort();
             for (var i = 0; i < tileStacksCount; i++)
@@ -317,28 +312,50 @@ namespace ModrogClient
                 (int)(_app.PlayingView.Scroll.X / Protocol.MapTileSize),
                 (int)(_app.PlayingView.Scroll.Y / Protocol.MapTileSize));
 
-            _packetWriter.WriteByte((byte)ClientPacketType.SetPosition);
+            _packetWriter.WriteByte((byte)ClientPacketType.SetPlayerPosition);
             _packetWriter.WriteShort((short)scrollPosition.X);
             _packetWriter.WriteShort((short)scrollPosition.Y);
             SendPacket();
 
-            // Send planned moves
-            var plannedMoves = new Dictionary<int, EntityMove>();
+            // Send intents
+            var intents = new Dictionary<int, EntityIntent>();
 
-            if (SelectedEntity != null && SelectedEntityMoveDirection != null)
+            if (SelectedEntity != null && SelectedEntityIntent != null)
             {
-                plannedMoves[SelectedEntity.Id] = SelectedEntity.GetMoveForTargetDirection(SelectedEntityMoveDirection.Value);
+                intents[SelectedEntity.Id] = SelectedEntityIntent.Value;
             }
 
-            _packetWriter.WriteByte((byte)ClientPacketType.PlanMoves);
+            _packetWriter.WriteByte((byte)ClientPacketType.SetEntityIntents);
             _packetWriter.WriteInt(TickIndex);
-            _packetWriter.WriteShort((short)plannedMoves.Count);
-            foreach (var (entityId, move) in plannedMoves)
+            _packetWriter.WriteShort((short)intents.Count);
+            foreach (var (entityId, move) in intents)
             {
                 _packetWriter.WriteInt(entityId);
                 _packetWriter.WriteByte((byte)move);
             }
             SendPacket();
+        }
+
+        void ReadSelfLocation()
+        {
+            var location = new Point(_packetReader.ReadShort(), _packetReader.ReadShort());
+            _app.PlayingView.OnTeleported(location);
+        }
+
+        void ReadNewEntitiesInSight()
+        {
+            var newlySeenEntitiesCount = (int)_packetReader.ReadShort();
+            for (var i = 0; i < newlySeenEntitiesCount; i++)
+            {
+                var id = _packetReader.ReadInt();
+                var spriteLocation = new Point(_packetReader.ReadShort(), _packetReader.ReadShort());
+                var playerIndex = _packetReader.ReadByte();
+                var position = new Point(_packetReader.ReadShort(), _packetReader.ReadShort());
+
+                var entity = new Game.ClientEntity(id, position) { SpriteLocation = spriteLocation, PlayerIndex = playerIndex };
+                EntitiesInSight.Add(entity);
+                EntitiesInSightById.Add(entity.Id, entity);
+            }
         }
         #endregion
     }

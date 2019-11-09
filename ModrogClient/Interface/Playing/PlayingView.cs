@@ -118,10 +118,10 @@ namespace ModrogClient.Interface.Playing
 
             if (state.SelectedEntity != null && state.SelectedEntity.PlayerIndex == state.SelfPlayerIndex)
             {
-                if (key == SDL.SDL_Keycode.SDLK_a || key == SDL.SDL_Keycode.SDLK_q) state.SetMoveTowards(ModrogApi.EntityDirection.Left);
-                if (key == SDL.SDL_Keycode.SDLK_d) state.SetMoveTowards(ModrogApi.EntityDirection.Right);
-                if (key == SDL.SDL_Keycode.SDLK_w || key == SDL.SDL_Keycode.SDLK_z) state.SetMoveTowards(ModrogApi.EntityDirection.Up);
-                if (key == SDL.SDL_Keycode.SDLK_s) state.SetMoveTowards(ModrogApi.EntityDirection.Down);
+                if (key == SDL.SDL_Keycode.SDLK_a || key == SDL.SDL_Keycode.SDLK_q) state.SetIntent(ModrogApi.EntityIntent.MoveLeft);
+                if (key == SDL.SDL_Keycode.SDLK_d) state.SetIntent(ModrogApi.EntityIntent.MoveRight);
+                if (key == SDL.SDL_Keycode.SDLK_w || key == SDL.SDL_Keycode.SDLK_z) state.SetIntent(ModrogApi.EntityIntent.MoveUp);
+                if (key == SDL.SDL_Keycode.SDLK_s) state.SetIntent(ModrogApi.EntityIntent.MoveDown);
             }
 
             if (key == SDL.SDL_Keycode.SDLK_TAB)
@@ -138,10 +138,11 @@ namespace ModrogClient.Interface.Playing
             if (key == SDL.SDL_Keycode.SDLK_UP) _isScrollingUp = false;
             if (key == SDL.SDL_Keycode.SDLK_DOWN) _isScrollingDown = false;
 
-            if (key == SDL.SDL_Keycode.SDLK_a || key == SDL.SDL_Keycode.SDLK_q) App.State.StopMovingTowards(ModrogApi.EntityDirection.Left);
-            if (key == SDL.SDL_Keycode.SDLK_d) App.State.StopMovingTowards(ModrogApi.EntityDirection.Right);
-            if (key == SDL.SDL_Keycode.SDLK_w || key == SDL.SDL_Keycode.SDLK_z) App.State.StopMovingTowards(ModrogApi.EntityDirection.Up);
-            if (key == SDL.SDL_Keycode.SDLK_s) App.State.StopMovingTowards(ModrogApi.EntityDirection.Down);
+            var state = App.State;
+            if (key == SDL.SDL_Keycode.SDLK_a || key == SDL.SDL_Keycode.SDLK_q) state.ClearIntent(ModrogApi.EntityIntent.MoveLeft);
+            if (key == SDL.SDL_Keycode.SDLK_d) state.ClearIntent(ModrogApi.EntityIntent.MoveRight);
+            if (key == SDL.SDL_Keycode.SDLK_w || key == SDL.SDL_Keycode.SDLK_z) state.ClearIntent(ModrogApi.EntityIntent.MoveUp);
+            if (key == SDL.SDL_Keycode.SDLK_s) state.ClearIntent(ModrogApi.EntityIntent.MoveDown);
 
             if (key == SDL.SDL_Keycode.SDLK_TAB) _sidebarPanel.Visible = false;
         }
@@ -164,7 +165,7 @@ namespace ModrogClient.Interface.Playing
             {
                 var hoveredEntities = new List<Game.ClientEntity>();
 
-                foreach (var entity in App.State.SeenEntities)
+                foreach (var entity in App.State.EntitiesInSight)
                 {
                     if (entity.Position.X == _hoveredTileCoords.X && entity.Position.Y == _hoveredTileCoords.Y) hoveredEntities.Add(entity);
                 }
@@ -251,10 +252,8 @@ namespace ModrogClient.Interface.Playing
             {
                 var panel = new Panel(_playerListContainer) { ChildLayout = ChildLayoutMode.Left };
 
+                new Element(panel) { Width = 12, Height = 12, Right = 8, BackgroundPatch = new TexturePatch(player.IsHost ? 0xffff44ff : 0x00000000) };
                 new Element(panel) { Width = 12, Height = 12, Right = 8, BackgroundPatch = new TexturePatch(player.IsOnline ? 0x44ff44ff : 0xff4444ff) };
-
-                // TODO: Icon for host/not host
-
                 new Label(panel) { LayoutWeight = 1, Text = player.Name };
             }
 
@@ -263,6 +262,7 @@ namespace ModrogClient.Interface.Playing
 
         public void OnChatMessageReceived(string author, string message)
         {
+            // TODO: Display chat message
         }
 
         public void OnSpritesheetReceived(Span<byte> data)
@@ -282,11 +282,6 @@ namespace ModrogClient.Interface.Playing
         public void OnTeleported(Point position)
         {
             Scroll = new Vector2(position.X * Protocol.MapTileSize, position.Y * Protocol.MapTileSize);
-        }
-
-        public void OnSelectedEntityChanged()
-        {
-            // TODO
         }
         #endregion
 
@@ -365,7 +360,7 @@ namespace ModrogClient.Interface.Playing
                 }
             }
 
-            foreach (var entity in state.SeenEntities)
+            foreach (var entity in state.EntitiesInSight)
             {
                 if (entity.Position.X < startTileCoords.X || entity.Position.Y < startTileCoords.Y || entity.Position.X > endTileCoords.X || entity.Position.Y > endTileCoords.Y) continue;
 

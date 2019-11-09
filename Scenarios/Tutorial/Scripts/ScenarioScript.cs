@@ -62,10 +62,10 @@ class ScenarioScript : IScenarioScript
         // spawnCoords = _cryptEntranceCoords;
 
         // Forest
-        Knight = ForestWorld.SpawnEntity(KnightEntityKind, spawnCoords, EntityDirection.Right, owner: Player);
+        Knight = ForestWorld.SpawnEntity(KnightEntityKind, spawnCoords, owner: Player);
 
-        _skeletons.Add(ForestWorld.SpawnEntity(SkeletonEntityKind, spawnCoords + new Point(10, 3), EntityDirection.Left, owner: null));
-        _skeletons.Add(ForestWorld.SpawnEntity(SkeletonEntityKind, spawnCoords + new Point(12, 4), EntityDirection.Left, owner: null));
+        _skeletons.Add(ForestWorld.SpawnEntity(SkeletonEntityKind, spawnCoords + new Point(10, 3), owner: null));
+        _skeletons.Add(ForestWorld.SpawnEntity(SkeletonEntityKind, spawnCoords + new Point(12, 4), owner: null));
 
         SetupForestView();
         Player.Teleport(ForestWorld, spawnCoords);
@@ -81,7 +81,7 @@ class ScenarioScript : IScenarioScript
             if (Knight.GetPosition() == _forestToCryptStairsCoords)
             {
                 SetupCryptView();
-                Knight.Teleport(UndergroundWorld, _cryptToForestStairsCoords + new Point(0, -1), EntityDirection.Up);
+                Knight.Teleport(UndergroundWorld, _cryptToForestStairsCoords + new Point(0, -1));
                 Player.Teleport(UndergroundWorld, _cryptToForestStairsCoords + new Point(0, -1));
             }
 
@@ -95,7 +95,7 @@ class ScenarioScript : IScenarioScript
             if (Knight.GetPosition() == _cryptToForestStairsCoords)
             {
                 SetupForestView();
-                Knight.Teleport(ForestWorld, _forestToCryptStairsCoords + new Point(0, 1), EntityDirection.Down);
+                Knight.Teleport(ForestWorld, _forestToCryptStairsCoords + new Point(0, 1));
                 Player.Teleport(ForestWorld, _forestToCryptStairsCoords + new Point(0, 1));
             }
         }
@@ -103,11 +103,11 @@ class ScenarioScript : IScenarioScript
 
     void SetupForestView()
     {
-        Knight.SetView(16, 0, MathF.PI * 2f / 3f);
+        Knight.SetView(16);
     }
 
     void SetupCryptView()
     {
-        Knight.SetView(4, 12, MathF.PI * 2f / 3f);
+        Knight.SetView(8);
     }
 }

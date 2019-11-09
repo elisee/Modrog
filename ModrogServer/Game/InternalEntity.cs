@@ -2,30 +2,30 @@
 using ModrogApi.Server;
 using SwarmBasics.Math;
 using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace ModrogServer.Game
 {
-    sealed class InternalEntity : Entity
+    sealed class InternalEntity : Entity, IEquatable<InternalEntity>
     {
         internal readonly int Id;
         internal InternalWorld World;
         public Point SpriteLocation;
         internal Point Position;
-        internal EntityDirection Direction;
+        internal Point PreviousTickPosition;
         internal int PlayerIndex;
 
-        internal EntityMove UpcomingMove = EntityMove.Idle;
+        internal EntityIntent UpcomingIntent = EntityIntent.Idle;
+        internal EntityAction EffectiveAction = EntityAction.Idle;
 
-        public int OmniViewRadius = 2;
-        public int DirectionalViewRadius = 8;
-        public float HalfFieldOfViewAngle = MathF.PI / 3f;
+        public int ViewRadius = 2;
 
-        public InternalEntity(int id, InternalWorld world, Point spriteLocation, Point position, EntityDirection direction, int playerIndex)
+
+        public InternalEntity(int id, InternalWorld world, Point spriteLocation, Point position, int playerIndex)
         {
             Id = id;
             SpriteLocation = spriteLocation;
-            Position = position;
-            Direction = direction;
+            Position = PreviousTickPosition = position;
 
             PlayerIndex = playerIndex;
             if (PlayerIndex != -1)
@@ -37,33 +37,26 @@ namespace ModrogServer.Game
             world.Add(this);
         }
 
-        public override void SetView(int omniViewRadius, int directionalViewRadius, float fieldOfViewAngle)
-        {
-            OmniViewRadius = omniViewRadius;
-            DirectionalViewRadius = directionalViewRadius;
-            HalfFieldOfViewAngle = fieldOfViewAngle / 2f;
-        }
+        public override bool Equals(object obj) => Equals(obj as InternalEntity);
+        public bool Equals([AllowNull] InternalEntity other) => other != null && Id == other?.Id;
+        public override int GetHashCode() => HashCode.Combine(Id);
 
-        internal float GetDirectionAngle() => Direction switch
+        public override void SetView(int omniViewRadius)
         {
-            EntityDirection.Right => 0f,
-            EntityDirection.Down => MathF.PI / 2f,
-            EntityDirection.Left => MathF.PI,
-            EntityDirection.Up => MathF.PI * 3f / 2f,
-            _ => throw new NotSupportedException(),
-        };
+            ViewRadius = omniViewRadius;
+        }
 
         #region API
         public override World GetWorld() => World;
         public override Point GetPosition() => Position;
 
-        public override void Teleport(World world, Point position, EntityDirection direction)
+        public override void Teleport(World world, Point position)
         {
-            ((InternalWorld)World).Remove(this);
+            World.Remove(this);
             ((InternalWorld)world).Add(this);
 
-            Position = position;
-            Direction = direction;
+            Position = PreviousTickPosition = position;
+            EffectiveAction = EntityAction.Idle;
         }
         #endregion
     }

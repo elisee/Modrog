@@ -52,8 +52,8 @@ namespace ModrogCommon
             StartGame,
 
             // Playing
-            SetPosition,
-            PlanMoves,
+            SetPlayerPosition,
+            SetEntityIntents,
         }
     }
 }

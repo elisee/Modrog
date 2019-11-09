@@ -1,29 +1,38 @@
 ﻿using ModrogApi;
 using SwarmBasics.Math;
+using System;
 
 namespace ModrogClient.Game
 {
     public class ClientEntity
     {
         public readonly int Id;
-
         public Point SpriteLocation;
-        public Point Position;
-        public EntityDirection Direction;
         public int PlayerIndex;
 
-        public ClientEntity(int id)
+        public Point PreviousTickPosition { get; private set; }
+        public Point Position { get; private set; }
+        public EntityAction Action { get; private set; }
+
+        public ClientEntity(int id, Point position)
         {
             Id = id;
+            Position = PreviousTickPosition = position;
         }
 
-        internal EntityMove GetMoveForTargetDirection(EntityDirection targetDirection)
+        public void ApplyTickAction(EntityAction action)
         {
-            if (targetDirection == Direction) return EntityMove.Forward;
+            PreviousTickPosition = Position;
+            Action = action;
 
-            var diff = (Direction - targetDirection + 4) % 4 - 2;
-            if (diff < 0) return EntityMove.RotateCCW;
-            else return EntityMove.RotateCW;
+            switch (action)
+            {
+                case EntityAction.MoveRight: Position = new Point(Position.X + 1, Position.Y); break;
+                case EntityAction.MoveDown: Position = new Point(Position.X, Position.Y + 1); break;
+                case EntityAction.MoveLeft: Position = new Point(Position.X - 1, Position.Y); break;
+                case EntityAction.MoveUp: Position = new Point(Position.X, Position.Y - 1); break;
+                default: throw new NotImplementedException();
+            }
         }
     }
 }

@@ -1,5 +1,4 @@
-﻿using ModrogApi;
-using ModrogCommon;
+﻿using ModrogCommon;
 using SwarmBasics.Math;
 using SwarmCore;
 using System;
@@ -57,14 +56,15 @@ namespace ModrogClient
         // Playing
         public bool PlayingMenuOpen { get; private set; }
 
-        public readonly Game.ClientTileKind[][] TileKindsByLayer = new Game.ClientTileKind[(int)MapLayer.Count][];
+        public readonly Game.ClientTileKind[][] TileKindsByLayer = new Game.ClientTileKind[(int)ModrogApi.MapLayer.Count][];
 
         public Dictionary<Point, Chunk> WorldChunks = new Dictionary<Point, Chunk>();
         public Dictionary<Point, Chunk> FogChunks = new Dictionary<Point, Chunk>();
-        public readonly List<Game.ClientEntity> SeenEntities = new List<Game.ClientEntity>();
+        public readonly List<Game.ClientEntity> EntitiesInSight = new List<Game.ClientEntity>();
+        public readonly Dictionary<int, Game.ClientEntity> EntitiesInSightById = new Dictionary<int, Game.ClientEntity>();
 
         public Game.ClientEntity SelectedEntity;
-        public EntityDirection? SelectedEntityMoveDirection;
+        public ModrogApi.EntityIntent? SelectedEntityIntent { get; private set; }
 
         // Scripts
         public readonly Dictionary<int, string> EntityScriptPaths = new Dictionary<int, string>();
@@ -265,7 +265,6 @@ namespace ModrogClient
         public void SetScenario(string scenarioName)
         {
             _packetWriter.WriteByte((byte)Protocol.ClientPacketType.SetScenario);
-            // TODO: Add a byte to say whether scenario or saved game
             _packetWriter.WriteByteSizeString(scenarioName);
             SendPacket();
         }
@@ -290,29 +289,24 @@ namespace ModrogClient
         public void SelectEntity(Game.ClientEntity entity)
         {
             SelectedEntity = entity;
-            SelectedEntityMoveDirection = null;
-            _app.PlayingView.OnSelectedEntityChanged();
+            SelectedEntityIntent = null;
         }
 
-        public void SetMoveTowards(EntityDirection direction)
+        public void SetIntent(ModrogApi.EntityIntent intent)
         {
-            PlanMove(SelectedEntity.GetMoveForTargetDirection(direction));
-            SelectedEntityMoveDirection = direction;
-        }
+            SelectedEntityIntent = intent;
 
-        public void StopMovingTowards(EntityDirection direction)
-        {
-            if (SelectedEntityMoveDirection == direction) SelectedEntityMoveDirection = null;
-        }
-
-        public void PlanMove(ModrogApi.EntityMove move)
-        {
-            _packetWriter.WriteByte((byte)Protocol.ClientPacketType.PlanMoves);
+            _packetWriter.WriteByte((byte)Protocol.ClientPacketType.SetEntityIntents);
             _packetWriter.WriteInt(TickIndex);
             _packetWriter.WriteShort(1);
             _packetWriter.WriteInt(SelectedEntity.Id);
-            _packetWriter.WriteByte((byte)move);
+            _packetWriter.WriteByte((byte)intent);
             SendPacket();
+        }
+
+        public void ClearIntent(ModrogApi.EntityIntent intent)
+        {
+            if (SelectedEntityIntent == intent) SelectedEntityIntent = null;
         }
         #endregion
 

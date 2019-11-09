@@ -11,7 +11,7 @@ namespace ModrogEditor.Interface.Editing.Image
 
         public static void CreateEmptyFile(string fullAssetPath)
         {
-            // TODO
+            // Since we can't edit images yet, no point in being able to create an empty one either
         }
 
         public ImageEditor(EditorApp @interface, string fullAssetPath, Action onUnsavedStatusChanged)

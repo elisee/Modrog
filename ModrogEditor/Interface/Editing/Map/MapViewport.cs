@@ -170,7 +170,6 @@ namespace ModrogEditor.Interface.Editing.Map
 
             if (button == SDL.SDL_BUTTON_LEFT)
             {
-                // TODO: Place a tile down or select an entity
                 _isPlacingTiles = true;
                 PutTile();
             }
