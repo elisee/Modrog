@@ -23,6 +23,9 @@ You'll need .NET Core 3 and Visual Studio 2019. VS Code might work.
 
 ## Tasks
 
+    - (Network) Track player view for each player, including fog-of-war chunks so we can resend on reconnection
+      - Allows applying actions to entities rather than resending each tick
+    - (Api) Have a setup phase and then prevent making further changes to entity kinds, tile kinds, etc.
     - (Gameplay) Implement Rogventure-style combat with hits & projectiles, see if entities having to turn around works well with it (We can allow some entities to turn instantly and others not I guess)
     - (Editor) Allow renaming assets
     - (Editor) Allow reparenting assets with drag'n'drop (need to add drag'n'drop in UI framework)
@@ -37,6 +40,7 @@ You'll need .NET Core 3 and Visual Studio 2019. VS Code might work.
     - (Team) Find a pixel artist! Waiting on mockups from Timothée
     - (Tutorial) Build it!
     - (Gameplay) Add back client-side script editing and display script errors somewhere
+      -> Move towards some visual scripting that is executed server-side and with instruction costs
     - (Gameplay) Add light checkerboard pattern on the floor?
     - (UI Desktop) Show focus outline only after navigating with keyboard once to avoid distracting players and hide after clicking with mouse
     - (UI Element) Allow dragging scrollbars
@@ -46,6 +50,7 @@ You'll need .NET Core 3 and Visual Studio 2019. VS Code might work.
     - (UI TextEditor) Language-specific syntax highlighting & auto-completion support (using callbacks or specialization, not built into the UI framework I think)
     - (UI TextEditor) Add option for line count gutter on the left and use it in script editor
     - (UI TextEditor) Add option to wrap text and use it for manifest description
+    - Support saving & loading games
 
 ## Visual inspirations
 
