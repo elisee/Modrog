@@ -108,20 +108,20 @@ namespace ModrogClient.Interface.Playing
             {
                 if (key == SDL.SDL_Keycode.SDLK_ESCAPE) App.State.SetPlayingMenuOpen(true);
 
-                if (key == SDL.SDL_Keycode.SDLK_LEFT) _isScrollingLeft = true;
-                if (key == SDL.SDL_Keycode.SDLK_RIGHT) _isScrollingRight = true;
-                if (key == SDL.SDL_Keycode.SDLK_UP) _isScrollingUp = true;
-                if (key == SDL.SDL_Keycode.SDLK_DOWN) _isScrollingDown = true;
+                if (key == SDL.SDL_Keycode.SDLK_a || key == SDL.SDL_Keycode.SDLK_q) _isScrollingLeft = true;
+                if (key == SDL.SDL_Keycode.SDLK_d) _isScrollingRight = true;
+                if (key == SDL.SDL_Keycode.SDLK_w || key == SDL.SDL_Keycode.SDLK_z) _isScrollingUp = true;
+                if (key == SDL.SDL_Keycode.SDLK_s) _isScrollingDown = true;
             }
 
             var state = App.State;
 
             if (state.SelectedEntity != null && state.SelectedEntity.PlayerIndex == state.SelfPlayerIndex)
             {
-                if (key == SDL.SDL_Keycode.SDLK_a || key == SDL.SDL_Keycode.SDLK_q) state.SetIntent(ModrogApi.EntityIntent.MoveLeft);
-                if (key == SDL.SDL_Keycode.SDLK_d) state.SetIntent(ModrogApi.EntityIntent.MoveRight);
-                if (key == SDL.SDL_Keycode.SDLK_w || key == SDL.SDL_Keycode.SDLK_z) state.SetIntent(ModrogApi.EntityIntent.MoveUp);
-                if (key == SDL.SDL_Keycode.SDLK_s) state.SetIntent(ModrogApi.EntityIntent.MoveDown);
+                if (key == SDL.SDL_Keycode.SDLK_LEFT) state.SetIntent(ModrogApi.EntityIntent.MoveLeft);
+                if (key == SDL.SDL_Keycode.SDLK_RIGHT) state.SetIntent(ModrogApi.EntityIntent.MoveRight);
+                if (key == SDL.SDL_Keycode.SDLK_UP) state.SetIntent(ModrogApi.EntityIntent.MoveUp);
+                if (key == SDL.SDL_Keycode.SDLK_DOWN) state.SetIntent(ModrogApi.EntityIntent.MoveDown);
             }
 
             if (key == SDL.SDL_Keycode.SDLK_TAB)
@@ -133,16 +133,16 @@ namespace ModrogClient.Interface.Playing
 
         public override void OnKeyUp(SDL.SDL_Keycode key)
         {
-            if (key == SDL.SDL_Keycode.SDLK_LEFT) _isScrollingLeft = false;
-            if (key == SDL.SDL_Keycode.SDLK_RIGHT) _isScrollingRight = false;
-            if (key == SDL.SDL_Keycode.SDLK_UP) _isScrollingUp = false;
-            if (key == SDL.SDL_Keycode.SDLK_DOWN) _isScrollingDown = false;
+            if (key == SDL.SDL_Keycode.SDLK_a || key == SDL.SDL_Keycode.SDLK_q) _isScrollingLeft = false;
+            if (key == SDL.SDL_Keycode.SDLK_d) _isScrollingRight = false;
+            if (key == SDL.SDL_Keycode.SDLK_w || key == SDL.SDL_Keycode.SDLK_z) _isScrollingUp = false;
+            if (key == SDL.SDL_Keycode.SDLK_s) _isScrollingDown = false;
 
             var state = App.State;
-            if (key == SDL.SDL_Keycode.SDLK_a || key == SDL.SDL_Keycode.SDLK_q) state.ClearIntent(ModrogApi.EntityIntent.MoveLeft);
-            if (key == SDL.SDL_Keycode.SDLK_d) state.ClearIntent(ModrogApi.EntityIntent.MoveRight);
-            if (key == SDL.SDL_Keycode.SDLK_w || key == SDL.SDL_Keycode.SDLK_z) state.ClearIntent(ModrogApi.EntityIntent.MoveUp);
-            if (key == SDL.SDL_Keycode.SDLK_s) state.ClearIntent(ModrogApi.EntityIntent.MoveDown);
+            if (key == SDL.SDL_Keycode.SDLK_LEFT) state.ClearIntent(ModrogApi.EntityIntent.MoveLeft);
+            if (key == SDL.SDL_Keycode.SDLK_RIGHT) state.ClearIntent(ModrogApi.EntityIntent.MoveRight);
+            if (key == SDL.SDL_Keycode.SDLK_UP) state.ClearIntent(ModrogApi.EntityIntent.MoveUp);
+            if (key == SDL.SDL_Keycode.SDLK_DOWN) state.ClearIntent(ModrogApi.EntityIntent.MoveDown);
 
             if (key == SDL.SDL_Keycode.SDLK_TAB) _sidebarPanel.Visible = false;
         }
