@@ -54,7 +54,7 @@ class ScenarioScript : IScenarioScript
         RobotEntityKind.SetManualControlScheme(ManualControlScheme.Default);
         RobotEntityKind.SetCapabilities(EntityCapabilities.Move);
 
-        SkeletonEntityKind = Universe.CreateEntityKind(spriteLocation: new Point(0, 7));
+        SkeletonEntityKind = Universe.CreateEntityKind(spriteLocation: new Point(0, 8));
 
         Player = Universe.GetPlayers()[0];
 
