@@ -312,6 +312,28 @@ namespace ModrogClient
         {
             if (SelectedEntityMoveIntentDirection == direction) SelectedEntityMoveIntentDirection = null;
         }
+
+        void SendIntents()
+        {
+            var intents = new Dictionary<int, (ModrogApi.EntityIntent, ModrogApi.Direction, int)>();
+
+            if (SelectedEntity != null && SelectedEntityMoveIntentDirection != null)
+            {
+                intents[SelectedEntity.Id] = (ModrogApi.EntityIntent.Move, SelectedEntityMoveIntentDirection.Value, 0);
+            }
+
+            _packetWriter.WriteByte((byte)Protocol.ClientPacketType.SetEntityIntents);
+            _packetWriter.WriteInt(TickIndex);
+            _packetWriter.WriteShort((short)intents.Count);
+            foreach (var (entityId, (intent, direction, slot)) in intents)
+            {
+                _packetWriter.WriteInt(entityId);
+                _packetWriter.WriteByte((byte)intent);
+                _packetWriter.WriteByte((byte)direction);
+                _packetWriter.WriteByte((byte)slot);
+            }
+            SendPacket();
+        }
         #endregion
 
         internal void Update(float deltaTime)
@@ -329,7 +351,11 @@ namespace ModrogClient
 
             if (Stage == ClientStage.Playing)
             {
+                var hasSentIntents = TickElapsedTime >= Protocol.TickInterval / 2f;
                 TickElapsedTime += deltaTime;
+                var shouldSendIntents = TickElapsedTime >= Protocol.TickInterval / 2f;
+
+                if (!hasSentIntents && shouldSendIntents) SendIntents();
             }
         }
     }

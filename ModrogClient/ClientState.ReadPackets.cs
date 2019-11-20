@@ -1,5 +1,4 @@
-﻿using ModrogApi;
-using ModrogCommon;
+﻿using ModrogCommon;
 using SwarmBasics.Math;
 using System;
 using System.Collections.Generic;
@@ -217,7 +216,7 @@ namespace ModrogClient
             _app.PlayingView.OnSpritesheetReceived(image);
 
             // Tile kinds
-            for (var layer = 0; layer < (int)MapLayer.Count; layer++)
+            for (var layer = 0; layer < (int)ModrogApi.MapLayer.Count; layer++)
             {
                 var tileKindsCount = _packetReader.ReadInt();
                 TileKindsByLayer[layer] = new Game.ClientTileKind[tileKindsCount];
@@ -275,8 +274,8 @@ namespace ModrogClient
             {
                 var id = _packetReader.ReadInt();
 
-                var action = (EntityAction)_packetReader.ReadByte();
-                var direction = (Direction)_packetReader.ReadByte();
+                var action = (ModrogApi.EntityAction)_packetReader.ReadByte();
+                var direction = (ModrogApi.Direction)_packetReader.ReadByte();
                 var actionItemKindId = (int)_packetReader.ReadShort();
 
                 EntitiesInSightById[id].ApplyTick(action, direction); // TODO: ItemKinds[actionItemKindId]);
@@ -293,7 +292,7 @@ namespace ModrogClient
 
                 if (!WorldChunks.TryGetValue(chunkCoords, out var worldChunk))
                 {
-                    worldChunk = new Chunk((int)MapLayer.Count);
+                    worldChunk = new Chunk((int)ModrogApi.MapLayer.Count);
                     WorldChunks.Add(chunkCoords, worldChunk);
                 }
 
@@ -303,7 +302,7 @@ namespace ModrogClient
 
                 var tileOffset = chunkTileCoords.Y * MapChunkSide + chunkTileCoords.X;
 
-                for (var layer = 0; layer < (int)MapLayer.Count; layer++) worldChunk.TilesPerLayer[layer][tileOffset] = _packetReader.ReadShort();
+                for (var layer = 0; layer < (int)ModrogApi.MapLayer.Count; layer++) worldChunk.TilesPerLayer[layer][tileOffset] = _packetReader.ReadShort();
 
                 if (!FogChunks.TryGetValue(chunkCoords, out var fogChunk))
                 {
@@ -322,26 +321,6 @@ namespace ModrogClient
             _packetWriter.WriteByte((byte)ClientPacketType.SetPlayerPosition);
             _packetWriter.WriteShort((short)scrollPosition.X);
             _packetWriter.WriteShort((short)scrollPosition.Y);
-            SendPacket();
-
-            // Send intents
-            var intents = new Dictionary<int, (EntityIntent, Direction, int)>();
-
-            if (SelectedEntity != null && SelectedEntityMoveIntentDirection != null)
-            {
-                intents[SelectedEntity.Id] = (EntityIntent.Move, SelectedEntityMoveIntentDirection.Value, 0);
-            }
-
-            _packetWriter.WriteByte((byte)ClientPacketType.SetEntityIntents);
-            _packetWriter.WriteInt(TickIndex);
-            _packetWriter.WriteShort((short)intents.Count);
-            foreach (var (entityId, (intent, direction, slot)) in intents)
-            {
-                _packetWriter.WriteInt(entityId);
-                _packetWriter.WriteByte((byte)intent);
-                _packetWriter.WriteByte((byte)direction);
-                _packetWriter.WriteByte((byte)slot);
-            }
             SendPacket();
         }
 
