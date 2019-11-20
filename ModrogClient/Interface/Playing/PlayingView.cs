@@ -24,6 +24,9 @@ namespace ModrogClient.Interface.Playing
         bool _isScrollingUp;
         bool _isScrollingDown;
 
+        bool _isUsingSlot0;
+        bool _isUsingSlot1;
+
         bool _isDraggingScroll;
         Vector2 _dragScroll;
 
@@ -114,14 +117,27 @@ namespace ModrogClient.Interface.Playing
                 if (key == SDL.SDL_Keycode.SDLK_s) _isScrollingDown = true;
             }
 
+            if (key == SDL.SDL_Keycode.SDLK_x) _isUsingSlot0 = true;
+            if (key == SDL.SDL_Keycode.SDLK_c) _isUsingSlot1 = true;
+
             var state = App.State;
 
             if (state.SelectedEntity != null && state.SelectedEntity.PlayerIndex == state.SelfPlayerIndex)
             {
-                if (key == SDL.SDL_Keycode.SDLK_LEFT) state.SetIntent(ModrogApi.EntityIntent.Move, ModrogApi.Direction.Left, 0);
-                if (key == SDL.SDL_Keycode.SDLK_RIGHT) state.SetIntent(ModrogApi.EntityIntent.Move, ModrogApi.Direction.Right, 0);
-                if (key == SDL.SDL_Keycode.SDLK_UP) state.SetIntent(ModrogApi.EntityIntent.Move, ModrogApi.Direction.Up, 0);
-                if (key == SDL.SDL_Keycode.SDLK_DOWN) state.SetIntent(ModrogApi.EntityIntent.Move, ModrogApi.Direction.Down, 0);
+                var intent = ModrogApi.EntityIntent.Move;
+                var slot = _isUsingSlot0 ? 0 : (_isUsingSlot1 ? 1 : -1);
+                if (slot != -1) intent = ModrogApi.EntityIntent.Use;
+
+                var direction = key switch
+                {
+                    SDL.SDL_Keycode.SDLK_RIGHT => ModrogApi.Direction.Right,
+                    SDL.SDL_Keycode.SDLK_DOWN => ModrogApi.Direction.Down,
+                    SDL.SDL_Keycode.SDLK_LEFT => ModrogApi.Direction.Left,
+                    SDL.SDL_Keycode.SDLK_UP => ModrogApi.Direction.Up,
+                    _ => (ModrogApi.Direction?)null,
+                };
+
+                if (direction.HasValue) state.SetIntent(intent, direction.Value, slot);
             }
 
             if (key == SDL.SDL_Keycode.SDLK_TAB)
@@ -137,6 +153,9 @@ namespace ModrogClient.Interface.Playing
             if (key == SDL.SDL_Keycode.SDLK_d) _isScrollingRight = false;
             if (key == SDL.SDL_Keycode.SDLK_w || key == SDL.SDL_Keycode.SDLK_z) _isScrollingUp = false;
             if (key == SDL.SDL_Keycode.SDLK_s) _isScrollingDown = false;
+
+            if (key == SDL.SDL_Keycode.SDLK_x) _isUsingSlot0 = false;
+            if (key == SDL.SDL_Keycode.SDLK_c) _isUsingSlot1 = false;
 
             var state = App.State;
             if (key == SDL.SDL_Keycode.SDLK_LEFT) state.ClearMoveIntent(ModrogApi.Direction.Left);

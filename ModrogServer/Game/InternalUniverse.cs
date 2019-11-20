@@ -21,7 +21,7 @@ namespace ModrogServer.Game
         internal string SpritesheetPath { get; private set; } = "Spritesheet.png";
 
         ScriptContext _scriptContext;
-        ModrogApi.Server.IScenarioScript _script;
+        internal ModrogApi.Server.IScenarioScript _script;
 
         internal int TickIndex { get; private set; } = -1;
         int _nextEntityId = 0;
@@ -45,22 +45,14 @@ namespace ModrogServer.Game
             {
                 Console.WriteLine("Failed to build scripts for scenario:");
                 foreach (var diagnostic in emitResult.Diagnostics) Console.WriteLine(diagnostic);
-                throw new NotImplementedException("TODO: Handle error");
+                throw new Exception($"Failed to build scripts for scenario.");
             }
 
             var scenarioScriptType = _scriptContext.Assembly.GetType("ScenarioScript");
-            if (scenarioScriptType == null)
-            {
-                Console.WriteLine("Could not find ScenarioScript class in scripts");
-                throw new NotImplementedException("TODO: Handle error");
-            }
+            if (scenarioScriptType == null) throw new Exception("Could not find ScenarioScript class in scripts.");
 
             var scenarioScriptConstructor = scenarioScriptType.GetConstructor(new Type[] { typeof(ModrogApi.Server.Universe) });
-            if (scenarioScriptConstructor == null)
-            {
-                Console.WriteLine($"Could not find ScenarioScript({typeof(ModrogApi.Server.Universe).FullName}) constructor in scripts");
-                throw new NotImplementedException("TODO: Handle error");
-            }
+            if (scenarioScriptConstructor == null) throw new Exception($"Could not find ScenarioScript({typeof(ModrogApi.Server.Universe).FullName}) constructor in scripts.");
 
             try
             {
@@ -68,8 +60,9 @@ namespace ModrogServer.Game
             }
             catch (Exception exception)
             {
+                Console.WriteLine("Encountered exception in ScenarioScript constructor:");
                 Console.WriteLine(exception.InnerException);
-                throw new NotImplementedException("TODO: Handle error");
+                throw new Exception("Encountered exception in ScenarioScript constructor.");
             }
         }
 

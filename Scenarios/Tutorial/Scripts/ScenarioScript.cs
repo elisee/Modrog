@@ -47,7 +47,7 @@ class ScenarioScript : IScenarioScript
         UndergroundWorld.InsertMap(0, 0, Universe.LoadMap("Maps/Underground.map"));
 
         KnightEntityKind = Universe.CreateEntityKind(spriteLocation: new Point(0, 6));
-        RobotEntityKind = Universe.CreateEntityKind(spriteLocation: new Point(4, 6));
+        RobotEntityKind = Universe.CreateEntityKind(spriteLocation: new Point(5, 6));
         SkeletonEntityKind = Universe.CreateEntityKind(spriteLocation: new Point(0, 8));
 
         Player = Universe.GetPlayers()[0];
@@ -68,12 +68,25 @@ class ScenarioScript : IScenarioScript
         // Crypt
     }
 
+    public void OnEntityIntent(Entity entity, EntityIntent intent, Direction direction, int slot, out bool preventDefault)
+    {
+        if (intent == EntityIntent.Use)
+        {
+            preventDefault = true;
+            entity.GetWorld().SpawnEntity(RobotEntityKind, entity.GetPosition() + ModrogApi.MathHelper.GetOffsetFromDirection(direction), owner: null);
+            return;
+        }
+
+        preventDefault = false;
+    }
+
     public void Tick()
     {
         if (Knight.GetWorld() == ForestWorld)
         {
             if (Knight.GetPosition() == _forestToCryptStairsCoords)
             {
+                // TODO: Would be best if this happened at the start of the next tick
                 SetupCryptView();
                 Knight.Teleport(UndergroundWorld, _cryptToForestStairsCoords + new Point(0, -1));
                 Player.Teleport(UndergroundWorld, _cryptToForestStairsCoords + new Point(0, -1));

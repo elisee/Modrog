@@ -281,15 +281,19 @@ namespace ModrogServer
             for (var i = 0; i < intentCount; i++)
             {
                 var entityId = _packetReader.ReadInt();
-                var intent = (ModrogApi.EntityIntent)_packetReader.ReadByte();
-                var intentDirection = (ModrogApi.Direction)_packetReader.ReadByte();
-                var actionSlot = _packetReader.ReadByte();
-
                 if (!player.OwnedEntitiesById.TryGetValue(entityId, out var entity)) throw new PacketException($"Invalid entity id in {nameof(Protocol.ClientPacketType.SetEntityIntents)} packet.");
+
+                var intent = _packetReader.ReadByte<ModrogApi.EntityIntent>();
+
+                var intentDirection = ModrogApi.Direction.Down;
+                if (intent == ModrogApi.EntityIntent.Move || intent == ModrogApi.EntityIntent.Use) intentDirection = _packetReader.ReadByte<ModrogApi.Direction>();
+
+                var intentSlot = 0;
+                if (intent == ModrogApi.EntityIntent.Use || intent == ModrogApi.EntityIntent.PickUp) intentSlot = _packetReader.ReadByte(max: 1);
 
                 entity.Intent = intent;
                 entity.IntentDirection = intentDirection;
-                entity.IntentSlot = actionSlot;
+                entity.IntentSlot = intentSlot;
             }
         }
         #endregion

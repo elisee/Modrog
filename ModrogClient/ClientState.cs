@@ -294,17 +294,17 @@ namespace ModrogClient
             SelectedEntityMoveIntentDirection = null;
         }
 
-        public void SetIntent(ModrogApi.EntityIntent intent, ModrogApi.Direction intentDirection, int intentSlot)
+        public void SetIntent(ModrogApi.EntityIntent intent, ModrogApi.Direction direction, int slot)
         {
-            if (intent == ModrogApi.EntityIntent.Move) SelectedEntityMoveIntentDirection = intentDirection;
+            if (intent == ModrogApi.EntityIntent.Move) SelectedEntityMoveIntentDirection = direction;
 
             _packetWriter.WriteByte((byte)Protocol.ClientPacketType.SetEntityIntents);
             _packetWriter.WriteInt(TickIndex);
             _packetWriter.WriteShort(1);
             _packetWriter.WriteInt(SelectedEntity.Id);
             _packetWriter.WriteByte((byte)intent);
-            _packetWriter.WriteByte((byte)intentDirection);
-            _packetWriter.WriteByte((byte)intentSlot);
+            if (intent == ModrogApi.EntityIntent.Move || intent == ModrogApi.EntityIntent.Use) _packetWriter.WriteByte((byte)direction);
+            if (intent == ModrogApi.EntityIntent.Use || intent == ModrogApi.EntityIntent.PickUp) _packetWriter.WriteByte((byte)slot);
             SendPacket();
         }
 
@@ -329,8 +329,8 @@ namespace ModrogClient
             {
                 _packetWriter.WriteInt(entityId);
                 _packetWriter.WriteByte((byte)intent);
-                _packetWriter.WriteByte((byte)direction);
-                _packetWriter.WriteByte((byte)slot);
+                if (intent == ModrogApi.EntityIntent.Move || intent == ModrogApi.EntityIntent.Use) _packetWriter.WriteByte((byte)direction);
+                if (intent == ModrogApi.EntityIntent.Use || intent == ModrogApi.EntityIntent.PickUp) _packetWriter.WriteByte((byte)slot);
             }
             SendPacket();
         }

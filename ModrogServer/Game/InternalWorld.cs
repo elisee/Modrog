@@ -21,16 +21,24 @@ namespace ModrogServer.Game
 
         internal void Tick()
         {
-            foreach (var entity in _entities)
+            var entities = _entities.ToArray();
+
+            foreach (var entity in entities)
             {
+                if (entity.World != this) continue;
+
                 entity.PreviousTickPosition = entity.Position;
+                entity.Action = ModrogApi.EntityAction.Idle;
+                entity.ActionDirection = ModrogApi.Direction.Down;
+                entity.ActionItem = null;
+
+                if (entity.Intent == ModrogApi.EntityIntent.Idle) continue;
 
                 var intent = entity.Intent;
                 entity.Intent = ModrogApi.EntityIntent.Idle;
 
-                entity.Action = ModrogApi.EntityAction.Idle;
-                entity.ActionDirection = ModrogApi.Direction.Down;
-                entity.ActionItem = null;
+                Universe._script.OnEntityIntent(entity, intent, entity.IntentDirection, entity.IntentSlot, out var preventDefault);
+                if (preventDefault) continue;
 
                 switch (intent)
                 {
@@ -63,6 +71,10 @@ namespace ModrogServer.Game
                             // TODO: Check for interactions with entities
                         }
                         break;
+
+                    case ModrogApi.EntityIntent.Use:
+                        break;
+
 
                     case ModrogApi.EntityIntent.Idle:
                         break;
