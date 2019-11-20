@@ -24,9 +24,8 @@ You'll need .NET Core 3 and Visual Studio 2019. VS Code might work.
 ## Tasks
 
     - (Network) Track player view for each player, including fog-of-war chunks so we can resend on reconnection
-      - Allows applying actions to entities rather than resending each tick
     - (Api) Have a setup phase and then prevent making further changes to entity kinds, tile kinds, etc.
-    - (Gameplay) Implement Rogventure-style combat with hits & projectiles, see if entities having to turn around works well with it (We can allow some entities to turn instantly and others not I guess)
+    - (Gameplay) Implement Rogventure-style combat with hits & projectiles
     - (Editor) Allow renaming assets
     - (Editor) Allow reparenting assets with drag'n'drop (need to add drag'n'drop in UI framework)
     - (Map Editor) Allow switching layers with 1, 2, 3
