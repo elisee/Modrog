@@ -242,6 +242,7 @@ namespace ModrogClient
             }
 
             TickIndex = _packetReader.ReadInt();
+            TickElapsedTime = 0f;
 
             var wasTeleported = _packetReader.ReadByte() != 0;
             if (wasTeleported)
@@ -266,13 +267,19 @@ namespace ModrogClient
             ReadNewEntitiesInSight();
 
             if (SelectedEntity != null) EntitiesInSightById.TryGetValue(SelectedEntity.Id, out SelectedEntity);
+            foreach (var entity in EntitiesInSight) entity.ClearPreviousTick();
 
             var entitiesWithActionCount = (int)_packetReader.ReadShort();
 
             for (var i = 0; i < entitiesWithActionCount; i++)
             {
                 var id = _packetReader.ReadInt();
-                EntitiesInSightById[id].ApplyTickAction((EntityAction)_packetReader.ReadByte());
+
+                var action = (EntityAction)_packetReader.ReadByte();
+                var direction = (Direction)_packetReader.ReadByte();
+                var actionItemKindId = (int)_packetReader.ReadShort();
+
+                EntitiesInSightById[id].ApplyTick(action, direction); // TODO: ItemKinds[actionItemKindId]);
             }
 
             var tileStacksCount = (int)_packetReader.ReadShort();
@@ -318,20 +325,22 @@ namespace ModrogClient
             SendPacket();
 
             // Send intents
-            var intents = new Dictionary<int, EntityIntent>();
+            var intents = new Dictionary<int, (EntityIntent, Direction, int)>();
 
-            if (SelectedEntity != null && SelectedEntityIntent != null)
+            if (SelectedEntity != null && SelectedEntityMoveIntentDirection != null)
             {
-                intents[SelectedEntity.Id] = SelectedEntityIntent.Value;
+                intents[SelectedEntity.Id] = (EntityIntent.Move, SelectedEntityMoveIntentDirection.Value, 0);
             }
 
             _packetWriter.WriteByte((byte)ClientPacketType.SetEntityIntents);
             _packetWriter.WriteInt(TickIndex);
             _packetWriter.WriteShort((short)intents.Count);
-            foreach (var (entityId, move) in intents)
+            foreach (var (entityId, (intent, direction, slot)) in intents)
             {
                 _packetWriter.WriteInt(entityId);
-                _packetWriter.WriteByte((byte)move);
+                _packetWriter.WriteByte((byte)intent);
+                _packetWriter.WriteByte((byte)direction);
+                _packetWriter.WriteByte((byte)slot);
             }
             SendPacket();
         }

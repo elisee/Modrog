@@ -1,6 +1,5 @@
 ﻿using ModrogApi;
 using SwarmBasics.Math;
-using System;
 
 namespace ModrogClient.Game
 {
@@ -13,6 +12,8 @@ namespace ModrogClient.Game
         public Point PreviousTickPosition { get; private set; }
         public Point Position { get; private set; }
         public EntityAction Action { get; private set; }
+        public Direction ActionDirection { get; private set; }
+        // TODO: public ClientItemKind ActionItem { get; private set; }
 
         public ClientEntity(int id, Point position)
         {
@@ -20,18 +21,34 @@ namespace ModrogClient.Game
             Position = PreviousTickPosition = position;
         }
 
-        public void ApplyTickAction(EntityAction action)
+        public void ClearPreviousTick()
+        {
+            PreviousTickPosition = Position;
+            Action = EntityAction.Idle;
+        }
+
+        public void ApplyTick(EntityAction action, Direction actionDirection) // TODO: , ClientItemKind actionItem)
         {
             PreviousTickPosition = Position;
             Action = action;
+            ActionDirection = actionDirection;
+            // TODO: ActionItem = actionItem;
 
             switch (action)
             {
-                case EntityAction.MoveRight: Position = new Point(Position.X + 1, Position.Y); break;
-                case EntityAction.MoveDown: Position = new Point(Position.X, Position.Y + 1); break;
-                case EntityAction.MoveLeft: Position = new Point(Position.X - 1, Position.Y); break;
-                case EntityAction.MoveUp: Position = new Point(Position.X, Position.Y - 1); break;
-                default: throw new NotImplementedException();
+                case EntityAction.Move:
+                    switch (actionDirection)
+                    {
+                        case Direction.Right: Position = new Point(Position.X + 1, Position.Y); break;
+                        case Direction.Down: Position = new Point(Position.X, Position.Y + 1); break;
+                        case Direction.Left: Position = new Point(Position.X - 1, Position.Y); break;
+                        case Direction.Up: Position = new Point(Position.X, Position.Y - 1); break;
+                    }
+                    break;
+
+                default:
+                    // Ignore
+                    break;
             }
         }
     }

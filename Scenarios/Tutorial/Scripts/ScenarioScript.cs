@@ -47,13 +47,7 @@ class ScenarioScript : IScenarioScript
         UndergroundWorld.InsertMap(0, 0, Universe.LoadMap("Maps/Underground.map"));
 
         KnightEntityKind = Universe.CreateEntityKind(spriteLocation: new Point(0, 6));
-        KnightEntityKind.SetManualControlScheme(ManualControlScheme.Default);
-        KnightEntityKind.SetCapabilities(EntityCapabilities.Move);
-
         RobotEntityKind = Universe.CreateEntityKind(spriteLocation: new Point(4, 6));
-        RobotEntityKind.SetManualControlScheme(ManualControlScheme.Default);
-        RobotEntityKind.SetCapabilities(EntityCapabilities.Move);
-
         SkeletonEntityKind = Universe.CreateEntityKind(spriteLocation: new Point(0, 8));
 
         Player = Universe.GetPlayers()[0];

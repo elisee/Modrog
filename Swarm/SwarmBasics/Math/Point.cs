@@ -27,6 +27,8 @@ namespace SwarmBasics.Math
 
         public static Point operator -(Point point) => new Point(-point.X, -point.Y);
 
+        public Vector2 ToVector2() => new Vector2(X, Y);
+
         internal string DebugDisplay => $"{X} {Y}";
     }
 }

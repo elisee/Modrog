@@ -3,27 +3,13 @@
     public enum EntityAction
     {
         Idle,
-
-        MoveRight,
-        MoveDown,
-        MoveLeft,
-        MoveUp,
-
-        BounceRight,
-        BounceDown,
-        BounceLeft,
-        BounceUp,
-
-        AttackRight,
-        AttackDown,
-        AttackLeft,
-        AttackUp,
+        Move,
+        Bounce,
+        Use,
+        PickUp,
 
         Hurt,
         Dead,
         HealUp,
-
-        PickUp,
-        Build,
     }
 }

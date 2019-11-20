@@ -118,10 +118,10 @@ namespace ModrogClient.Interface.Playing
 
             if (state.SelectedEntity != null && state.SelectedEntity.PlayerIndex == state.SelfPlayerIndex)
             {
-                if (key == SDL.SDL_Keycode.SDLK_LEFT) state.SetIntent(ModrogApi.EntityIntent.MoveLeft);
-                if (key == SDL.SDL_Keycode.SDLK_RIGHT) state.SetIntent(ModrogApi.EntityIntent.MoveRight);
-                if (key == SDL.SDL_Keycode.SDLK_UP) state.SetIntent(ModrogApi.EntityIntent.MoveUp);
-                if (key == SDL.SDL_Keycode.SDLK_DOWN) state.SetIntent(ModrogApi.EntityIntent.MoveDown);
+                if (key == SDL.SDL_Keycode.SDLK_LEFT) state.SetIntent(ModrogApi.EntityIntent.Move, ModrogApi.Direction.Left, 0);
+                if (key == SDL.SDL_Keycode.SDLK_RIGHT) state.SetIntent(ModrogApi.EntityIntent.Move, ModrogApi.Direction.Right, 0);
+                if (key == SDL.SDL_Keycode.SDLK_UP) state.SetIntent(ModrogApi.EntityIntent.Move, ModrogApi.Direction.Up, 0);
+                if (key == SDL.SDL_Keycode.SDLK_DOWN) state.SetIntent(ModrogApi.EntityIntent.Move, ModrogApi.Direction.Down, 0);
             }
 
             if (key == SDL.SDL_Keycode.SDLK_TAB)
@@ -139,10 +139,10 @@ namespace ModrogClient.Interface.Playing
             if (key == SDL.SDL_Keycode.SDLK_s) _isScrollingDown = false;
 
             var state = App.State;
-            if (key == SDL.SDL_Keycode.SDLK_LEFT) state.ClearIntent(ModrogApi.EntityIntent.MoveLeft);
-            if (key == SDL.SDL_Keycode.SDLK_RIGHT) state.ClearIntent(ModrogApi.EntityIntent.MoveRight);
-            if (key == SDL.SDL_Keycode.SDLK_UP) state.ClearIntent(ModrogApi.EntityIntent.MoveUp);
-            if (key == SDL.SDL_Keycode.SDLK_DOWN) state.ClearIntent(ModrogApi.EntityIntent.MoveDown);
+            if (key == SDL.SDL_Keycode.SDLK_LEFT) state.ClearMoveIntent(ModrogApi.Direction.Left);
+            if (key == SDL.SDL_Keycode.SDLK_RIGHT) state.ClearMoveIntent(ModrogApi.Direction.Right);
+            if (key == SDL.SDL_Keycode.SDLK_UP) state.ClearMoveIntent(ModrogApi.Direction.Up);
+            if (key == SDL.SDL_Keycode.SDLK_DOWN) state.ClearMoveIntent(ModrogApi.Direction.Down);
 
             if (key == SDL.SDL_Keycode.SDLK_TAB) _sidebarPanel.Visible = false;
         }
@@ -360,18 +360,42 @@ namespace ModrogClient.Interface.Playing
                 }
             }
 
+            var tickProgress = state.TickProgress;
+
             foreach (var entity in state.EntitiesInSight)
             {
                 if (entity.Position.X < startTileCoords.X || entity.Position.Y < startTileCoords.Y || entity.Position.X > endTileCoords.X || entity.Position.Y > endTileCoords.Y) continue;
 
-                var left = ViewRectangle.X + (int)(entity.Position.X * _zoom * Protocol.MapTileSize) - (int)(viewportScroll.X * _zoom);
-                var right = ViewRectangle.X + (int)((entity.Position.X + 1) * _zoom * Protocol.MapTileSize) - (int)(viewportScroll.X * _zoom);
-                var top = ViewRectangle.Y + (int)(entity.Position.Y * _zoom * Protocol.MapTileSize) - (int)(viewportScroll.Y * _zoom);
-                var bottom = ViewRectangle.Y + (int)((entity.Position.Y + 1) * _zoom * Protocol.MapTileSize) - (int)(viewportScroll.Y * _zoom);
+                var position = Vector2.Lerp(entity.PreviousTickPosition.ToVector2(), entity.Position.ToVector2(), tickProgress);
+                var angle = GetAngleFromDirection(entity.ActionDirection);
+                var stretch = Vector2.One;
+
+                if (entity.Action == ModrogApi.EntityAction.Move)
+                {
+                    position.Y += -MathF.Sin(tickProgress * MathF.PI) * 0.2f;
+                    stretch.X = 1f - MathF.Sin(tickProgress * MathF.PI) * 0.2f;
+                    stretch.Y = 1f + MathF.Sin(tickProgress * MathF.PI) * 0.2f;
+                }
+                else if (entity.Action == ModrogApi.EntityAction.Bounce)
+                {
+                    var amount = MathF.Sin(tickProgress * MathF.PI) * 0.1f;
+
+                    position.X += MathF.Cos(angle) * amount;
+                    position.Y += MathF.Sin(angle) * amount;
+
+                    stretch.X = 1f - Math.Abs(MathF.Cos(angle)) * amount + Math.Abs(MathF.Sin(angle)) * amount;
+                    stretch.Y = 1f - Math.Abs(MathF.Sin(angle)) * amount + Math.Abs(MathF.Cos(angle)) * amount;
+                }
+
+
+                var left = ViewRectangle.X + (int)((position.X + 0.5f - 0.5f * stretch.X) * _zoom * Protocol.MapTileSize) - (int)(viewportScroll.X * _zoom);
+                var right = ViewRectangle.X + (int)((position.X + 0.5f + 0.5f * stretch.X) * _zoom * Protocol.MapTileSize) - (int)(viewportScroll.X * _zoom);
+                var top = ViewRectangle.Y + (int)((position.Y + 0.5f - 0.5f * stretch.Y) * _zoom * Protocol.MapTileSize) - (int)(viewportScroll.Y * _zoom);
+                var bottom = ViewRectangle.Y + (int)((position.Y + 0.5f + 0.5f * stretch.Y) * _zoom * Protocol.MapTileSize) - (int)(viewportScroll.Y * _zoom);
 
                 var sourceRect = new SDL.SDL_Rect { x = entity.SpriteLocation.X * Protocol.MapTileSize, y = entity.SpriteLocation.Y * Protocol.MapTileSize, w = Protocol.MapTileSize, h = Protocol.MapTileSize };
                 var destRect = new SDL.SDL_Rect { x = left, y = top, w = right - left, h = bottom - top };
-                SDL.SDL_RenderCopy(Desktop.Renderer, SpritesheetTexture, ref sourceRect, ref destRect);
+                SDL.SDL_RenderCopyEx(Desktop.Renderer, SpritesheetTexture, ref sourceRect, ref destRect, 0f, IntPtr.Zero, entity.ActionDirection == ModrogApi.Direction.Left ? SDL.SDL_RendererFlip.SDL_FLIP_HORIZONTAL : SDL.SDL_RendererFlip.SDL_FLIP_NONE);
             }
 
             var fogColor = new Color(0x00000044);
@@ -447,20 +471,27 @@ namespace ModrogClient.Interface.Playing
                 var color = new Color(0x00ff00ff);
                 color.UseAsDrawColor(Desktop.Renderer);
 
-                var x = state.SelectedEntity.Position.X;
-                var y = state.SelectedEntity.Position.Y;
-                var w = 1;
-                var h = 1;
+                var position = Vector2.Lerp(state.SelectedEntity.PreviousTickPosition.ToVector2(), state.SelectedEntity.Position.ToVector2(), tickProgress);
+                var size = new Vector2(1f, 1f);
 
-                var left = ViewRectangle.X + (int)(x * _zoom * Protocol.MapTileSize) - (int)(viewportScroll.X * _zoom);
-                var right = ViewRectangle.X + (int)(((x + w) * Protocol.MapTileSize) * _zoom) - (int)(viewportScroll.X * _zoom);
-                var top = ViewRectangle.Y + (int)(y * _zoom * Protocol.MapTileSize) - (int)(viewportScroll.Y * _zoom);
-                var bottom = ViewRectangle.Y + (int)(((y + h) * Protocol.MapTileSize) * _zoom) - (int)(viewportScroll.Y * _zoom);
+                var left = ViewRectangle.X + (int)(position.X * _zoom * Protocol.MapTileSize) - (int)(viewportScroll.X * _zoom);
+                var right = ViewRectangle.X + (int)(((position.X + size.X) * Protocol.MapTileSize) * _zoom) - (int)(viewportScroll.X * _zoom);
+                var top = ViewRectangle.Y + (int)(position.Y * _zoom * Protocol.MapTileSize) - (int)(viewportScroll.Y * _zoom);
+                var bottom = ViewRectangle.Y + (int)(((position.Y + size.Y) * Protocol.MapTileSize) * _zoom) - (int)(viewportScroll.Y * _zoom);
 
                 var rect = new Rectangle(left, top, right - left, bottom - top).ToSDL_Rect();
                 SDL.SDL_RenderDrawRect(Desktop.Renderer, ref rect);
             }
         }
-        #endregion
+
+        float GetAngleFromDirection(ModrogApi.Direction direction) => direction switch
+        {
+            ModrogApi.Direction.Right => 0f,
+            ModrogApi.Direction.Down => MathF.PI / 2f,
+            ModrogApi.Direction.Left => MathF.PI,
+            ModrogApi.Direction.Up => MathF.PI * 3f / 2f,
+            _ => throw new InvalidOperationException(),
+        };
     }
+    #endregion
 }

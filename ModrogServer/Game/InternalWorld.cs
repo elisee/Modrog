@@ -25,43 +25,38 @@ namespace ModrogServer.Game
             {
                 entity.PreviousTickPosition = entity.Position;
 
-                var intent = entity.UpcomingIntent;
-                entity.UpcomingIntent = ModrogApi.EntityIntent.Idle;
-                entity.EffectiveAction = ModrogApi.EntityAction.Idle;
+                var intent = entity.Intent;
+                entity.Intent = ModrogApi.EntityIntent.Idle;
+
+                entity.Action = ModrogApi.EntityAction.Idle;
+                entity.ActionDirection = ModrogApi.Direction.Down;
+                entity.ActionItem = null;
 
                 switch (intent)
                 {
-                    case ModrogApi.EntityIntent.MoveRight:
-                    case ModrogApi.EntityIntent.MoveDown:
-                    case ModrogApi.EntityIntent.MoveLeft:
-                    case ModrogApi.EntityIntent.MoveUp:
+                    case ModrogApi.EntityIntent.Move:
                         {
                             var newPosition = entity.Position;
 
-                            switch (intent)
+                            switch (entity.IntentDirection)
                             {
-                                case ModrogApi.EntityIntent.MoveRight: newPosition.X++; break;
-                                case ModrogApi.EntityIntent.MoveDown: newPosition.Y++; break;
-                                case ModrogApi.EntityIntent.MoveLeft: newPosition.X--; break;
-                                case ModrogApi.EntityIntent.MoveUp: newPosition.Y--; break;
+                                case ModrogApi.Direction.Right: newPosition.X++; break;
+                                case ModrogApi.Direction.Down: newPosition.Y++; break;
+                                case ModrogApi.Direction.Left: newPosition.X--; break;
+                                case ModrogApi.Direction.Up: newPosition.Y--; break;
                             }
+
+                            entity.ActionDirection = entity.IntentDirection;
 
                             // TODO: Need to check each layer for various flags
                             var targetTile = PeekTile(ModrogApi.MapLayer.Wall, newPosition.X, newPosition.Y);
                             if (targetTile != 0)
                             {
-                                // Can't move
+                                entity.Action = ModrogApi.EntityAction.Bounce;
                                 break;
                             }
 
-                            switch (intent)
-                            {
-                                case ModrogApi.EntityIntent.MoveRight: entity.EffectiveAction = ModrogApi.EntityAction.MoveRight; break;
-                                case ModrogApi.EntityIntent.MoveDown: entity.EffectiveAction = ModrogApi.EntityAction.MoveDown; break;
-                                case ModrogApi.EntityIntent.MoveLeft: entity.EffectiveAction = ModrogApi.EntityAction.MoveLeft; break;
-                                case ModrogApi.EntityIntent.MoveUp: entity.EffectiveAction = ModrogApi.EntityAction.MoveUp; break;
-                            }
-
+                            entity.Action = ModrogApi.EntityAction.Move;
                             entity.Position = newPosition;
 
                             // TODO: Dig, push, collect, etc.

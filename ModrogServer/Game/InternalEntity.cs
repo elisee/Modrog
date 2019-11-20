@@ -15,11 +15,18 @@ namespace ModrogServer.Game
         internal Point PreviousTickPosition;
         internal int PlayerIndex;
 
-        internal EntityIntent UpcomingIntent = EntityIntent.Idle;
-        internal EntityAction EffectiveAction = EntityAction.Idle;
+        internal readonly ItemKind[] StorageSlotItems = new ItemKind[4];
+        internal readonly ItemKind[] ActionSlotItems = new ItemKind[2];
+
+        internal EntityIntent Intent = EntityIntent.Idle;
+        internal Direction IntentDirection;
+        internal int IntentSlot;
+
+        internal EntityAction Action = EntityAction.Idle;
+        internal Direction ActionDirection;
+        internal ItemKind ActionItem;
 
         public int ViewRadius = 2;
-
 
         public InternalEntity(int id, InternalWorld world, Point spriteLocation, Point position, int playerIndex)
         {
@@ -56,8 +63,16 @@ namespace ModrogServer.Game
             ((InternalWorld)world).Add(this);
 
             Position = PreviousTickPosition = position;
-            EffectiveAction = EntityAction.Idle;
+            Action = EntityAction.Idle;
+            ActionDirection = Direction.Down;
+            ActionItem = null;
         }
+
+        public override ItemKind GetStorageSlotItem(int index) => StorageSlotItems[index];
+        public override void SetStorageSlotItem(int index, ItemKind itemKind) => StorageSlotItems[index] = itemKind;
+
+        public override ItemKind GetActionSlotItem(int index) => ActionSlotItems[index];
+        public override void SetActionSlotItem(int index, ItemKind itemKind) => ActionSlotItems[index] = itemKind;
         #endregion
     }
 }

@@ -80,7 +80,7 @@ namespace ModrogServer
                     if (world != player.World) continue;
 
                     seenEntities.Add(ownedEntity);
-                    if (ownedEntity.EffectiveAction != ModrogApi.EntityAction.Idle) seenEntitiesWithAction.Add(ownedEntity);
+                    if (ownedEntity.Action != ModrogApi.EntityAction.Idle) seenEntitiesWithAction.Add(ownedEntity);
 
                     var squaredViewRadius = ownedEntity.ViewRadius * ownedEntity.ViewRadius;
                     var viewRadius = ownedEntity.ViewRadius;
@@ -113,7 +113,7 @@ namespace ModrogServer
                             if (targetEntity != null)
                             {
                                 seenEntities.Add(targetEntity);
-                                if (targetEntity.EffectiveAction != ModrogApi.EntityAction.Idle) seenEntitiesWithAction.Add(ownedEntity);
+                                if (targetEntity.Action != ModrogApi.EntityAction.Idle) seenEntitiesWithAction.Add(ownedEntity);
                             }
                         }
                     }
@@ -155,7 +155,9 @@ namespace ModrogServer
                     Debug.Assert(entity.World == player.World);
 
                     _packetWriter.WriteInt(entity.Id);
-                    _packetWriter.WriteByte((byte)entity.EffectiveAction);
+                    _packetWriter.WriteByte((byte)entity.Action);
+                    _packetWriter.WriteByte((byte)entity.ActionDirection);
+                    _packetWriter.WriteShort((byte)0); // TODO: entity.ActionItem);
                 }
 
                 _packetWriter.WriteShort((short)seenTileStacks.Count);

@@ -1,6 +1,6 @@
 ﻿namespace ModrogApi.Server
 {
-    public abstract class EntityKind
+    public abstract class ItemKind
     {
     }
 }

@@ -64,7 +64,7 @@ namespace ModrogClient
         public readonly Dictionary<int, Game.ClientEntity> EntitiesInSightById = new Dictionary<int, Game.ClientEntity>();
 
         public Game.ClientEntity SelectedEntity;
-        public ModrogApi.EntityIntent? SelectedEntityIntent { get; private set; }
+        public ModrogApi.Direction? SelectedEntityMoveIntentDirection { get; private set; }
 
         // Scripts
         public readonly Dictionary<int, string> EntityScriptPaths = new Dictionary<int, string>();
@@ -73,7 +73,9 @@ namespace ModrogClient
         // Scripting
 
         // Ticking
-        public int TickIndex;
+        public int TickIndex { get; private set; }
+        public float TickElapsedTime { get; private set; }
+        public float TickProgress => Math.Min(1f, TickElapsedTime / Protocol.TickInterval);
         readonly ClientApp _app;
 
         public ClientState(ClientApp app)
@@ -289,24 +291,26 @@ namespace ModrogClient
         public void SelectEntity(Game.ClientEntity entity)
         {
             SelectedEntity = entity;
-            SelectedEntityIntent = null;
+            SelectedEntityMoveIntentDirection = null;
         }
 
-        public void SetIntent(ModrogApi.EntityIntent intent)
+        public void SetIntent(ModrogApi.EntityIntent intent, ModrogApi.Direction intentDirection, int intentSlot)
         {
-            SelectedEntityIntent = intent;
+            if (intent == ModrogApi.EntityIntent.Move) SelectedEntityMoveIntentDirection = intentDirection;
 
             _packetWriter.WriteByte((byte)Protocol.ClientPacketType.SetEntityIntents);
             _packetWriter.WriteInt(TickIndex);
             _packetWriter.WriteShort(1);
             _packetWriter.WriteInt(SelectedEntity.Id);
             _packetWriter.WriteByte((byte)intent);
+            _packetWriter.WriteByte((byte)intentDirection);
+            _packetWriter.WriteByte((byte)intentSlot);
             SendPacket();
         }
 
-        public void ClearIntent(ModrogApi.EntityIntent intent)
+        public void ClearMoveIntent(ModrogApi.Direction direction)
         {
-            if (SelectedEntityIntent == intent) SelectedEntityIntent = null;
+            if (SelectedEntityMoveIntentDirection == direction) SelectedEntityMoveIntentDirection = null;
         }
         #endregion
 
@@ -321,6 +325,11 @@ namespace ModrogClient
                 }
 
                 ReadPackets(packets);
+            }
+
+            if (Stage == ClientStage.Playing)
+            {
+                TickElapsedTime += deltaTime;
             }
         }
     }

@@ -9,5 +9,11 @@ namespace ModrogApi.Server
 
         public abstract void SetView(int viewRadius);
         public abstract void Teleport(World world, Point position);
+
+        public abstract ItemKind GetStorageSlotItem(int index);
+        public abstract void SetStorageSlotItem(int index, ItemKind itemKind);
+
+        public abstract ItemKind GetActionSlotItem(int index);
+        public abstract void SetActionSlotItem(int index, ItemKind itemKind);
     }
 }
