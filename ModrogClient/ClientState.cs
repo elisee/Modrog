@@ -75,7 +75,7 @@ namespace ModrogClient
         // Ticking
         public int TickIndex { get; private set; }
         public float TickElapsedTime { get; private set; }
-        public float TickProgress => Math.Min(1f, TickElapsedTime / Protocol.TickInterval);
+        public float TickProgress => Easing.InOutCubic(Math.Min(1f, TickElapsedTime / Protocol.TickInterval));
         readonly ClientApp _app;
 
         public ClientState(ClientApp app)
