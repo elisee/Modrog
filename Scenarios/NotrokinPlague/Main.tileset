@@ -1,0 +1,50 @@
+{
+    "spritesheet": "Spritesheet.png",
+    "tileSize": 32,
+    "tileKinds": {
+        "Floor": [
+            {
+                "name": "Dirt",
+                "spriteLocation": [ 7, 3 ]
+            },
+        ],
+
+        "Fluid": [
+            {
+                "name": "Water",
+                "spriteLocation": [ 3, 3 ]
+            },
+        ],
+
+        "Wall": [
+            {
+                "name": "WallSingle",
+                "spriteLocation": [ 2, 17 ]
+            },
+            {
+                "name": "WallHorizontal",
+                "spriteLocation": [ 1, 16 ]
+            },
+            {
+                "name": "WallVertical",
+                "spriteLocation": [ 3, 13 ]
+            },
+            {
+                "name": "WallTopLeft",
+                "spriteLocation": [ 4, 16 ]
+            },
+            {
+                "name": "WallTopRight",
+                "spriteLocation": [ 5, 16 ]
+            },
+            {
+                "name": "WallCornerBottomLeft",
+                "spriteLocation": [ 4, 17 ]
+            },
+            {
+                "name": "WallCornerBottomRight",
+                "spriteLocation": [ 5, 17 ]
+            },
+        ]
+    }
+}
