@@ -56,6 +56,7 @@ namespace ModrogClient
         // Playing
         public bool PlayingMenuOpen { get; private set; }
 
+        public int TileSize { get; private set; }
         public readonly Game.ClientTileKind[][] TileKindsByLayer = new Game.ClientTileKind[(int)ModrogApi.MapLayer.Count][];
 
         public Dictionary<Point, Chunk> WorldChunks = new Dictionary<Point, Chunk>();

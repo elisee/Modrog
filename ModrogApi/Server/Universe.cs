@@ -5,6 +5,7 @@ namespace ModrogApi.Server
     public abstract class Universe
     {
         public abstract void SetSpritesheet(string path);
+        public abstract void SetTileSize(int tileSize);
 
         public abstract Player[] GetPlayers();
         public abstract EntityKind CreateEntityKind(Point spriteLocation);

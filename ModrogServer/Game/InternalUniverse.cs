@@ -20,6 +20,8 @@ namespace ModrogServer.Game
         internal string ScenarioPath { get; private set; }
         internal string SpritesheetPath { get; private set; } = "Spritesheet.png";
 
+        internal int TileSize { get; private set; }
+
         ScriptContext _scriptContext;
         internal ModrogApi.Server.IScenarioScript _script;
 
@@ -95,6 +97,7 @@ namespace ModrogServer.Game
                 tileSetJson = JsonHelper.Parse(File.ReadAllText(Path.Combine(ScenarioPath, tileSetPath)));
 
                 SpritesheetPath = tileSetJson.GetProperty("spritesheet").GetString();
+                TileSize = tileSetJson.GetProperty("tileSize").GetInt32();
 
                 var tileKindsJson = tileSetJson.GetProperty("tileKinds");
 
@@ -165,6 +168,7 @@ namespace ModrogServer.Game
         }
 
         public override void SetSpritesheet(string path) { SpritesheetPath = path; }
+        public override void SetTileSize(int tileSize) { TileSize = tileSize; }
 
         public override ModrogApi.Server.Player[] GetPlayers() => Players;
 

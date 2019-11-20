@@ -8,7 +8,6 @@ using SwarmPlatform.UI;
 using System;
 using System.IO;
 using System.Runtime.InteropServices;
-using System.Text.Json;
 
 namespace ModrogEditor.Interface.Editing.Map
 {
@@ -32,7 +31,7 @@ namespace ModrogEditor.Interface.Editing.Map
         public IntPtr SpritesheetTexture { get; private set; }
 
         // Tile Kinds
-        public string TileSetPath = "";
+        public string TileSetPath { get; private set; } = "";
 
         public struct EditorTileKind
         {
@@ -40,6 +39,7 @@ namespace ModrogEditor.Interface.Editing.Map
             public Point SpriteLocation;
         }
 
+        public int TileSize { get; private set; }
         public readonly EditorTileKind[][] TileKindsByLayer = new EditorTileKind[(int)ModrogApi.MapLayer.Count][];
         readonly TextButton[] _tileLayerButtons = new TextButton[(int)ModrogApi.MapLayer.Count];
 
@@ -176,68 +176,79 @@ namespace ModrogEditor.Interface.Editing.Map
                 }
             }
 
-            if (TileSetPath.Length > 0)
-            {
-                JsonElement tileSetJson;
-                try
-                {
-                    tileSetJson = JsonHelper.Parse(File.ReadAllText(Path.Combine(App.State.ActiveScenarioPath, TileSetPath)));
-
-                    SpritesheetPath = tileSetJson.GetProperty("spritesheet").GetString();
-
-                    var tileKindsJson = tileSetJson.GetProperty("tileKinds");
-
-                    for (var i = 0; i < (int)ModrogApi.MapLayer.Count; i++)
-                    {
-                        var layerName = Enum.GetName(typeof(ModrogApi.MapLayer), i);
-
-                        if (tileKindsJson.TryGetProperty(layerName, out var layerJson))
-                        {
-                            var tileKinds = TileKindsByLayer[i] = new EditorTileKind[layerJson.GetArrayLength()];
-
-                            for (var j = 0; j < tileKinds.Length; j++)
-                            {
-                                var tileKindJson = layerJson[j];
-
-                                var name = tileKindJson.GetProperty("name").GetString();
-
-                                var spriteLocationJson = tileKindJson.GetProperty("spriteLocation");
-                                var spriteLocation = new Point(
-                                    spriteLocationJson[0].GetInt32(),
-                                    spriteLocationJson[1].GetInt32());
-
-                                tileKinds[j] = new EditorTileKind { Name = name, SpriteLocation = spriteLocation };
-                            }
-                        }
-                        else
-                        {
-                            TileKindsByLayer[i] = new EditorTileKind[0];
-                        }
-                    }
-
-                }
-                catch (Exception exception)
-                {
-                    error = "Error while loading tile set: " + exception.Message;
-                    return false;
-                }
-
-                try
-                {
-                    SpritesheetTexture = SDL_image.IMG_LoadTexture(Desktop.Renderer, Path.Combine(App.State.ActiveScenarioPath, SpritesheetPath));
-                    if (SpritesheetTexture == IntPtr.Zero) throw new Exception(SDL.SDL_GetError());
-                }
-                catch (Exception exception)
-                {
-                    error = "Error while loading spritesheet texture: " + exception.Message;
-                    return false;
-                }
-            }
+            if (TileSetPath.Length > 0) LoadTileSet();
 
             _mainLayer.Visible = true;
 
             error = null;
             return true;
+        }
+
+        void LoadTileSet()
+        {
+            // TODO: If this fails, we should not 
+            try
+            {
+                var tileSetJson = JsonHelper.Parse(File.ReadAllText(Path.Combine(App.State.ActiveScenarioPath, TileSetPath)));
+
+                SpritesheetPath = tileSetJson.GetProperty("spritesheet").GetString();
+                TileSize = tileSetJson.GetProperty("tileSize").GetInt32();
+
+                var tileKindsJson = tileSetJson.GetProperty("tileKinds");
+
+                for (var i = 0; i < (int)ModrogApi.MapLayer.Count; i++)
+                {
+                    var layerName = Enum.GetName(typeof(ModrogApi.MapLayer), i);
+
+                    if (tileKindsJson.TryGetProperty(layerName, out var layerJson))
+                    {
+                        var tileKinds = TileKindsByLayer[i] = new EditorTileKind[layerJson.GetArrayLength()];
+
+                        for (var j = 0; j < tileKinds.Length; j++)
+                        {
+                            var tileKindJson = layerJson[j];
+
+                            var name = tileKindJson.GetProperty("name").GetString();
+
+                            var spriteLocationJson = tileKindJson.GetProperty("spriteLocation");
+                            var spriteLocation = new Point(
+                                spriteLocationJson[0].GetInt32(),
+                                spriteLocationJson[1].GetInt32());
+
+                            tileKinds[j] = new EditorTileKind { Name = name, SpriteLocation = spriteLocation };
+                        }
+                    }
+                    else
+                    {
+                        TileKindsByLayer[i] = new EditorTileKind[0];
+                    }
+                }
+
+            }
+            catch (Exception exception)
+            {
+                // TODO: Display error somewhere
+                // error = "Error while loading tile set: " + exception.Message;
+                return;
+            }
+
+            try
+            {
+                SpritesheetTexture = SDL_image.IMG_LoadTexture(Desktop.Renderer, Path.Combine(App.State.ActiveScenarioPath, SpritesheetPath));
+                if (SpritesheetTexture == IntPtr.Zero) throw new Exception(SDL.SDL_GetError());
+            }
+            catch (Exception exception)
+            {
+                // TODO: Display error somewhere
+                // error = "Error while loading spritesheet texture: " + exception.Message;
+                return;
+            }
+        }
+
+        internal void SetTileSet(string tileSetPath)
+        {
+            TileSetPath = tileSetPath;
+            LoadTileSet();
         }
 
         public override void Unload()

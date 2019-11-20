@@ -69,8 +69,8 @@ namespace ModrogClient.Interface.Playing
                 Scroll.Y - ViewRectangle.Height / 2 / _zoom);
 
             var newHoveredTileCoords = new Point(
-                (int)MathF.Floor((viewportScroll.X + (Desktop.MouseX - ViewRectangle.X) / _zoom) / Protocol.MapTileSize),
-                (int)MathF.Floor((viewportScroll.Y + (Desktop.MouseY - ViewRectangle.Y) / _zoom) / Protocol.MapTileSize));
+                (int)MathF.Floor((viewportScroll.X + (Desktop.MouseX - ViewRectangle.X) / _zoom) / App.State.TileSize),
+                (int)MathF.Floor((viewportScroll.Y + (Desktop.MouseY - ViewRectangle.Y) / _zoom) / App.State.TileSize));
 
             var hasHoveredTileChanged = _hoveredTileCoords != newHoveredTileCoords;
             _hoveredTileCoords = newHoveredTileCoords;
@@ -300,7 +300,7 @@ namespace ModrogClient.Interface.Playing
 
         public void OnTeleported(Point position)
         {
-            Scroll = new Vector2(position.X * Protocol.MapTileSize, position.Y * Protocol.MapTileSize);
+            Scroll = new Vector2(position.X * App.State.TileSize, position.Y * App.State.TileSize);
         }
         #endregion
 
@@ -317,12 +317,12 @@ namespace ModrogClient.Interface.Playing
                 Scroll.Y - ViewRectangle.Height / 2 / _zoom);
 
             var startTileCoords = new Point(
-                (int)MathF.Floor(viewportScroll.X / Protocol.MapTileSize),
-                (int)MathF.Floor(viewportScroll.Y / Protocol.MapTileSize));
+                (int)MathF.Floor(viewportScroll.X / state.TileSize),
+                (int)MathF.Floor(viewportScroll.Y / state.TileSize));
 
             var endTileCoords = new Point(
-                startTileCoords.X + (int)MathF.Ceiling(ViewRectangle.Width / (Protocol.MapTileSize * _zoom) + 1),
-                startTileCoords.Y + (int)MathF.Ceiling(ViewRectangle.Height / (Protocol.MapTileSize * _zoom) + 1));
+                startTileCoords.X + (int)MathF.Ceiling(ViewRectangle.Width / (state.TileSize * _zoom) + 1),
+                startTileCoords.Y + (int)MathF.Ceiling(ViewRectangle.Height / (state.TileSize * _zoom) + 1));
 
             new Color(0xffffffff).UseAsDrawColor(Desktop.Renderer);
 
@@ -364,13 +364,13 @@ namespace ModrogClient.Interface.Playing
                                 var y = chunkStartTileCoords.Y + chunkRelativeY;
                                 var x = chunkStartTileCoords.X + chunkRelativeX;
 
-                                var left = ViewRectangle.X + (int)(x * _zoom * Protocol.MapTileSize) - (int)(viewportScroll.X * _zoom);
-                                var right = ViewRectangle.X + (int)((x + 1) * _zoom * Protocol.MapTileSize) - (int)(viewportScroll.X * _zoom);
-                                var top = ViewRectangle.Y + (int)(y * _zoom * Protocol.MapTileSize) - (int)(viewportScroll.Y * _zoom);
-                                var bottom = ViewRectangle.Y + (int)((y + 1) * _zoom * Protocol.MapTileSize) - (int)(viewportScroll.Y * _zoom);
+                                var left = ViewRectangle.X + (int)(x * _zoom * state.TileSize) - (int)(viewportScroll.X * _zoom);
+                                var right = ViewRectangle.X + (int)((x + 1) * _zoom * state.TileSize) - (int)(viewportScroll.X * _zoom);
+                                var top = ViewRectangle.Y + (int)(y * _zoom * state.TileSize) - (int)(viewportScroll.Y * _zoom);
+                                var bottom = ViewRectangle.Y + (int)((y + 1) * _zoom * state.TileSize) - (int)(viewportScroll.Y * _zoom);
 
                                 var spriteLocation = tileKinds[tile - 1].SpriteLocation;
-                                var sourceRect = new SDL.SDL_Rect { x = spriteLocation.X * Protocol.MapTileSize, y = spriteLocation.Y * Protocol.MapTileSize, w = Protocol.MapTileSize, h = Protocol.MapTileSize };
+                                var sourceRect = new SDL.SDL_Rect { x = spriteLocation.X * state.TileSize, y = spriteLocation.Y * state.TileSize, w = state.TileSize, h = state.TileSize };
                                 var destRect = new SDL.SDL_Rect { x = left, y = top, w = right - left, h = bottom - top };
                                 SDL.SDL_RenderCopy(Desktop.Renderer, SpritesheetTexture, ref sourceRect, ref destRect);
                             }
@@ -407,12 +407,12 @@ namespace ModrogClient.Interface.Playing
                 }
 
 
-                var left = ViewRectangle.X + (int)((position.X + 0.5f - 0.5f * stretch.X) * _zoom * Protocol.MapTileSize) - (int)(viewportScroll.X * _zoom);
-                var right = ViewRectangle.X + (int)((position.X + 0.5f + 0.5f * stretch.X) * _zoom * Protocol.MapTileSize) - (int)(viewportScroll.X * _zoom);
-                var top = ViewRectangle.Y + (int)((position.Y + 0.5f - 0.5f * stretch.Y) * _zoom * Protocol.MapTileSize) - (int)(viewportScroll.Y * _zoom);
-                var bottom = ViewRectangle.Y + (int)((position.Y + 0.5f + 0.5f * stretch.Y) * _zoom * Protocol.MapTileSize) - (int)(viewportScroll.Y * _zoom);
+                var left = ViewRectangle.X + (int)((position.X + 0.5f - 0.5f * stretch.X) * _zoom * state.TileSize) - (int)(viewportScroll.X * _zoom);
+                var right = ViewRectangle.X + (int)((position.X + 0.5f + 0.5f * stretch.X) * _zoom * state.TileSize) - (int)(viewportScroll.X * _zoom);
+                var top = ViewRectangle.Y + (int)((position.Y + 0.5f - 0.5f * stretch.Y) * _zoom * state.TileSize) - (int)(viewportScroll.Y * _zoom);
+                var bottom = ViewRectangle.Y + (int)((position.Y + 0.5f + 0.5f * stretch.Y) * _zoom * state.TileSize) - (int)(viewportScroll.Y * _zoom);
 
-                var sourceRect = new SDL.SDL_Rect { x = entity.SpriteLocation.X * Protocol.MapTileSize, y = entity.SpriteLocation.Y * Protocol.MapTileSize, w = Protocol.MapTileSize, h = Protocol.MapTileSize };
+                var sourceRect = new SDL.SDL_Rect { x = entity.SpriteLocation.X * state.TileSize, y = entity.SpriteLocation.Y * state.TileSize, w = state.TileSize, h = state.TileSize };
                 var destRect = new SDL.SDL_Rect { x = left, y = top, w = right - left, h = bottom - top };
                 SDL.SDL_RenderCopyEx(Desktop.Renderer, SpritesheetTexture, ref sourceRect, ref destRect, 0f, IntPtr.Zero, entity.ActionDirection == ModrogApi.Direction.Left ? SDL.SDL_RendererFlip.SDL_FLIP_HORIZONTAL : SDL.SDL_RendererFlip.SDL_FLIP_NONE);
             }
@@ -443,10 +443,10 @@ namespace ModrogClient.Interface.Playing
 
                     if (!state.FogChunks.TryGetValue(new Point(chunkX, chunkY), out var fogChunk))
                     {
-                        var left = ViewRectangle.X + (int)(chunkStartTileCoords.X * _zoom * Protocol.MapTileSize) - (int)(viewportScroll.X * _zoom);
-                        var right = ViewRectangle.X + (int)((chunkStartTileCoords.X + Protocol.MapChunkSide) * _zoom * Protocol.MapTileSize) - (int)(viewportScroll.X * _zoom);
-                        var top = ViewRectangle.Y + (int)(chunkStartTileCoords.Y * _zoom * Protocol.MapTileSize) - (int)(viewportScroll.Y * _zoom);
-                        var bottom = ViewRectangle.Y + (int)((chunkStartTileCoords.Y + Protocol.MapChunkSide) * _zoom * Protocol.MapTileSize) - (int)(viewportScroll.Y * _zoom);
+                        var left = ViewRectangle.X + (int)(chunkStartTileCoords.X * _zoom * state.TileSize) - (int)(viewportScroll.X * _zoom);
+                        var right = ViewRectangle.X + (int)((chunkStartTileCoords.X + Protocol.MapChunkSide) * _zoom * state.TileSize) - (int)(viewportScroll.X * _zoom);
+                        var top = ViewRectangle.Y + (int)(chunkStartTileCoords.Y * _zoom * state.TileSize) - (int)(viewportScroll.Y * _zoom);
+                        var bottom = ViewRectangle.Y + (int)((chunkStartTileCoords.Y + Protocol.MapChunkSide) * _zoom * state.TileSize) - (int)(viewportScroll.Y * _zoom);
 
                         var destRect = new SDL.SDL_Rect { x = left, y = top, w = right - left, h = bottom - top };
                         SDL.SDL_RenderFillRect(Desktop.Renderer, ref destRect);
@@ -471,10 +471,10 @@ namespace ModrogClient.Interface.Playing
                             var y = chunkStartTileCoords.Y + chunkRelativeY;
                             var x = chunkStartTileCoords.X + chunkRelativeX;
 
-                            var left = ViewRectangle.X + (int)(x * _zoom * Protocol.MapTileSize) - (int)(viewportScroll.X * _zoom);
-                            var right = ViewRectangle.X + (int)((x + 1) * _zoom * Protocol.MapTileSize) - (int)(viewportScroll.X * _zoom);
-                            var top = ViewRectangle.Y + (int)(y * _zoom * Protocol.MapTileSize) - (int)(viewportScroll.Y * _zoom);
-                            var bottom = ViewRectangle.Y + (int)((y + 1) * _zoom * Protocol.MapTileSize) - (int)(viewportScroll.Y * _zoom);
+                            var left = ViewRectangle.X + (int)(x * _zoom * state.TileSize) - (int)(viewportScroll.X * _zoom);
+                            var right = ViewRectangle.X + (int)((x + 1) * _zoom * state.TileSize) - (int)(viewportScroll.X * _zoom);
+                            var top = ViewRectangle.Y + (int)(y * _zoom * state.TileSize) - (int)(viewportScroll.Y * _zoom);
+                            var bottom = ViewRectangle.Y + (int)((y + 1) * _zoom * state.TileSize) - (int)(viewportScroll.Y * _zoom);
 
                             var destRect = new SDL.SDL_Rect { x = left, y = top, w = right - left, h = bottom - top };
                             SDL.SDL_RenderFillRect(Desktop.Renderer, ref destRect);
@@ -493,10 +493,10 @@ namespace ModrogClient.Interface.Playing
                 var position = Vector2.Lerp(state.SelectedEntity.PreviousTickPosition.ToVector2(), state.SelectedEntity.Position.ToVector2(), tickProgress);
                 var size = new Vector2(1f, 1f);
 
-                var left = ViewRectangle.X + (int)(position.X * _zoom * Protocol.MapTileSize) - (int)(viewportScroll.X * _zoom);
-                var right = ViewRectangle.X + (int)(((position.X + size.X) * Protocol.MapTileSize) * _zoom) - (int)(viewportScroll.X * _zoom);
-                var top = ViewRectangle.Y + (int)(position.Y * _zoom * Protocol.MapTileSize) - (int)(viewportScroll.Y * _zoom);
-                var bottom = ViewRectangle.Y + (int)(((position.Y + size.Y) * Protocol.MapTileSize) * _zoom) - (int)(viewportScroll.Y * _zoom);
+                var left = ViewRectangle.X + (int)(position.X * _zoom * state.TileSize) - (int)(viewportScroll.X * _zoom);
+                var right = ViewRectangle.X + (int)(((position.X + size.X) * state.TileSize) * _zoom) - (int)(viewportScroll.X * _zoom);
+                var top = ViewRectangle.Y + (int)(position.Y * _zoom * state.TileSize) - (int)(viewportScroll.Y * _zoom);
+                var bottom = ViewRectangle.Y + (int)(((position.Y + size.Y) * state.TileSize) * _zoom) - (int)(viewportScroll.Y * _zoom);
 
                 var rect = new Rectangle(left, top, right - left, bottom - top).ToSDL_Rect();
                 SDL.SDL_RenderDrawRect(Desktop.Renderer, ref rect);

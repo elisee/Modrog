@@ -215,6 +215,8 @@ namespace ModrogClient
             var image = _packetReader.ReadBytes(size);
             _app.PlayingView.OnSpritesheetReceived(image);
 
+            TileSize = _packetReader.ReadShort();
+
             // Tile kinds
             for (var layer = 0; layer < (int)ModrogApi.MapLayer.Count; layer++)
             {
@@ -315,8 +317,8 @@ namespace ModrogClient
 
             // Send scroll update
             var scrollPosition = new Point(
-                (int)(_app.PlayingView.Scroll.X / Protocol.MapTileSize),
-                (int)(_app.PlayingView.Scroll.Y / Protocol.MapTileSize));
+                (int)(_app.PlayingView.Scroll.X / _app.State.TileSize),
+                (int)(_app.PlayingView.Scroll.Y / _app.State.TileSize));
 
             _packetWriter.WriteByte((byte)ClientPacketType.SetPlayerPosition);
             _packetWriter.WriteShort((short)scrollPosition.X);

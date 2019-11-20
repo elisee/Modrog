@@ -13,7 +13,6 @@ namespace ModrogCommon
         public const float StartCountdownDuration = 3f;
         public const float TickInterval = 0.2f;
 
-        public const int MapTileSize = 20;
         public const int MapChunkSide = 16;
 
         public enum ServerPacketType : byte

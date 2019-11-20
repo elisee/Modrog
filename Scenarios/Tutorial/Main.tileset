@@ -1,5 +1,6 @@
 {
     "spritesheet": "Spritesheet.png",
+    "tileSize": 20,
     "tileKinds": {
         "Floor": [
             {

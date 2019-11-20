@@ -36,8 +36,6 @@ namespace ModrogEditor
         public readonly Font MainFont;
         public readonly Font MonoFont;
 
-        public readonly IntPtr TileMarkersSpritesheet;
-
         // Interface
         public readonly Desktop Desktop;
 
@@ -74,9 +72,6 @@ namespace ModrogEditor
 
             MainFont = Font.LoadFromChevyRayFolder(_renderer, Path.Combine(_assetsPath, "Fonts", "ChevyRay - Softsquare"));
             MonoFont = Font.LoadFromChevyRayFolder(_renderer, Path.Combine(_assetsPath, "Fonts", "ChevyRay - Softsquare Mono"));
-
-            var tileMarkersSpritesheetPath = Path.Combine(_assetsPath, "Editor", "MapTileMarkers.png");
-            TileMarkersSpritesheet = SDL_image.IMG_LoadTexture(_renderer, tileMarkersSpritesheetPath);
 
             // Interface
             Desktop = new Desktop(_renderer,

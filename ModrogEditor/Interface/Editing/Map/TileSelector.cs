@@ -1,5 +1,4 @@
-﻿using ModrogCommon;
-using SDL2;
+﻿using SDL2;
 using SwarmBasics;
 using SwarmBasics.Math;
 using SwarmPlatform.Graphics;
@@ -21,13 +20,13 @@ namespace ModrogEditor.Interface.Editing.Map
         }
 
         #region Internals
-        int GetTilesPerRow() => _contentRectangle.Width / Protocol.MapTileSize;
+        int GetTilesPerRow() => _contentRectangle.Width / _mapEditor.TileSize;
 
         void UpdateHoveredTileKind()
         {
             var newHoveredTileKindCoords = new Point(
-                (int)MathF.Floor(((Desktop.MouseX - ViewRectangle.X)) / Protocol.MapTileSize),
-                (int)MathF.Floor(((Desktop.MouseY - ViewRectangle.Y)) / Protocol.MapTileSize));
+                (int)MathF.Floor(((Desktop.MouseX - ViewRectangle.X)) / _mapEditor.TileSize),
+                (int)MathF.Floor(((Desktop.MouseY - ViewRectangle.Y)) / _mapEditor.TileSize));
 
             // var hasHoveredTileChanged = _hoveredTileKindCoords != newHoveredTileKindCoords;
             _hoveredTileKindCoords = newHoveredTileKindCoords;
@@ -53,14 +52,18 @@ namespace ModrogEditor.Interface.Editing.Map
         {
             base.DrawSelf();
 
+            if (_mapEditor.TileSetPath.Length == 0) return;
+
             var tileKinds = _mapEditor.TileKindsByLayer[_mapEditor.TileLayer];
             var tilesPerRow = GetTilesPerRow();
 
             // Empty tile
             {
-                var sourceRect = new SDL.SDL_Rect { x = 0 * Protocol.MapTileSize, y = 0 * Protocol.MapTileSize, w = Protocol.MapTileSize, h = Protocol.MapTileSize };
-                var destRect = new SDL.SDL_Rect { x = _contentRectangle.X + 0 * Protocol.MapTileSize, y = _contentRectangle.Y + 0 * Protocol.MapTileSize, w = Protocol.MapTileSize, h = Protocol.MapTileSize };
-                SDL.SDL_RenderCopy(Desktop.Renderer, _mapEditor.App.TileMarkersSpritesheet, ref sourceRect, ref destRect);
+                var rect = new SDL.SDL_Rect { x = _contentRectangle.X + 0 * _mapEditor.TileSize, y = _contentRectangle.Y + 0 * _mapEditor.TileSize, w = _mapEditor.TileSize, h = _mapEditor.TileSize };
+
+                new Color(0xff0000ff).UseAsDrawColor(Desktop.Renderer);
+                SDL.SDL_RenderDrawLine(Desktop.Renderer, rect.x, rect.y, rect.x + rect.w - 1, rect.y + rect.h - 1);
+                SDL.SDL_RenderDrawLine(Desktop.Renderer, rect.x + rect.w - 1, rect.y, rect.x, rect.y + rect.h - 1);
             }
 
             for (var i = 0; i < tileKinds.Length; i++)
@@ -69,18 +72,25 @@ namespace ModrogEditor.Interface.Editing.Map
                 var y = (i + 1) / tilesPerRow;
 
                 var spriteLocation = tileKinds[i].SpriteLocation;
-                var sourceRect = new SDL.SDL_Rect { x = spriteLocation.X * Protocol.MapTileSize, y = spriteLocation.Y * Protocol.MapTileSize, w = Protocol.MapTileSize, h = Protocol.MapTileSize };
-                var destRect = new SDL.SDL_Rect { x = _contentRectangle.X + x * Protocol.MapTileSize, y = _contentRectangle.Y + y * Protocol.MapTileSize, w = Protocol.MapTileSize, h = Protocol.MapTileSize };
+                var sourceRect = new SDL.SDL_Rect { x = spriteLocation.X * _mapEditor.TileSize, y = spriteLocation.Y * _mapEditor.TileSize, w = _mapEditor.TileSize, h = _mapEditor.TileSize };
+                var destRect = new SDL.SDL_Rect { x = _contentRectangle.X + x * _mapEditor.TileSize, y = _contentRectangle.Y + y * _mapEditor.TileSize, w = _mapEditor.TileSize, h = _mapEditor.TileSize };
                 SDL.SDL_RenderCopy(Desktop.Renderer, _mapEditor.SpritesheetTexture, ref sourceRect, ref destRect);
             }
 
             // Selected tile
             {
-                var sourceRect = new SDL.SDL_Rect { x = 1 * Protocol.MapTileSize, y = 0 * Protocol.MapTileSize, w = Protocol.MapTileSize, h = Protocol.MapTileSize };
                 var x = _mapEditor.BrushTileKindIndex % tilesPerRow;
                 var y = _mapEditor.BrushTileKindIndex / tilesPerRow;
-                var destRect = new SDL.SDL_Rect { x = _contentRectangle.X + x * Protocol.MapTileSize, y = _contentRectangle.Y + y * Protocol.MapTileSize, w = Protocol.MapTileSize, h = Protocol.MapTileSize };
-                SDL.SDL_RenderCopy(Desktop.Renderer, _mapEditor.App.TileMarkersSpritesheet, ref sourceRect, ref destRect);
+                var outerRect = new SDL.SDL_Rect { x = _contentRectangle.X + x * _mapEditor.TileSize, y = _contentRectangle.Y + y * _mapEditor.TileSize, w = _mapEditor.TileSize, h = _mapEditor.TileSize };
+                var midRect = new SDL.SDL_Rect { x = _contentRectangle.X + x * _mapEditor.TileSize + 1, y = _contentRectangle.Y + y * _mapEditor.TileSize + 1, w = _mapEditor.TileSize - 2, h = _mapEditor.TileSize - 2 };
+                var innerRect = new SDL.SDL_Rect { x = _contentRectangle.X + x * _mapEditor.TileSize + 2, y = _contentRectangle.Y + y * _mapEditor.TileSize + 2, w = _mapEditor.TileSize - 4, h = _mapEditor.TileSize - 4 };
+
+                new Color(0x000000ff).UseAsDrawColor(Desktop.Renderer);
+                SDL.SDL_RenderDrawRect(Desktop.Renderer, ref outerRect);
+                SDL.SDL_RenderDrawRect(Desktop.Renderer, ref innerRect);
+
+                new Color(0xffffffff).UseAsDrawColor(Desktop.Renderer);
+                SDL.SDL_RenderDrawRect(Desktop.Renderer, ref midRect);
             }
 
             if (IsHovered)
@@ -93,10 +103,10 @@ namespace ModrogEditor.Interface.Editing.Map
                 var w = 1;
                 var h = 1;
 
-                var renderX = ViewRectangle.X + (int)(x * Protocol.MapTileSize);
-                var renderY = ViewRectangle.Y + (int)(y * Protocol.MapTileSize);
+                var renderX = ViewRectangle.X + (int)(x * _mapEditor.TileSize);
+                var renderY = ViewRectangle.Y + (int)(y * _mapEditor.TileSize);
 
-                var rect = new Rectangle(renderX, renderY, (int)(w * Protocol.MapTileSize), (int)(h * Protocol.MapTileSize)).ToSDL_Rect();
+                var rect = new Rectangle(renderX, renderY, (int)(w * _mapEditor.TileSize), (int)(h * _mapEditor.TileSize)).ToSDL_Rect();
                 SDL.SDL_RenderDrawRect(Desktop.Renderer, ref rect);
             }
         }

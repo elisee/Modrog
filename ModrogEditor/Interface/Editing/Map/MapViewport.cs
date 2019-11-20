@@ -50,8 +50,8 @@ namespace ModrogEditor.Interface.Editing.Map
                 _scroll.Y - ViewRectangle.Height / 2 / _zoom);
 
             var newHoveredTileCoords = new Point(
-                (int)MathF.Floor((viewportScroll.X + (Desktop.MouseX - ViewRectangle.X) / _zoom) / Protocol.MapTileSize),
-                (int)MathF.Floor((viewportScroll.Y + (Desktop.MouseY - ViewRectangle.Y) / _zoom) / Protocol.MapTileSize));
+                (int)MathF.Floor((viewportScroll.X + (Desktop.MouseX - ViewRectangle.X) / _zoom) / _mapEditor.TileSize),
+                (int)MathF.Floor((viewportScroll.Y + (Desktop.MouseY - ViewRectangle.Y) / _zoom) / _mapEditor.TileSize));
 
             var hasHoveredTileChanged = _hoveredTileCoords != newHoveredTileCoords;
             _hoveredTileCoords = newHoveredTileCoords;
@@ -241,12 +241,12 @@ namespace ModrogEditor.Interface.Editing.Map
                 _scroll.Y - ViewRectangle.Height / 2 / _zoom);
 
             var startTileCoords = new Point(
-                (int)MathF.Floor(viewportScroll.X / Protocol.MapTileSize),
-                (int)MathF.Floor(viewportScroll.Y / Protocol.MapTileSize));
+                (int)MathF.Floor(viewportScroll.X / _mapEditor.TileSize),
+                (int)MathF.Floor(viewportScroll.Y / _mapEditor.TileSize));
 
             var endTileCoords = new Point(
-                startTileCoords.X + (int)MathF.Ceiling(ViewRectangle.Width / (Protocol.MapTileSize * _zoom) + 1),
-                startTileCoords.Y + (int)MathF.Ceiling(ViewRectangle.Height / (Protocol.MapTileSize * _zoom) + 1));
+                startTileCoords.X + (int)MathF.Ceiling(ViewRectangle.Width / (_mapEditor.TileSize * _zoom) + 1),
+                startTileCoords.Y + (int)MathF.Ceiling(ViewRectangle.Height / (_mapEditor.TileSize * _zoom) + 1));
 
             Desktop.PushClipRect(ViewRectangle);
 
@@ -290,13 +290,13 @@ namespace ModrogEditor.Interface.Editing.Map
                                 var y = chunkStartTileCoords.Y + chunkRelativeY;
                                 var x = chunkStartTileCoords.X + chunkRelativeX;
 
-                                var left = ViewRectangle.X + (int)(x * _zoom * Protocol.MapTileSize) - (int)(viewportScroll.X * _zoom);
-                                var right = ViewRectangle.X + (int)((x + 1) * _zoom * Protocol.MapTileSize) - (int)(viewportScroll.X * _zoom);
-                                var top = ViewRectangle.Y + (int)(y * _zoom * Protocol.MapTileSize) - (int)(viewportScroll.Y * _zoom);
-                                var bottom = ViewRectangle.Y + (int)((y + 1) * _zoom * Protocol.MapTileSize) - (int)(viewportScroll.Y * _zoom);
+                                var left = ViewRectangle.X + (int)(x * _zoom * _mapEditor.TileSize) - (int)(viewportScroll.X * _zoom);
+                                var right = ViewRectangle.X + (int)((x + 1) * _zoom * _mapEditor.TileSize) - (int)(viewportScroll.X * _zoom);
+                                var top = ViewRectangle.Y + (int)(y * _zoom * _mapEditor.TileSize) - (int)(viewportScroll.Y * _zoom);
+                                var bottom = ViewRectangle.Y + (int)((y + 1) * _zoom * _mapEditor.TileSize) - (int)(viewportScroll.Y * _zoom);
 
                                 var spriteLocation = tileKinds[tileIndex - 1].SpriteLocation;
-                                var sourceRect = new SDL.SDL_Rect { x = spriteLocation.X * Protocol.MapTileSize, y = spriteLocation.Y * Protocol.MapTileSize, w = Protocol.MapTileSize, h = Protocol.MapTileSize };
+                                var sourceRect = new SDL.SDL_Rect { x = spriteLocation.X * _mapEditor.TileSize, y = spriteLocation.Y * _mapEditor.TileSize, w = _mapEditor.TileSize, h = _mapEditor.TileSize };
                                 var destRect = new SDL.SDL_Rect { x = left, y = top, w = right - left, h = bottom - top };
                                 SDL.SDL_RenderCopy(Desktop.Renderer, _mapEditor.SpritesheetTexture, ref sourceRect, ref destRect);
                             }
@@ -315,10 +315,10 @@ namespace ModrogEditor.Interface.Editing.Map
                 var w = 1;
                 var h = 1;
 
-                var renderX = ViewRectangle.X + (int)(x * _zoom * Protocol.MapTileSize) - (int)(viewportScroll.X * _zoom);
-                var renderY = ViewRectangle.Y + (int)(y * _zoom * Protocol.MapTileSize) - (int)(viewportScroll.Y * _zoom);
+                var renderX = ViewRectangle.X + (int)(x * _zoom * _mapEditor.TileSize) - (int)(viewportScroll.X * _zoom);
+                var renderY = ViewRectangle.Y + (int)(y * _zoom * _mapEditor.TileSize) - (int)(viewportScroll.Y * _zoom);
 
-                var rect = new Rectangle(renderX, renderY, (int)(w * Protocol.MapTileSize * _zoom), (int)(h * Protocol.MapTileSize * _zoom)).ToSDL_Rect();
+                var rect = new Rectangle(renderX, renderY, (int)(w * _mapEditor.TileSize * _zoom), (int)(h * _mapEditor.TileSize * _zoom)).ToSDL_Rect();
 
                 SDL.SDL_RenderDrawRect(Desktop.Renderer, ref rect);
             }

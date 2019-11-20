@@ -9,7 +9,6 @@ namespace ModrogServer
 {
     partial class ServerState
     {
-
         void StartPlaying()
         {
             _packetWriter.WriteByte((byte)Protocol.ServerPacketType.Chat);
@@ -48,6 +47,7 @@ namespace ModrogServer
         {
             _packetWriter.WriteInt(_spritesheetBytes.Length);
             _packetWriter.WriteBytes(_spritesheetBytes);
+            _packetWriter.WriteShort((short)_universe.TileSize);
 
             for (var layer = 0; layer < _universe.TileKindsPerLayer.Length; layer++)
             {

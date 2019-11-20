@@ -93,7 +93,7 @@ namespace ModrogEditor.Interface.Editing.Map
 
             if (tileSetPath != _mapEditor.TileSetPath)
             {
-                _mapEditor.TileSetPath = tileSetPath;
+                _mapEditor.SetTileSet(tileSetPath);
                 _mapEditor.MarkUnsavedChanges();
             }
 
