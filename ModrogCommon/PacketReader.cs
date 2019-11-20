@@ -27,6 +27,20 @@ namespace ModrogCommon
             return value;
         }
 
+        public byte ReadByte(int max)
+        {
+            var value = ReadByte();
+            if (value > max) throw new Exception($"Read {value} but expected at most {max}");
+            return value;
+        }
+
+        public TEnum ReadByte<TEnum>() where TEnum : Enum
+        {
+            var value = ReadByte();
+            if (!Enum.IsDefined(typeof(TEnum), value)) throw new PacketException($"Invalid {typeof(TEnum).Name} enum value");
+            return (TEnum)Enum.ToObject(typeof(TEnum), value);
+        }
+
         public Span<byte> ReadBytes(int size)
         {
             EnsureBytesAvailable(size);
