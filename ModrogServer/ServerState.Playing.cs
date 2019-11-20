@@ -79,27 +79,18 @@ namespace ModrogServer
                     var world = ownedEntity.World;
                     if (world != player.World) continue;
 
-                    seenEntities.Add(ownedEntity);
-                    if (ownedEntity.Action != ModrogApi.EntityAction.Idle) seenEntitiesWithAction.Add(ownedEntity);
-
                     var squaredViewRadius = ownedEntity.ViewRadius * ownedEntity.ViewRadius;
                     var viewRadius = ownedEntity.ViewRadius;
-                    seenTileStacks.TryAdd(ownedEntity.Position, world.PeekTileStack(ownedEntity.Position.X, ownedEntity.Position.Y));
 
                     for (var dy = -viewRadius; dy <= viewRadius; dy++)
                     {
                         for (var dx = -viewRadius; dx <= viewRadius; dx++)
                         {
-                            if (dx == 0 && dy == 0) continue;
-
-                            var angle = MathF.Atan2(dy, dx);
-                            var squaredDistance = dx * dx + dy * dy;
-
-                            var isInView = squaredDistance <= squaredViewRadius;
-
-                            if (!isInView) continue;
-
                             var target = new Point(ownedEntity.Position.X + dx, ownedEntity.Position.Y + dy);
+
+                            var squaredDistance = dx * dx + dy * dy;
+                            var isInView = squaredDistance <= squaredViewRadius;
+                            if (!isInView) continue;
 
                             var hasLineOfSight =
                                 world.HasLineOfSight(ownedEntity.Position.X, ownedEntity.Position.Y, target.X, target.Y) ||
@@ -108,12 +99,11 @@ namespace ModrogServer
                             if (!hasLineOfSight) continue;
 
                             seenTileStacks.TryAdd(target, world.PeekTileStack(target.X, target.Y));
-                            var targetEntity = world.PeekEntity(target.X, target.Y);
 
-                            if (targetEntity != null)
+                            foreach (var entityInView in world.PeekEntities(target.X, target.Y))
                             {
-                                seenEntities.Add(targetEntity);
-                                if (targetEntity.Action != ModrogApi.EntityAction.Idle) seenEntitiesWithAction.Add(ownedEntity);
+                                seenEntities.Add(entityInView);
+                                if (entityInView.Action != ModrogApi.EntityAction.Idle) seenEntitiesWithAction.Add(ownedEntity);
                             }
                         }
                     }

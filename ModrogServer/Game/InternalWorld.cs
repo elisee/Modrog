@@ -44,16 +44,7 @@ namespace ModrogServer.Game
                 {
                     case ModrogApi.EntityIntent.Move:
                         {
-                            var newPosition = entity.Position;
-
-                            switch (entity.IntentDirection)
-                            {
-                                case ModrogApi.Direction.Right: newPosition.X++; break;
-                                case ModrogApi.Direction.Down: newPosition.Y++; break;
-                                case ModrogApi.Direction.Left: newPosition.X--; break;
-                                case ModrogApi.Direction.Up: newPosition.Y--; break;
-                            }
-
+                            var newPosition = entity.Position + ModrogApi.MathHelper.GetOffsetFromDirection(entity.IntentDirection);
                             entity.ActionDirection = entity.IntentDirection;
 
                             // TODO: Need to check each layer for various flags
@@ -134,15 +125,17 @@ namespace ModrogServer.Game
             return stack;
         }
 
-        internal InternalEntity PeekEntity(int x, int y)
+        internal ICollection<InternalEntity> PeekEntities(int x, int y)
         {
+            var entities = new List<InternalEntity>();
+
             // TODO: Optimize with space partitioning
             foreach (var entity in _entities)
             {
-                if (entity.Position.X == x && entity.Position.Y == y) return entity;
+                if (entity.Position.X == x && entity.Position.Y == y) entities.Add(entity);
             }
 
-            return null;
+            return entities;
         }
 
         // http://www.roguebasin.com/index.php?title=Bresenham%27s_Line_Algorithm
