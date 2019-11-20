@@ -1,4 +1,4 @@
 ﻿namespace ModrogApi
 {
-    public enum Direction { Right, Down, Left, Up }
+    public enum Direction : byte { Right, Down, Left, Up }
 }

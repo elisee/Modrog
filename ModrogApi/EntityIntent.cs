@@ -1,6 +1,6 @@
 ﻿namespace ModrogApi
 {
-    public enum EntityIntent
+    public enum EntityIntent : byte
     {
         Idle,
         Move,

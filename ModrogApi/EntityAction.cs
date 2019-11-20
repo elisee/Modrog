@@ -1,6 +1,6 @@
 ﻿namespace ModrogApi
 {
-    public enum EntityAction
+    public enum EntityAction : byte
     {
         Idle,
         Move,

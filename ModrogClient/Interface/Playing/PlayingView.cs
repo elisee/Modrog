@@ -367,7 +367,7 @@ namespace ModrogClient.Interface.Playing
                 if (entity.Position.X < startTileCoords.X || entity.Position.Y < startTileCoords.Y || entity.Position.X > endTileCoords.X || entity.Position.Y > endTileCoords.Y) continue;
 
                 var position = Vector2.Lerp(entity.PreviousTickPosition.ToVector2(), entity.Position.ToVector2(), tickProgress);
-                var angle = GetAngleFromDirection(entity.ActionDirection);
+                var angle = ModrogApi.MathHelper.GetAngleFromDirection(entity.ActionDirection);
                 var stretch = Vector2.One;
 
                 if (entity.Action == ModrogApi.EntityAction.Move)
@@ -483,15 +483,6 @@ namespace ModrogClient.Interface.Playing
                 SDL.SDL_RenderDrawRect(Desktop.Renderer, ref rect);
             }
         }
-
-        float GetAngleFromDirection(ModrogApi.Direction direction) => direction switch
-        {
-            ModrogApi.Direction.Right => 0f,
-            ModrogApi.Direction.Down => MathF.PI / 2f,
-            ModrogApi.Direction.Left => MathF.PI,
-            ModrogApi.Direction.Up => MathF.PI * 3f / 2f,
-            _ => throw new InvalidOperationException(),
-        };
     }
     #endregion
 }
