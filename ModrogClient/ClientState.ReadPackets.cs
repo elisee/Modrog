@@ -315,15 +315,7 @@ namespace ModrogClient
                 fogChunk.TilesPerLayer[0][tileOffset] = 1;
             }
 
-            // Send scroll update
-            var scrollPosition = new Point(
-                (int)(_app.PlayingView.Scroll.X / _app.State.TileSize),
-                (int)(_app.PlayingView.Scroll.Y / _app.State.TileSize));
-
-            _packetWriter.WriteByte((byte)ClientPacketType.SetPlayerPosition);
-            _packetWriter.WriteShort((short)scrollPosition.X);
-            _packetWriter.WriteShort((short)scrollPosition.Y);
-            SendPacket();
+            _app.PlayingView.OnTick();
         }
 
         void ReadSelfLocation()

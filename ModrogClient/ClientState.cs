@@ -295,6 +295,14 @@ namespace ModrogClient
             SelectedEntityMoveIntentDirection = null;
         }
 
+        public void SendSelfPlayerPosition(Point scrollPosition)
+        {
+            _packetWriter.WriteByte((byte)Protocol.ClientPacketType.SetPlayerPosition);
+            _packetWriter.WriteShort((short)scrollPosition.X);
+            _packetWriter.WriteShort((short)scrollPosition.Y);
+            SendPacket();
+        }
+
         public void SetIntent(ModrogApi.CharacterIntent intent, ModrogApi.Direction direction = ModrogApi.Direction.Down, int slot = 0)
         {
             if (intent == ModrogApi.CharacterIntent.Move) SelectedEntityMoveIntentDirection = direction;

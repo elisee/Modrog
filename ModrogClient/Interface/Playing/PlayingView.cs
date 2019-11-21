@@ -42,6 +42,7 @@ namespace ModrogClient.Interface.Playing
         readonly Element _characterPortrait;
         readonly Element _healthBarFill;
 
+        readonly Label _hudSwapHint;
         readonly Panel _hudSwapPanel;
 
         // Sidebar
@@ -83,6 +84,14 @@ namespace ModrogClient.Interface.Playing
                     new Panel(slotsContainer) { Width = 32, Height = 32, Left = i > 0 ? (i == 2 ? 16 : 8) : 0, BackgroundPatch = new TexturePatch(0x789456ff) };
                 }
             }
+
+            _hudSwapHint = new Label(_hud)
+            {
+                Visible = false,
+                Top = 8,
+                Text = "Press SPACE to pick up items",
+                Flow = Flow.Shrink
+            };
 
             _hudSwapPanel = new Panel(_hud)
             {
@@ -182,6 +191,7 @@ namespace ModrogClient.Interface.Playing
                     if (App.State.SelectedEntity != null && App.State.SelectedEntity.PlayerIndex == App.State.SelfPlayerIndex)
                     {
                         _hudSwapPanel.Visible = true;
+                        _hudSwapHint.Visible = false;
                         _hud.Layout();
                     }
                 }
@@ -253,15 +263,8 @@ namespace ModrogClient.Interface.Playing
         {
             if (button == SDL.SDL_BUTTON_LEFT)
             {
-                _hudSwapPanel.Visible = false;
-                Desktop.SetFocusedElement(this);
-
                 var hoveredEntities = new List<Game.ClientEntity>();
-
-                foreach (var entity in App.State.EntitiesInSight)
-                {
-                    if (entity.Position.X == _hoveredTileCoords.X && entity.Position.Y == _hoveredTileCoords.Y) hoveredEntities.Add(entity);
-                }
+                foreach (var entity in App.State.EntitiesInSight) if (entity.Position == _hoveredTileCoords) hoveredEntities.Add(entity);
 
                 if (hoveredEntities.Count > 0)
                 {
@@ -277,13 +280,16 @@ namespace ModrogClient.Interface.Playing
                     }
 
                     _hudCharacterPanel.Visible = true; // TODO: App.State.SelectedEntity.ItemKind == null; ??
-                    _hud.Layout(_contentRectangle);
                 }
                 else
                 {
                     App.State.SelectEntity(null);
                     _hudCharacterPanel.Visible = false;
                 }
+
+                _hudSwapPanel.Visible = false;
+                _hud.Layout(_contentRectangle);
+                Desktop.SetFocusedElement(this);
             }
             else if (button == SDL.SDL_BUTTON_MIDDLE)
             {
@@ -363,6 +369,26 @@ namespace ModrogClient.Interface.Playing
         public void OnChatMessageReceived(string author, string message)
         {
             // TODO: Display chat message
+        }
+
+        public void OnTick()
+        {
+            App.State.SendSelfPlayerPosition(new Point((int)(Scroll.X / App.State.TileSize), (int)(Scroll.Y / App.State.TileSize)));
+
+            if (App.State.SelectedEntity != null)
+            {
+                // TODO: Just figure out whether there is at least one entity with ItemKind != null
+                var position = App.State.SelectedEntity.Position;
+                var entityStack = new List<Game.ClientEntity>();
+                foreach (var entity in App.State.EntitiesInSight) if (entity.Position == position) entityStack.Add(entity);
+
+                var showHudSwapHint = entityStack.Count > 1 && !_hudSwapPanel.Visible;
+                if (showHudSwapHint != _hudSwapHint.Visible)
+                {
+                    _hudSwapHint.Visible = showHudSwapHint;
+                    _hud.Layout();
+                }
+            }
         }
 
         public void OnSpritesheetReceived(Span<byte> data)
