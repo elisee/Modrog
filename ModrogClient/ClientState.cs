@@ -222,6 +222,15 @@ namespace ModrogClient
         {
             ErrorMessage = error;
 
+            WorldChunks.Clear();
+            FogChunks.Clear();
+
+            CharacterKinds.Clear();
+            ItemKinds.Clear();
+
+            SelectedEntity = null;
+            SelectedEntityMoveIntentDirection = null;
+
             _socket?.Close();
             _socket = null;
 
@@ -300,19 +309,44 @@ namespace ModrogClient
             SendPacket();
         }
 
-        public void SetIntent(ModrogApi.CharacterIntent intent, ModrogApi.Direction direction = ModrogApi.Direction.Down, int slot = 0)
+        public void SetMoveIntent(ModrogApi.Direction direction)
         {
-            if (SelectedEntity.PlayerIndex != SelfPlayerIndex) return;
-            if (intent == ModrogApi.CharacterIntent.Move) SelectedEntityMoveIntentDirection = direction;
+            SelectedEntityMoveIntentDirection = direction;
+
+            WriteIntentHeader(ModrogApi.CharacterIntent.Move);
+            _packetWriter.WriteByte((byte)direction);
+            SendPacket();
+        }
+
+        public void SetUseIntent(ModrogApi.Direction direction, int slot)
+        {
+            SelectedEntityMoveIntentDirection = null;
+
+            WriteIntentHeader(ModrogApi.CharacterIntent.Use);
+            _packetWriter.WriteByte((byte)slot);
+            _packetWriter.WriteByte((byte)direction);
+            SendPacket();
+        }
+
+        public void SetSwapIntent(int slot, int itemEntityId)
+        {
+            SelectedEntityMoveIntentDirection = null;
+
+            WriteIntentHeader(ModrogApi.CharacterIntent.Swap);
+            _packetWriter.WriteByte((byte)slot);
+            _packetWriter.WriteInt(itemEntityId);
+            SendPacket();
+        }
+
+        void WriteIntentHeader(ModrogApi.CharacterIntent intent)
+        {
+            Debug.Assert(SelectedEntity.PlayerIndex == SelfPlayerIndex);
 
             _packetWriter.WriteByte((byte)Protocol.ClientPacketType.SetEntityIntents);
             _packetWriter.WriteInt(TickIndex);
             _packetWriter.WriteShort(1);
             _packetWriter.WriteInt(SelectedEntity.Id);
             _packetWriter.WriteByte((byte)intent);
-            if (intent == ModrogApi.CharacterIntent.Move || intent == ModrogApi.CharacterIntent.Use) _packetWriter.WriteByte((byte)direction);
-            if (intent == ModrogApi.CharacterIntent.Use || intent == ModrogApi.CharacterIntent.Swap) _packetWriter.WriteByte((byte)slot);
-            SendPacket();
         }
 
         public void ClearMoveIntent(ModrogApi.Direction direction)

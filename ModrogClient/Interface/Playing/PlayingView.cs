@@ -38,8 +38,10 @@ namespace ModrogClient.Interface.Playing
         // Hud
         readonly Element _hud;
 
-        readonly Panel _hudCharacterPanel;
-        readonly Element _characterPortrait;
+        readonly Panel _hudEntityPanel;
+        readonly Element _entityPortrait;
+
+        readonly Element _hudCharacterContainer;
         readonly Element _healthBarFill;
 
         readonly Label _hudSwapHint;
@@ -60,7 +62,7 @@ namespace ModrogClient.Interface.Playing
             // Hud
             _hud = new Element(this) { ChildLayout = ChildLayoutMode.Top };
 
-            _hudCharacterPanel = new Panel(_hud)
+            _hudEntityPanel = new Panel(_hud)
             {
                 Visible = false,
                 Top = 8,
@@ -70,15 +72,16 @@ namespace ModrogClient.Interface.Playing
                 Flow = Flow.Shrink
             };
 
-            _characterPortrait = new Label(_hudCharacterPanel) { Width = 64, Height = 64, BackgroundPatch = new TexturePatch(0x000000ff) };
+            var portraitCartridge = new Element(_hudEntityPanel) { Width = 64, Height = 64, BackgroundPatch = new TexturePatch(0x000000ff) };
+            _entityPortrait = new Element(portraitCartridge);
 
             {
-                var container = new Element(_hudCharacterPanel) { Left = 8, ChildLayout = ChildLayoutMode.Top };
+                _hudCharacterContainer = new Element(_hudEntityPanel) { Left = 8, ChildLayout = ChildLayoutMode.Top };
 
-                var healthBarBackground = new Element(container) { Left = 0, Width = 128, Height = 16, BackgroundPatch = new TexturePatch(0x222222ff) };
+                var healthBarBackground = new Element(_hudCharacterContainer) { Left = 0, Width = 128, Height = 16, BackgroundPatch = new TexturePatch(0x222222ff) };
                 _healthBarFill = new Element(healthBarBackground) { Left = 0, Width = 64, BackgroundPatch = new TexturePatch(0x12cc34ff) };
 
-                var slotsContainer = new Element(container) { ChildLayout = ChildLayoutMode.Left, Top = 8 };
+                var slotsContainer = new Element(_hudCharacterContainer) { ChildLayout = ChildLayoutMode.Left, Top = 8 };
                 for (var i = 0; i < 6; i++)
                 {
                     new Panel(slotsContainer) { Width = 32, Height = 32, Left = i > 0 ? (i == 2 ? 16 : 8) : 0, BackgroundPatch = new TexturePatch(0x789456ff) };
@@ -103,8 +106,8 @@ namespace ModrogClient.Interface.Playing
                 Flow = Flow.Shrink
             };
 
-            new StyledTextButton(_hudSwapPanel) { Width = 32, Height = 32, Text = "[X]", OnActivate = () => App.State.SetIntent(ModrogApi.CharacterIntent.Swap, slot: 0) };
-            new StyledTextButton(_hudSwapPanel) { Width = 32, Height = 32, Left = 8, Text = "[C]", OnActivate = () => App.State.SetIntent(ModrogApi.CharacterIntent.Swap, slot: 1) };
+            new StyledTextButton(_hudSwapPanel) { Width = 32, Height = 32, Text = "[X]", OnActivate = () => App.State.SetSwapIntent(slot: 0, itemEntityId: 0) };
+            new StyledTextButton(_hudSwapPanel) { Width = 32, Height = 32, Left = 8, Text = "[C]", OnActivate = () => App.State.SetSwapIntent(slot: 1, itemEntityId: 0) };
 
             // Sidebar
             _sidebarPanel = new Panel(Desktop, this)
@@ -197,11 +200,6 @@ namespace ModrogClient.Interface.Playing
                 }
                 else
                 {
-                    var intent = ModrogApi.CharacterIntent.Move;
-
-                    var slot = _isUsingSlot0 ? 0 : (_isUsingSlot1 ? 1 : -1);
-                    if (slot != -1) intent = ModrogApi.CharacterIntent.Use;
-
                     var direction = key switch
                     {
                         SDL.SDL_Keycode.SDLK_RIGHT => ModrogApi.Direction.Right,
@@ -211,7 +209,12 @@ namespace ModrogClient.Interface.Playing
                         _ => (ModrogApi.Direction?)null,
                     };
 
-                    if (direction.HasValue) state.SetIntent(intent, direction.Value, slot);
+                    if (direction.HasValue)
+                    {
+                        if (_isUsingSlot0) state.SetUseIntent(direction.Value, 0);
+                        else if (_isUsingSlot1) state.SetUseIntent(direction.Value, 1);
+                        else state.SetMoveIntent(direction.Value);
+                    }
                 }
             }
 
@@ -263,28 +266,34 @@ namespace ModrogClient.Interface.Playing
         {
             if (button == SDL.SDL_BUTTON_LEFT)
             {
+                var state = App.State;
                 var hoveredEntities = new List<Game.ClientEntity>();
-                foreach (var entity in App.State.EntitiesInSight) if (entity.Position == _hoveredTileCoords) hoveredEntities.Add(entity);
+                foreach (var entity in state.EntitiesInSight) if (entity.Position == _hoveredTileCoords) hoveredEntities.Add(entity);
 
                 if (hoveredEntities.Count > 0)
                 {
-                    if (App.State.SelectedEntity == null || hoveredEntities.Count == 1)
+                    if (state.SelectedEntity == null || hoveredEntities.Count == 1)
                     {
-                        App.State.SelectEntity(hoveredEntities[0]);
+                        state.SelectEntity(hoveredEntities.Find(x => x.CharacterKind != null) ?? hoveredEntities[0]);
                     }
                     else
                     {
-                        var selectedEntityIndex = hoveredEntities.IndexOf(App.State.SelectedEntity);
+                        var selectedEntityIndex = hoveredEntities.IndexOf(state.SelectedEntity);
                         var newSelectedEntityIndex = selectedEntityIndex < hoveredEntities.Count - 1 ? selectedEntityIndex + 1 : 0;
-                        App.State.SelectEntity(hoveredEntities[newSelectedEntityIndex]);
+                        state.SelectEntity(hoveredEntities[newSelectedEntityIndex]);
                     }
 
-                    _hudCharacterPanel.Visible = true; // TODO: App.State.SelectedEntity.ItemKind == null; ??
+                    var entity = state.SelectedEntity;
+                    var spriteLocation = entity.CharacterKind?.SpriteLocation ?? entity.ItemKind.SpriteLocation;
+                    var sourceRect = new Rectangle(spriteLocation.X * state.TileSize, spriteLocation.Y * state.TileSize, state.TileSize, state.TileSize);
+                    _entityPortrait.BackgroundPatch = new TexturePatch(new TextureArea(_spritesheetTexture, sourceRect));
+                    _hudCharacterContainer.Visible = entity.CharacterKind != null;
+                    _hudEntityPanel.Visible = true;
                 }
                 else
                 {
                     App.State.SelectEntity(null);
-                    _hudCharacterPanel.Visible = false;
+                    _hudEntityPanel.Visible = false;
                 }
 
                 _hudSwapPanel.Visible = false;
@@ -375,14 +384,13 @@ namespace ModrogClient.Interface.Playing
         {
             App.State.SendSelfPlayerPosition(new Point((int)(Scroll.X / App.State.TileSize), (int)(Scroll.Y / App.State.TileSize)));
 
-            if (App.State.SelectedEntity != null)
+            if (App.State.SelectedEntity?.PlayerIndex == App.State.SelfPlayerIndex)
             {
-                // TODO: Just figure out whether there is at least one entity with ItemKind != null
                 var position = App.State.SelectedEntity.Position;
-                var entityStack = new List<Game.ClientEntity>();
-                foreach (var entity in App.State.EntitiesInSight) if (entity.Position == position) entityStack.Add(entity);
+                var itemEntities = new List<Game.ClientEntity>();
+                foreach (var entity in App.State.EntitiesInSight) if (entity.Position == position && entity.ItemKind != null) itemEntities.Add(entity);
 
-                var showHudSwapHint = entityStack.Count > 1 && !_hudSwapPanel.Visible;
+                var showHudSwapHint = itemEntities.Count > 0 && !_hudSwapPanel.Visible;
                 if (showHudSwapHint != _hudSwapHint.Visible)
                 {
                     _hudSwapHint.Visible = showHudSwapHint;
