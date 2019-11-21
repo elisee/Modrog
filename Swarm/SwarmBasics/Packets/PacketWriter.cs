@@ -1,8 +1,9 @@
-﻿using System;
+﻿using SwarmBasics.Math;
+using System;
 using System.Diagnostics;
 using System.Text;
 
-namespace ModrogCommon
+namespace SwarmBasics.Packets
 {
     public class PacketWriter
     {
@@ -31,7 +32,7 @@ namespace ModrogCommon
 
         void EnsureBytesAvailable(int bytes)
         {
-            if (_cursor + bytes > _buffer.Length) Array.Resize(ref _buffer, (int)Math.Ceiling((_buffer.Length + bytes) * 1.5));
+            if (_cursor + bytes > _buffer.Length) Array.Resize(ref _buffer, (int)System.Math.Ceiling((_buffer.Length + bytes) * 1.5));
         }
 
         public void WriteByte(byte value)
@@ -49,6 +50,17 @@ namespace ModrogCommon
             _buffer[_cursor + 0] = (byte)((value >> 8) & 0xff);
             _buffer[_cursor + 1] = (byte)((value >> 0) & 0xff);
             _cursor += sizeof(short);
+        }
+
+        public void WriteShortPoint(Point value)
+        {
+            EnsureBytesAvailable(sizeof(short) * 2);
+
+            _buffer[_cursor + 0] = (byte)((value.X >> 8) & 0xff);
+            _buffer[_cursor + 1] = (byte)((value.X >> 0) & 0xff);
+            _buffer[_cursor + 2] = (byte)((value.Y >> 8) & 0xff);
+            _buffer[_cursor + 3] = (byte)((value.Y >> 0) & 0xff);
+            _cursor += sizeof(short) * 2;
         }
 
         public void WriteInt(int value)

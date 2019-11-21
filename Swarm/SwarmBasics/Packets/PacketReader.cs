@@ -1,7 +1,8 @@
-﻿using System;
+﻿using SwarmBasics.Math;
+using System;
 using System.Text;
 
-namespace ModrogCommon
+namespace SwarmBasics.Packets
 {
     public class PacketReader
     {
@@ -54,6 +55,16 @@ namespace ModrogCommon
             EnsureBytesAvailable(sizeof(short));
             var value = (short)((_buffer[_cursor + 0] << 8) + _buffer[_cursor + 1]);
             _cursor += sizeof(short);
+            return value;
+        }
+
+        public Point ReadShortPoint()
+        {
+            EnsureBytesAvailable(sizeof(short) * 2);
+            var value = new Point(
+                (short)((_buffer[_cursor + 0] << 8) + _buffer[_cursor + 1]),
+                (short)((_buffer[_cursor + 2] << 8) + _buffer[_cursor + 3]));
+            _cursor += sizeof(short) * 2;
             return value;
         }
 

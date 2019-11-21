@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace ModrogCommon
+namespace SwarmBasics.Packets
 {
     public class PacketException : Exception
     {
