@@ -238,13 +238,13 @@ namespace SwarmPlatform.UI
                 {
                     layoutRectangle.X += Left.Value;
                     layoutRectangle.Width -= Left.Value;
-                    if (Right == null && HorizontalFlow == Flow.Shrink) layoutRectangle.X = _containerRectangle.X;
+                    if (Right == null && HorizontalFlow == Flow.Shrink) layoutRectangle.X = _containerRectangle.X + Left.Value;
                 }
 
                 if (Right != null)
                 {
                     layoutRectangle.Width -= Right.Value;
-                    if (Left == 0 && HorizontalFlow == Flow.Shrink) layoutRectangle.X = _containerRectangle.Right - layoutRectangle.Width;
+                    if (Left == 0 && HorizontalFlow == Flow.Shrink) layoutRectangle.X = _containerRectangle.Right - Right.Value - layoutRectangle.Width;
                 }
             }
 
@@ -268,13 +268,13 @@ namespace SwarmPlatform.UI
                 {
                     layoutRectangle.Y += Top.Value;
                     layoutRectangle.Height -= Top.Value;
-                    if (Bottom == null && VerticalFlow == Flow.Shrink) layoutRectangle.Y = _containerRectangle.Y;
+                    if (Bottom == null && VerticalFlow == Flow.Shrink) layoutRectangle.Y = _containerRectangle.Y + Top.Value;
                 }
 
                 if (Bottom != null)
                 {
                     layoutRectangle.Height -= Bottom.Value;
-                    if (Top == null && VerticalFlow == Flow.Shrink) layoutRectangle.Y = _containerRectangle.Bottom - layoutRectangle.Height;
+                    if (Top == null && VerticalFlow == Flow.Shrink) layoutRectangle.Y = _containerRectangle.Bottom - Bottom.Value - layoutRectangle.Height;
                 }
             }
 
