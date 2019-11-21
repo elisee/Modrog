@@ -221,14 +221,28 @@ namespace ModrogClient
             // Tile kinds
             for (var layer = 0; layer < (int)ModrogApi.MapLayer.Count; layer++)
             {
-                var tileKindsCount = _packetReader.ReadInt();
+                var tileKindsCount = _packetReader.ReadShort();
                 TileKindsByLayer[layer] = new Game.ClientTileKind[tileKindsCount];
 
                 for (var i = 0; i < tileKindsCount; i++)
                 {
-                    var spriteLocation = new Point(_packetReader.ReadShort(), _packetReader.ReadShort());
+                    var spriteLocation = _packetReader.ReadShortPoint();
                     TileKindsByLayer[layer][i] = new Game.ClientTileKind(spriteLocation);
                 }
+            }
+
+            var characterKindsCount = _packetReader.ReadShort();
+            for (var i = 0; i < characterKindsCount; i++)
+            {
+                var characterKind = new Game.ClientCharacterKind(i, _packetReader.ReadShortPoint());
+                CharacterKinds.Add(characterKind);
+            }
+
+            var itemKindsCount = _packetReader.ReadShort();
+            for (var i = 0; i < itemKindsCount; i++)
+            {
+                var itemKind = new Game.ClientItemKind(i, _packetReader.ReadShortPoint());
+                ItemKinds.Add(itemKind);
             }
         }
 
@@ -287,7 +301,7 @@ namespace ModrogClient
             var tileStacksCount = (int)_packetReader.ReadShort();
             for (var i = 0; i < tileStacksCount; i++)
             {
-                var worldTileCoords = new Point(_packetReader.ReadShort(), _packetReader.ReadShort());
+                var worldTileCoords = _packetReader.ReadShortPoint();
 
                 var chunkCoords = new Point(
                     (int)MathF.Floor((float)worldTileCoords.X / MapChunkSide),
@@ -321,7 +335,7 @@ namespace ModrogClient
 
         void ReadSelfLocation()
         {
-            var location = new Point(_packetReader.ReadShort(), _packetReader.ReadShort());
+            var location = _packetReader.ReadShortPoint();
             _app.PlayingView.OnTeleported(location);
         }
 
@@ -331,11 +345,22 @@ namespace ModrogClient
             for (var i = 0; i < newlySeenEntitiesCount; i++)
             {
                 var id = _packetReader.ReadInt();
-                var spriteLocation = new Point(_packetReader.ReadShort(), _packetReader.ReadShort());
-                var playerIndex = _packetReader.ReadByte();
-                var position = new Point(_packetReader.ReadShort(), _packetReader.ReadShort());
+                var position = _packetReader.ReadShortPoint();
 
-                var entity = new Game.ClientEntity(id, position) { SpriteLocation = spriteLocation, PlayerIndex = playerIndex };
+                var characterKindId = _packetReader.ReadShort();
+                var itemKindId = _packetReader.ReadShort();
+
+                Game.ClientEntity entity;
+                if (characterKindId != short.MaxValue)
+                {
+                    var playerIndex = _packetReader.ReadByte();
+                    entity = new Game.ClientEntity(id, position, CharacterKinds[characterKindId], playerIndex);
+                }
+                else
+                {
+                    entity = new Game.ClientEntity(id, position, ItemKinds[itemKindId]);
+                }
+
                 EntitiesInSight.Add(entity);
                 EntitiesInSightById.Add(entity.Id, entity);
             }

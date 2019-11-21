@@ -1,6 +1,5 @@
 ﻿using Microsoft.CodeAnalysis;
 using ModrogCommon;
-using SwarmBasics.Math;
 using SwarmBasics.Packets;
 using System;
 using System.Collections.Generic;
@@ -146,8 +145,7 @@ namespace ModrogServer
                     var player = _universe.Players[peer.Identity.PlayerIndex];
 
                     _packetWriter.WriteInt(player.Index);
-                    _packetWriter.WriteShort((short)player.Position.X);
-                    _packetWriter.WriteShort((short)player.Position.Y);
+                    _packetWriter.WriteShortPoint(player.Position);
 
                     WriteUniverseSetup();
                     WriteNewEntitiesInSight(player.EntitiesInSight);
@@ -250,21 +248,20 @@ namespace ModrogServer
             foreach (var entity in entities)
             {
                 _packetWriter.WriteInt(entity.Id);
-                _packetWriter.WriteShort((short)entity.SpriteLocation.X);
-                _packetWriter.WriteShort((short)entity.SpriteLocation.Y);
+                // For characters, we send the previous tick position so the client can interpolate after applying the action below
+                _packetWriter.WriteShortPoint(entity.CharacterKind != null ? entity.PreviousTickPosition : entity.Position);
 
-                _packetWriter.WriteByte((byte)entity.PlayerIndex);
+                _packetWriter.WriteShort((short)(entity.CharacterKind?.Id ?? short.MaxValue));
+                _packetWriter.WriteShort((short)(entity.ItemKind?.Id ?? short.MaxValue));
 
-                // We send the previous tick position so the client can interpolate after applying the action below
-                _packetWriter.WriteShort((short)entity.PreviousTickPosition.X);
-                _packetWriter.WriteShort((short)entity.PreviousTickPosition.Y);
+                if (entity.CharacterKind != null) _packetWriter.WriteByte((byte)entity.PlayerIndex);
             }
         }
 
         void ReadPlayerPosition(Peer peer)
         {
             var player = _universe.Players[peer.Identity.PlayerIndex];
-            player.Position = new Point(_packetReader.ReadShort(), _packetReader.ReadShort());
+            player.Position = _packetReader.ReadShortPoint();
         }
 
         void ReadSetEntityIntents(Peer peer)

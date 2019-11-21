@@ -17,8 +17,8 @@ class ScenarioScript: IScenarioScript
         world.InsertMap(0, 0, Universe.LoadMap("Maps/Test.map"));
 
         var player = Universe.GetPlayers()[0];
-        var characterEntityKind = Universe.CreateEntityKind(spriteLocation: new Point(0, 0));
-        var character = world.SpawnEntity(characterEntityKind, new Point(0, 0), owner: player);
+        var characterEntityKind = Universe.CreateCharacterKind(spriteLocation: new Point(0, 0));
+        var character = world.SpawnCharacter(characterEntityKind, new Point(0, 0), owner: player);
         player.Teleport(world, new Point(0, 0));
     }
 

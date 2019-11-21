@@ -2,6 +2,7 @@
 using ModrogCommon;
 using ModrogCommon.Scripting;
 using SwarmBasics.Math;
+using SwarmBasics.Packets;
 using SwarmCore;
 using System;
 using System.Collections.Generic;
@@ -14,6 +15,10 @@ namespace ModrogServer.Game
     sealed class InternalUniverse : ModrogApi.Server.Universe, IDisposable
     {
         internal readonly InternalPlayer[] Players;
+
+        internal readonly List<InternalCharacterKind> CharacterKinds = new List<InternalCharacterKind>();
+        internal readonly List<InternalItemKind> ItemKinds = new List<InternalItemKind>();
+
         internal readonly List<InternalTileKind>[] TileKindsPerLayer = new List<InternalTileKind>[(int)ModrogApi.MapLayer.Count];
         internal readonly List<InternalWorld> _worlds = new List<InternalWorld>();
 
@@ -26,7 +31,12 @@ namespace ModrogServer.Game
         internal ModrogApi.Server.IScenarioScript _script;
 
         internal int TickIndex { get; private set; } = -1;
+
+        int _nextCharacterKindId = 0;
+        int _nextItemKindId = 0;
+
         int _nextEntityId = 0;
+        internal int GetNextEntityId() => _nextEntityId++;
 
         internal InternalUniverse(InternalPlayer[] players, string scenarioPath)
         {
@@ -74,8 +84,6 @@ namespace ModrogServer.Game
             _scriptContext.Dispose();
             _scriptContext = null;
         }
-
-        internal int GetNextEntityId() => _nextEntityId++;
 
         internal void Tick()
         {
@@ -179,13 +187,15 @@ namespace ModrogServer.Game
 
         public override ModrogApi.Server.CharacterKind CreateCharacterKind(Point spriteLocation)
         {
-            var entityKind = new InternalCharacterKind(spriteLocation);
-            return entityKind;
+            var characterKind = new InternalCharacterKind(_nextCharacterKindId++, spriteLocation);
+            CharacterKinds.Add(characterKind);
+            return characterKind;
         }
 
         public override ModrogApi.Server.ItemKind CreateItemKind(Point spriteLocation)
         {
-            var itemKind = new InternalItemKind(spriteLocation);
+            var itemKind = new InternalItemKind(_nextItemKindId++, spriteLocation);
+            ItemKinds.Add(itemKind);
             return itemKind;
         }
 

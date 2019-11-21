@@ -51,13 +51,20 @@ namespace ModrogServer
 
             for (var layer = 0; layer < _universe.TileKindsPerLayer.Length; layer++)
             {
-                _packetWriter.WriteInt(_universe.TileKindsPerLayer[layer].Count);
+                _packetWriter.WriteShort((short)_universe.TileKindsPerLayer[layer].Count);
+                foreach (var tileKind in _universe.TileKindsPerLayer[layer]) _packetWriter.WriteShortPoint(tileKind.SpriteLocation);
+            }
 
-                foreach (var tileKind in _universe.TileKindsPerLayer[layer])
-                {
-                    _packetWriter.WriteShort((short)tileKind.SpriteLocation.X);
-                    _packetWriter.WriteShort((short)tileKind.SpriteLocation.Y);
-                }
+            _packetWriter.WriteShort((short)_universe.CharacterKinds.Count);
+            foreach (var kind in _universe.CharacterKinds)
+            {
+                _packetWriter.WriteShortPoint(kind.SpriteLocation);
+            }
+
+            _packetWriter.WriteShort((short)_universe.ItemKinds.Count);
+            foreach (var kind in _universe.ItemKinds)
+            {
+                _packetWriter.WriteShortPoint(kind.SpriteLocation);
             }
         }
 
@@ -117,8 +124,7 @@ namespace ModrogServer
 
                 if (player.WasJustTeleported)
                 {
-                    _packetWriter.WriteShort((short)player.Position.X);
-                    _packetWriter.WriteShort((short)player.Position.Y);
+                    _packetWriter.WriteShortPoint(player.Position);
                     player.WasJustTeleported = false;
                 }
 
@@ -153,8 +159,7 @@ namespace ModrogServer
                 _packetWriter.WriteShort((short)seenTileStacks.Count);
                 foreach (var (position, tileStack) in seenTileStacks)
                 {
-                    _packetWriter.WriteShort((short)position.X);
-                    _packetWriter.WriteShort((short)position.Y);
+                    _packetWriter.WriteShortPoint(position);
                     for (var i = 0; i < tileStack.Length; i++) _packetWriter.WriteShort(tileStack[i]);
                 }
 

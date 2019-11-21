@@ -1,4 +1,3 @@
-
 # Modrog
 
 Top-down adventures to play with friends and build yourself
@@ -24,6 +23,7 @@ You'll need .NET Core 3 and Visual Studio 2019. VS Code might work.
 
 ## Tasks
 
+    - (Gameplay) Implement drag'n'drop inventory management with list of items on the ground
     - (Network) Track player view for each player, including fog-of-war chunks so we can resend on reconnection
     - (Api) Have a setup phase and then prevent making further changes to entity kinds, tile kinds, etc.
     - (Gameplay) Implement Rogventure-style combat with hits & projectiles

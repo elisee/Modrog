@@ -1,19 +1,16 @@
 ﻿using SwarmBasics.Math;
 
-namespace ModrogServer.Game
+namespace ModrogClient.Game
 {
-    sealed class InternalCharacterKind : ModrogApi.Server.CharacterKind
+    class ClientCharacterKind
     {
         public readonly int Id;
         public readonly Point SpriteLocation;
 
-        internal InternalCharacterKind(int id, Point spriteLocation)
+        public ClientCharacterKind(int id, Point spriteLocation)
         {
             Id = id;
             SpriteLocation = spriteLocation;
         }
-
-        #region API
-        #endregion
     }
 }

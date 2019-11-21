@@ -75,12 +75,12 @@ namespace ModrogServer.Game
 
         public override ModrogApi.Server.Entity SpawnCharacter(ModrogApi.Server.CharacterKind kind, Point position, ModrogApi.Server.Player owner)
         {
-            return new InternalEntity(Universe.GetNextEntityId(), this, ((InternalCharacterKind)kind).SpriteLocation, position, owner != null ? ((InternalPlayer)owner).Index : -1);
+            return new InternalEntity(Universe.GetNextEntityId(), this, position, kind, owner != null ? ((InternalPlayer)owner).Index : -1);
         }
 
         public override ModrogApi.Server.Entity SpawnItem(ModrogApi.Server.ItemKind kind, Point position)
         {
-            return new InternalEntity(Universe.GetNextEntityId(), this, ((InternalItemKind)kind).SpriteLocation, position, -1);
+            return new InternalEntity(Universe.GetNextEntityId(), this, position, kind);
         }
 
         internal void Add(InternalEntity entity)

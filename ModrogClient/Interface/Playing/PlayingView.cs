@@ -519,7 +519,8 @@ namespace ModrogClient.Interface.Playing
                 var top = ViewRectangle.Y + (int)((position.Y + 0.5f - 0.5f * stretch.Y) * _zoom * state.TileSize) - (int)(viewportScroll.Y * _zoom);
                 var bottom = ViewRectangle.Y + (int)((position.Y + 0.5f + 0.5f * stretch.Y) * _zoom * state.TileSize) - (int)(viewportScroll.Y * _zoom);
 
-                var sourceRect = new SDL.SDL_Rect { x = entity.SpriteLocation.X * state.TileSize, y = entity.SpriteLocation.Y * state.TileSize, w = state.TileSize, h = state.TileSize };
+                var spriteLocation = entity.CharacterKind?.SpriteLocation ?? entity.ItemKind.SpriteLocation;
+                var sourceRect = new SDL.SDL_Rect { x = spriteLocation.X * state.TileSize, y = spriteLocation.Y * state.TileSize, w = state.TileSize, h = state.TileSize };
                 var destRect = new SDL.SDL_Rect { x = left, y = top, w = right - left, h = bottom - top };
                 SDL.SDL_RenderCopyEx(Desktop.Renderer, _spritesheetTexture, ref sourceRect, ref destRect, 0f, IntPtr.Zero, entity.ActionDirection == ModrogApi.Direction.Left ? SDL.SDL_RendererFlip.SDL_FLIP_HORIZONTAL : SDL.SDL_RendererFlip.SDL_FLIP_NONE);
             }

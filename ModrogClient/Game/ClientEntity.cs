@@ -3,11 +3,13 @@ using SwarmBasics.Math;
 
 namespace ModrogClient.Game
 {
-    public class ClientEntity
+    class ClientEntity
     {
         public readonly int Id;
-        public Point SpriteLocation;
-        public int PlayerIndex;
+        public int PlayerIndex = -1;
+
+        public readonly ClientCharacterKind CharacterKind;
+        public readonly ClientItemKind ItemKind;
 
         public Point PreviousTickPosition { get; private set; }
         public Point Position { get; private set; }
@@ -15,10 +17,19 @@ namespace ModrogClient.Game
         public Direction ActionDirection { get; private set; }
         // TODO: public ClientItemKind ActionItem { get; private set; }
 
-        public ClientEntity(int id, Point position)
+        public ClientEntity(int id, Point position, ClientCharacterKind characterKind, int playerIndex)
         {
             Id = id;
             Position = PreviousTickPosition = position;
+            CharacterKind = characterKind;
+            PlayerIndex = playerIndex;
+        }
+
+        public ClientEntity(int id, Point position, ClientItemKind itemKind)
+        {
+            Id = id;
+            Position = PreviousTickPosition = position;
+            ItemKind = itemKind;
         }
 
         public void ClearPreviousTick()

@@ -10,28 +10,28 @@ namespace ModrogServer.Game
     {
         internal readonly int Id;
         internal InternalWorld World;
-        public Point SpriteLocation;
         internal Point Position;
-        internal Point PreviousTickPosition;
+
+        internal readonly InternalCharacterKind CharacterKind;
+        internal readonly InternalItemKind[] SlotItems = new InternalItemKind[4 + 2];
         internal int PlayerIndex;
+        public int ViewRadius = 2;
 
-        internal readonly ItemKind[] SlotItems = new ItemKind[4 + 2];
-
+        internal Point PreviousTickPosition;
         internal CharacterIntent Intent = CharacterIntent.Idle;
         internal Direction IntentDirection;
         internal int IntentSlot;
-
         internal EntityAction Action = EntityAction.Idle;
         internal Direction ActionDirection;
         internal ItemKind ActionItem;
 
-        public int ViewRadius = 2;
+        internal readonly InternalItemKind ItemKind;
 
-        public InternalEntity(int id, InternalWorld world, Point spriteLocation, Point position, int playerIndex)
+        public InternalEntity(int id, InternalWorld world, Point position, CharacterKind characterKind, int playerIndex)
         {
             Id = id;
-            SpriteLocation = spriteLocation;
             Position = PreviousTickPosition = position;
+            CharacterKind = (InternalCharacterKind)characterKind;
 
             PlayerIndex = playerIndex;
             if (PlayerIndex != -1)
@@ -43,8 +43,17 @@ namespace ModrogServer.Game
             world.Add(this);
         }
 
+        public InternalEntity(int id, InternalWorld world, Point position, ItemKind itemKind)
+        {
+            Id = id;
+            Position = position;
+            ItemKind = (InternalItemKind)itemKind;
+
+            world.Add(this);
+        }
+
         public override bool Equals(object obj) => Equals(obj as InternalEntity);
-        public bool Equals([AllowNull] InternalEntity other) => other != null && Id == other?.Id;
+        public bool Equals([AllowNull] InternalEntity other) => other != null && Id == other.Id;
         public override int GetHashCode() => HashCode.Combine(Id);
 
         public override void SetView(int omniViewRadius)
@@ -78,7 +87,7 @@ namespace ModrogServer.Game
         }
 
         public override ItemKind GetSlotItem(int index) => SlotItems[index];
-        public override void SetSlotItem(int index, ItemKind itemKind) => SlotItems[index] = itemKind;
+        public override void SetSlotItem(int index, ItemKind itemKind) => SlotItems[index] = (InternalItemKind)itemKind;
         #endregion
     }
 }

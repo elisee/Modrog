@@ -60,6 +60,9 @@ namespace ModrogClient
         public int TileSize { get; private set; }
         public readonly Game.ClientTileKind[][] TileKindsByLayer = new Game.ClientTileKind[(int)ModrogApi.MapLayer.Count][];
 
+        public readonly List<Game.ClientCharacterKind> CharacterKinds = new List<Game.ClientCharacterKind>();
+        public readonly List<Game.ClientItemKind> ItemKinds = new List<Game.ClientItemKind>();
+
         public Dictionary<Point, Chunk> WorldChunks = new Dictionary<Point, Chunk>();
         public Dictionary<Point, Chunk> FogChunks = new Dictionary<Point, Chunk>();
         public readonly List<Game.ClientEntity> EntitiesInSight = new List<Game.ClientEntity>();
@@ -299,13 +302,13 @@ namespace ModrogClient
         public void SendSelfPlayerPosition(Point scrollPosition)
         {
             _packetWriter.WriteByte((byte)Protocol.ClientPacketType.SetPlayerPosition);
-            _packetWriter.WriteShort((short)scrollPosition.X);
-            _packetWriter.WriteShort((short)scrollPosition.Y);
+            _packetWriter.WriteShortPoint(scrollPosition);
             SendPacket();
         }
 
         public void SetIntent(ModrogApi.CharacterIntent intent, ModrogApi.Direction direction = ModrogApi.Direction.Down, int slot = 0)
         {
+            if (SelectedEntity.PlayerIndex != SelfPlayerIndex) return;
             if (intent == ModrogApi.CharacterIntent.Move) SelectedEntityMoveIntentDirection = direction;
 
             _packetWriter.WriteByte((byte)Protocol.ClientPacketType.SetEntityIntents);
