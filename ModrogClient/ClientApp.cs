@@ -30,7 +30,6 @@ namespace ModrogClient
 
         // Assets
         readonly string _assetsPath;
-        readonly string _scriptsPath;
 
         // Interface
         public readonly Font TitleFont;
@@ -65,16 +64,6 @@ namespace ModrogClient
 
             SDL.SDL_GetWindowSize(_window, out var initialWidth, out var initialHeight);
             _viewport = new Rectangle(0, 0, initialWidth, initialHeight);
-
-            // Scripts
-            _scriptsPath = Path.Combine(AppContext.BaseDirectory, "Scripts");
-            if (!Directory.Exists(_scriptsPath)) Directory.CreateDirectory(_scriptsPath);
-
-            foreach (var scriptFilePath in Directory.EnumerateFiles(_scriptsPath, "*.lua", SearchOption.AllDirectories))
-            {
-                var relativeFilePath = scriptFilePath.Substring(_scriptsPath.Length + 1);
-                State.Scripts.Add(relativeFilePath, File.ReadAllText(scriptFilePath));
-            }
 
             // Assets
             _assetsPath = FileHelper.FindAppFolder("Assets");

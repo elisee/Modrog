@@ -71,12 +71,6 @@ namespace ModrogClient
         public Game.ClientEntity SelectedEntity;
         public ModrogApi.Direction? SelectedEntityMoveIntentDirection { get; private set; }
 
-        // Scripts
-        public readonly Dictionary<int, string> EntityScriptPaths = new Dictionary<int, string>();
-        public readonly Dictionary<string, string> Scripts = new Dictionary<string, string>();
-
-        // Scripting
-
         // Ticking
         public int TickIndex { get; private set; }
         public float TickElapsedTime { get; private set; }
