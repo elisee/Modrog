@@ -30,6 +30,7 @@ You'll need .NET Core 3 and Visual Studio 2019. VS Code might work.
     - (Gameplay) When the selected player moves around, make sure to clamp the camera to it so player doesn't have to manage it manually
     - (Editor) Allow renaming assets
     - (Editor) Allow reparenting assets with drag'n'drop (need to add drag'n'drop in UI framework)
+    - (Editor) Fix focus in asset tree view
     - (Map Editor) Allow switching layers with 1, 2, 3
     - (Map Editor) Display all tileset layers in the sidebar at once
     - (Map Editor) Trace line segments when using the brush rather than just placing tiles at hovered position. (Can reuse line drawing logic from line of sight)
