@@ -3,6 +3,7 @@ using SDL2;
 using SwarmBasics;
 using SwarmBasics.Math;
 using SwarmPlatform.Graphics;
+using SwarmPlatform.Interface;
 using SwarmPlatform.UI;
 using System;
 using System.Collections.Generic;
@@ -19,7 +20,6 @@ namespace ModrogClient.Interface.Playing
         bool _isScrollingUp;
         bool _isScrollingDown;
 
-        bool _isSwapping;
         bool _isUsingSlot0;
         bool _isUsingSlot1;
 
@@ -36,9 +36,13 @@ namespace ModrogClient.Interface.Playing
         Point _hoveredTileCoords;
 
         // Hud
-        readonly Panel _hud;
-        readonly Element _hudPortrait;
+        readonly Element _hud;
+
+        readonly Panel _hudCharacterPanel;
+        readonly Element _characterPortrait;
         readonly Element _healthBarFill;
+
+        readonly Panel _hudSwapPanel;
 
         // Sidebar
         readonly Element _sidebarPanel;
@@ -53,21 +57,22 @@ namespace ModrogClient.Interface.Playing
             : base(app, null)
         {
             // Hud
-            _hud = new Panel(this)
+            _hud = new Element(this) { ChildLayout = ChildLayoutMode.Top };
+
+            _hudCharacterPanel = new Panel(_hud)
             {
                 Visible = false,
-                BackgroundPatch = new TexturePatch(0x123456ff),
                 Top = 8,
-                Left = 8,
+                BackgroundPatch = new TexturePatch(0x123456ff),
                 Padding = 8,
-                Flow = Flow.Shrink,
                 ChildLayout = ChildLayoutMode.Left,
+                Flow = Flow.Shrink
             };
 
-            _hudPortrait = new Label(_hud) { Width = 64, Height = 64, BackgroundPatch = new TexturePatch(0x000000ff) };
+            _characterPortrait = new Label(_hudCharacterPanel) { Width = 64, Height = 64, BackgroundPatch = new TexturePatch(0x000000ff) };
 
             {
-                var container = new Element(_hud) { Left = 8, ChildLayout = ChildLayoutMode.Top };
+                var container = new Element(_hudCharacterPanel) { Left = 8, ChildLayout = ChildLayoutMode.Top };
 
                 var healthBarBackground = new Element(container) { Left = 0, Width = 128, Height = 16, BackgroundPatch = new TexturePatch(0x222222ff) };
                 _healthBarFill = new Element(healthBarBackground) { Left = 0, Width = 64, BackgroundPatch = new TexturePatch(0x12cc34ff) };
@@ -75,9 +80,22 @@ namespace ModrogClient.Interface.Playing
                 var slotsContainer = new Element(container) { ChildLayout = ChildLayoutMode.Left, Top = 8 };
                 for (var i = 0; i < 6; i++)
                 {
-                    new Panel(slotsContainer) { Width = 32, Height = 32, Left = i > 0 ? 8 : 0, BackgroundPatch = new TexturePatch(0x789456ff) };
+                    new Panel(slotsContainer) { Width = 32, Height = 32, Left = i > 0 ? (i == 2 ? 16 : 8) : 0, BackgroundPatch = new TexturePatch(0x789456ff) };
                 }
             }
+
+            _hudSwapPanel = new Panel(_hud)
+            {
+                Visible = false,
+                BackgroundPatch = new TexturePatch(0x456123ff),
+                Top = 8,
+                Padding = 8,
+                ChildLayout = ChildLayoutMode.Left,
+                Flow = Flow.Shrink
+            };
+
+            new StyledTextButton(_hudSwapPanel) { Width = 32, Height = 32, Text = "[X]", OnActivate = () => App.State.SetIntent(ModrogApi.CharacterIntent.Swap, slot: 0) };
+            new StyledTextButton(_hudSwapPanel) { Width = 32, Height = 32, Left = 8, Text = "[C]", OnActivate = () => App.State.SetIntent(ModrogApi.CharacterIntent.Swap, slot: 1) };
 
             // Sidebar
             _sidebarPanel = new Panel(Desktop, this)
@@ -157,44 +175,33 @@ namespace ModrogClient.Interface.Playing
 
             if (state.SelectedEntity != null && state.SelectedEntity.PlayerIndex == state.SelfPlayerIndex)
             {
-                if (key == SDL.SDL_Keycode.SDLK_e)
+                if (key == SDL.SDL_Keycode.SDLK_x) _isUsingSlot0 = true;
+                else if (key == SDL.SDL_Keycode.SDLK_c) _isUsingSlot1 = true;
+                else if (key == SDL.SDL_Keycode.SDLK_SPACE)
                 {
-                    _isSwapping = true;
-                }
-                else if (_isSwapping)
-                {
-                    switch (key)
+                    if (App.State.SelectedEntity != null && App.State.SelectedEntity.PlayerIndex == App.State.SelfPlayerIndex)
                     {
-                        case SDL.SDL_Keycode.SDLK_RIGHT: break;
-                        case SDL.SDL_Keycode.SDLK_DOWN: break;
-                        case SDL.SDL_Keycode.SDLK_LEFT: break;
-                        case SDL.SDL_Keycode.SDLK_UP: break;
-                        case SDL.SDL_Keycode.SDLK_x: state.SetIntent(ModrogApi.CharacterIntent.Swap, slot: 0); break;
-                        case SDL.SDL_Keycode.SDLK_c: state.SetIntent(ModrogApi.CharacterIntent.Swap, slot: 1); break;
+                        _hudSwapPanel.Visible = true;
+                        _hud.Layout();
                     }
                 }
                 else
                 {
-                    if (key == SDL.SDL_Keycode.SDLK_x) _isUsingSlot0 = true;
-                    else if (key == SDL.SDL_Keycode.SDLK_c) _isUsingSlot1 = true;
-                    else
+                    var intent = ModrogApi.CharacterIntent.Move;
+
+                    var slot = _isUsingSlot0 ? 0 : (_isUsingSlot1 ? 1 : -1);
+                    if (slot != -1) intent = ModrogApi.CharacterIntent.Use;
+
+                    var direction = key switch
                     {
-                        var intent = ModrogApi.CharacterIntent.Move;
+                        SDL.SDL_Keycode.SDLK_RIGHT => ModrogApi.Direction.Right,
+                        SDL.SDL_Keycode.SDLK_DOWN => ModrogApi.Direction.Down,
+                        SDL.SDL_Keycode.SDLK_LEFT => ModrogApi.Direction.Left,
+                        SDL.SDL_Keycode.SDLK_UP => ModrogApi.Direction.Up,
+                        _ => (ModrogApi.Direction?)null,
+                    };
 
-                        var slot = _isUsingSlot0 ? 0 : (_isUsingSlot1 ? 1 : -1);
-                        if (slot != -1) intent = ModrogApi.CharacterIntent.Use;
-
-                        var direction = key switch
-                        {
-                            SDL.SDL_Keycode.SDLK_RIGHT => ModrogApi.Direction.Right,
-                            SDL.SDL_Keycode.SDLK_DOWN => ModrogApi.Direction.Down,
-                            SDL.SDL_Keycode.SDLK_LEFT => ModrogApi.Direction.Left,
-                            SDL.SDL_Keycode.SDLK_UP => ModrogApi.Direction.Up,
-                            _ => (ModrogApi.Direction?)null,
-                        };
-
-                        if (direction.HasValue) state.SetIntent(intent, direction.Value, slot);
-                    }
+                    if (direction.HasValue) state.SetIntent(intent, direction.Value, slot);
                 }
             }
 
@@ -214,7 +221,11 @@ namespace ModrogClient.Interface.Playing
 
             var state = App.State;
 
-            if (key == SDL.SDL_Keycode.SDLK_e) _isSwapping = false;
+            if (key == SDL.SDL_Keycode.SDLK_SPACE)
+            {
+                _hudSwapPanel.Visible = false;
+                Desktop.SetFocusedElement(this);
+            }
             if (key == SDL.SDL_Keycode.SDLK_x) _isUsingSlot0 = false;
             if (key == SDL.SDL_Keycode.SDLK_c) _isUsingSlot1 = false;
 
@@ -242,6 +253,9 @@ namespace ModrogClient.Interface.Playing
         {
             if (button == SDL.SDL_BUTTON_LEFT)
             {
+                _hudSwapPanel.Visible = false;
+                Desktop.SetFocusedElement(this);
+
                 var hoveredEntities = new List<Game.ClientEntity>();
 
                 foreach (var entity in App.State.EntitiesInSight)
@@ -262,13 +276,13 @@ namespace ModrogClient.Interface.Playing
                         App.State.SelectEntity(hoveredEntities[newSelectedEntityIndex]);
                     }
 
-                    _hud.Visible = true;
+                    _hudCharacterPanel.Visible = true; // TODO: App.State.SelectedEntity.ItemKind == null; ??
                     _hud.Layout(_contentRectangle);
                 }
                 else
                 {
                     App.State.SelectEntity(null);
-                    _hud.Visible = false;
+                    _hudCharacterPanel.Visible = false;
                 }
             }
             else if (button == SDL.SDL_BUTTON_MIDDLE)
