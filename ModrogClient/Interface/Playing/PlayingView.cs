@@ -35,7 +35,12 @@ namespace ModrogClient.Interface.Playing
         // Hovered tile
         Point _hoveredTileCoords;
 
-        // Player list
+        // Hud
+        readonly Panel _hud;
+        readonly Element _hudPortrait;
+        readonly Element _healthBarFill;
+
+        // Sidebar
         readonly Element _sidebarPanel;
         readonly Label _serverNameLabel;
         readonly Label _scenarioNameLabel;
@@ -47,6 +52,34 @@ namespace ModrogClient.Interface.Playing
         public PlayingView(ClientApp app)
             : base(app, null)
         {
+            // Hud
+            _hud = new Panel(this)
+            {
+                Visible = false,
+                BackgroundPatch = new TexturePatch(0x123456ff),
+                Top = 8,
+                Left = 8,
+                Padding = 8,
+                Flow = Flow.Shrink,
+                ChildLayout = ChildLayoutMode.Left,
+            };
+
+            _hudPortrait = new Label(_hud) { Width = 64, Height = 64, BackgroundPatch = new TexturePatch(0x000000ff) };
+
+            {
+                var container = new Element(_hud) { Left = 8, ChildLayout = ChildLayoutMode.Top };
+
+                var healthBarBackground = new Element(container) { Left = 0, Width = 128, Height = 16, BackgroundPatch = new TexturePatch(0x222222ff) };
+                _healthBarFill = new Element(healthBarBackground) { Left = 0, Width = 64, BackgroundPatch = new TexturePatch(0x12cc34ff) };
+
+                var slotsContainer = new Element(container) { ChildLayout = ChildLayoutMode.Left, Top = 8 };
+                for (var i = 0; i < 6; i++)
+                {
+                    new Panel(slotsContainer) { Width = 32, Height = 32, Left = i > 0 ? 8 : 0, BackgroundPatch = new TexturePatch(0x789456ff) };
+                }
+            }
+
+            // Sidebar
             _sidebarPanel = new Panel(Desktop, this)
             {
                 Visible = false,
@@ -60,6 +93,7 @@ namespace ModrogClient.Interface.Playing
             _scenarioNameLabel = new Label(_sidebarPanel) { FontStyle = app.HeaderFontStyle, Wrap = true, Padding = 8, BackgroundPatch = new TexturePatch(0x331111ff) };
             _playerListContainer = new Panel(_sidebarPanel) { LayoutWeight = 1, ChildLayout = ChildLayoutMode.Top, Padding = 8 };
 
+            // Menu
             _menu = new PlayingMenu(app, this) { Visible = false };
         }
 
@@ -227,8 +261,15 @@ namespace ModrogClient.Interface.Playing
                         var newSelectedEntityIndex = selectedEntityIndex < hoveredEntities.Count - 1 ? selectedEntityIndex + 1 : 0;
                         App.State.SelectEntity(hoveredEntities[newSelectedEntityIndex]);
                     }
+
+                    _hud.Visible = true;
+                    _hud.Layout(_contentRectangle);
                 }
-                else App.State.SelectEntity(null);
+                else
+                {
+                    App.State.SelectEntity(null);
+                    _hud.Visible = false;
+                }
             }
             else if (button == SDL.SDL_BUTTON_MIDDLE)
             {
