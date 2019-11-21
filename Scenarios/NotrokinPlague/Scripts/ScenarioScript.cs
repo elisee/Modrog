@@ -22,7 +22,7 @@ class ScenarioScript: IScenarioScript
         player.Teleport(world, new Point(0, 0));
     }
 
-    public void OnEntityIntent(Entity entity, EntityIntent intent, Direction direction, int slot, out bool preventDefault)
+    public void OnCharacterIntent(Entity entity, CharacterIntent intent, Direction direction, int slot, out bool preventDefault)
     {
         preventDefault = false;
     }

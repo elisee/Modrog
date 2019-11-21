@@ -98,12 +98,12 @@ namespace ModrogServer
                                 world.HasLineOfSight(ownedEntity.Position.X, ownedEntity.Position.Y, target.X, target.Y - Math.Sign(dy));
                             if (!hasLineOfSight) continue;
 
-                            seenTileStacks.TryAdd(target, world.PeekTileStack(target.X, target.Y));
+                            seenTileStacks.TryAdd(target, world.PeekTileStack(target));
 
-                            foreach (var entityInView in world.PeekEntities(target.X, target.Y))
+                            foreach (Game.InternalEntity entityInView in world.GetEntities(target))
                             {
                                 seenEntities.Add(entityInView);
-                                if (entityInView.Action != ModrogApi.EntityAction.Idle) seenEntitiesWithAction.Add(ownedEntity);
+                                if (entityInView.Action != ModrogApi.EntityAction.Idle) seenEntitiesWithAction.Add(entityInView);
                             }
                         }
                     }

@@ -32,23 +32,23 @@ namespace ModrogServer.Game
                 entity.ActionDirection = ModrogApi.Direction.Down;
                 entity.ActionItem = null;
 
-                if (entity.Intent == ModrogApi.EntityIntent.Idle) continue;
+                if (entity.Intent == ModrogApi.CharacterIntent.Idle) continue;
 
                 var intent = entity.Intent;
-                entity.Intent = ModrogApi.EntityIntent.Idle;
+                entity.Intent = ModrogApi.CharacterIntent.Idle;
 
-                Universe._script.OnEntityIntent(entity, intent, entity.IntentDirection, entity.IntentSlot, out var preventDefault);
+                Universe._script.OnCharacterIntent(entity, intent, entity.IntentDirection, entity.IntentSlot, out var preventDefault);
                 if (preventDefault) continue;
 
                 switch (intent)
                 {
-                    case ModrogApi.EntityIntent.Move:
+                    case ModrogApi.CharacterIntent.Move:
                         {
                             var newPosition = entity.Position + ModrogApi.MathHelper.GetOffsetFromDirection(entity.IntentDirection);
                             entity.ActionDirection = entity.IntentDirection;
 
                             // TODO: Need to check each layer for various flags
-                            var targetTile = PeekTile(ModrogApi.MapLayer.Wall, newPosition.X, newPosition.Y);
+                            var targetTile = PeekTile(ModrogApi.MapLayer.Wall, newPosition);
                             if (targetTile != 0)
                             {
                                 entity.Action = ModrogApi.EntityAction.Bounce;
@@ -63,19 +63,24 @@ namespace ModrogServer.Game
                         }
                         break;
 
-                    case ModrogApi.EntityIntent.Use:
+                    case ModrogApi.CharacterIntent.Use:
                         break;
 
 
-                    case ModrogApi.EntityIntent.Idle:
+                    case ModrogApi.CharacterIntent.Idle:
                         break;
                 }
             }
         }
 
-        public override ModrogApi.Server.Entity SpawnEntity(ModrogApi.Server.EntityKind kind, Point position, ModrogApi.Server.Player owner)
+        public override ModrogApi.Server.Entity SpawnCharacter(ModrogApi.Server.CharacterKind kind, Point position, ModrogApi.Server.Player owner)
         {
-            return new InternalEntity(Universe.GetNextEntityId(), this, ((InternalEntityKind)kind).SpriteLocation, position, owner != null ? ((InternalPlayer)owner).Index : -1);
+            return new InternalEntity(Universe.GetNextEntityId(), this, ((InternalCharacterKind)kind).SpriteLocation, position, owner != null ? ((InternalPlayer)owner).Index : -1);
+        }
+
+        public override ModrogApi.Server.Entity SpawnItem(ModrogApi.Server.ItemKind kind, Point position)
+        {
+            return new InternalEntity(Universe.GetNextEntityId(), this, ((InternalItemKind)kind).SpriteLocation, position, -1);
         }
 
         internal void Add(InternalEntity entity)
@@ -92,47 +97,47 @@ namespace ModrogServer.Game
             entity.World = null;
         }
 
-        internal short PeekTile(ModrogApi.MapLayer layer, int x, int y)
+        internal short PeekTile(ModrogApi.MapLayer layer, Point position)
         {
             var chunkCoords = new Point(
-                (int)MathF.Floor((float)x / Protocol.MapChunkSide),
-                (int)MathF.Floor((float)y / Protocol.MapChunkSide));
+                (int)MathF.Floor((float)position.X / Protocol.MapChunkSide),
+                (int)MathF.Floor((float)position.Y / Protocol.MapChunkSide));
 
             if (!Chunks.TryGetValue(chunkCoords, out var chunk)) return 0;
 
             var chunkTileCoords = new Point(
-                MathHelper.Mod(x, Protocol.MapChunkSide),
-                MathHelper.Mod(y, Protocol.MapChunkSide));
+                MathHelper.Mod(position.X, Protocol.MapChunkSide),
+                MathHelper.Mod(position.Y, Protocol.MapChunkSide));
 
             return chunk.TilesPerLayer[(int)layer][chunkTileCoords.Y * Protocol.MapChunkSide + chunkTileCoords.X];
         }
 
-        internal short[] PeekTileStack(int x, int y)
+        internal short[] PeekTileStack(Point position)
         {
             var chunkCoords = new Point(
-                (int)MathF.Floor((float)x / Protocol.MapChunkSide),
-                (int)MathF.Floor((float)y / Protocol.MapChunkSide));
+                (int)MathF.Floor((float)position.X / Protocol.MapChunkSide),
+                (int)MathF.Floor((float)position.Y / Protocol.MapChunkSide));
 
             var stack = new short[(int)ModrogApi.MapLayer.Count];
             if (!Chunks.TryGetValue(chunkCoords, out var chunk)) return stack;
 
             var chunkTileCoords = new Point(
-                MathHelper.Mod(x, Protocol.MapChunkSide),
-                MathHelper.Mod(y, Protocol.MapChunkSide));
+                MathHelper.Mod(position.X, Protocol.MapChunkSide),
+                MathHelper.Mod(position.Y, Protocol.MapChunkSide));
 
             for (var i = 0; i < (int)ModrogApi.MapLayer.Count; i++) stack[i] = chunk.TilesPerLayer[i][chunkTileCoords.Y * Protocol.MapChunkSide + chunkTileCoords.X];
 
             return stack;
         }
 
-        internal ICollection<InternalEntity> PeekEntities(int x, int y)
+        public override IReadOnlyList<ModrogApi.Server.Entity> GetEntities(Point position)
         {
-            var entities = new List<InternalEntity>();
+            var entities = new List<ModrogApi.Server.Entity>();
 
             // TODO: Optimize with space partitioning
             foreach (var entity in _entities)
             {
-                if (entity.Position.X == x && entity.Position.Y == y) entities.Add(entity);
+                if (entity.Position == position) entities.Add(entity);
             }
 
             return entities;
@@ -142,7 +147,7 @@ namespace ModrogServer.Game
         internal bool HasLineOfSight(int x0, int y0, int x1, int y1)
         {
             static void Swap<T>(ref T lhs, ref T rhs) { T temp; temp = lhs; lhs = rhs; rhs = temp; }
-            bool IsTileTransparent(int x, int y) => PeekTile(ModrogApi.MapLayer.Wall, x, y) == 0;
+            bool IsTileTransparent(int x, int y) => PeekTile(ModrogApi.MapLayer.Wall, new Point(x, y)) == 0;
 
             bool steep = Math.Abs(y1 - y0) > Math.Abs(x1 - x0);
             if (steep) { Swap(ref x0, ref y0); Swap(ref x1, ref y1); }
@@ -160,11 +165,11 @@ namespace ModrogServer.Game
         }
 
         #region API
-        public override void SetTile(ModrogApi.MapLayer layer, int x, int y, ModrogApi.Server.TileKind tileKind)
+        public override void SetTile(ModrogApi.MapLayer layer, Point position, ModrogApi.Server.TileKind tileKind)
         {
             var chunkCoords = new Point(
-                (int)MathF.Floor((float)x / Protocol.MapChunkSide),
-                (int)MathF.Floor((float)y / Protocol.MapChunkSide));
+                (int)MathF.Floor((float)position.X / Protocol.MapChunkSide),
+                (int)MathF.Floor((float)position.Y / Protocol.MapChunkSide));
 
             if (!Chunks.TryGetValue(chunkCoords, out var chunk))
             {
@@ -173,8 +178,8 @@ namespace ModrogServer.Game
             }
 
             var chunkTileCoords = new Point(
-                MathHelper.Mod(x, Protocol.MapChunkSide),
-                MathHelper.Mod(y, Protocol.MapChunkSide));
+                MathHelper.Mod(position.X, Protocol.MapChunkSide),
+                MathHelper.Mod(position.Y, Protocol.MapChunkSide));
 
             chunk.TilesPerLayer[(int)layer][chunkTileCoords.Y * Protocol.MapChunkSide + chunkTileCoords.X] = (short)(1 + ((InternalTileKind)tileKind).Index);
         }

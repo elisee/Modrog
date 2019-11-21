@@ -283,13 +283,13 @@ namespace ModrogServer
                 var entityId = _packetReader.ReadInt();
                 if (!player.OwnedEntitiesById.TryGetValue(entityId, out var entity)) throw new PacketException($"Invalid entity id in {nameof(Protocol.ClientPacketType.SetEntityIntents)} packet.");
 
-                var intent = _packetReader.ReadByte<ModrogApi.EntityIntent>();
+                var intent = _packetReader.ReadByte<ModrogApi.CharacterIntent>();
 
                 var intentDirection = ModrogApi.Direction.Down;
-                if (intent == ModrogApi.EntityIntent.Move || intent == ModrogApi.EntityIntent.Use) intentDirection = _packetReader.ReadByte<ModrogApi.Direction>();
+                if (intent == ModrogApi.CharacterIntent.Move || intent == ModrogApi.CharacterIntent.Use) intentDirection = _packetReader.ReadByte<ModrogApi.Direction>();
 
                 var intentSlot = 0;
-                if (intent == ModrogApi.EntityIntent.Use || intent == ModrogApi.EntityIntent.PickUp) intentSlot = _packetReader.ReadByte(max: 1);
+                if (intent == ModrogApi.CharacterIntent.Use || intent == ModrogApi.CharacterIntent.Swap) intentSlot = _packetReader.ReadByte(max: 1);
 
                 entity.Intent = intent;
                 entity.IntentDirection = intentDirection;

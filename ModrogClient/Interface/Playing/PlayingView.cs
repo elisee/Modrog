@@ -11,21 +11,23 @@ namespace ModrogClient.Interface.Playing
 {
     class PlayingView : ClientElement
     {
-        IntPtr SpritesheetTexture;
+        IntPtr _spritesheetTexture;
+
+        // Controls
+        bool _isScrollingLeft;
+        bool _isScrollingRight;
+        bool _isScrollingUp;
+        bool _isScrollingDown;
+
+        bool _isSwapping;
+        bool _isUsingSlot0;
+        bool _isUsingSlot1;
 
         // Scrolling
         public Vector2 Scroll { get; private set; }
         float _zoom = 2f;
         const float MinZoom = 0.5f;
         const float MaxZoom = 2f;
-
-        bool _isScrollingLeft;
-        bool _isScrollingRight;
-        bool _isScrollingUp;
-        bool _isScrollingDown;
-
-        bool _isUsingSlot0;
-        bool _isUsingSlot1;
 
         bool _isDraggingScroll;
         Vector2 _dragScroll;
@@ -94,10 +96,10 @@ namespace ModrogClient.Interface.Playing
 
         public override void OnUnmounted()
         {
-            if (SpritesheetTexture != IntPtr.Zero)
+            if (_spritesheetTexture != IntPtr.Zero)
             {
-                SDL.SDL_DestroyTexture(SpritesheetTexture);
-                SpritesheetTexture = IntPtr.Zero;
+                SDL.SDL_DestroyTexture(_spritesheetTexture);
+                _spritesheetTexture = IntPtr.Zero;
             }
 
             Desktop.UnregisterAnimation(Animate);
@@ -117,27 +119,49 @@ namespace ModrogClient.Interface.Playing
                 if (key == SDL.SDL_Keycode.SDLK_s) _isScrollingDown = true;
             }
 
-            if (key == SDL.SDL_Keycode.SDLK_x) _isUsingSlot0 = true;
-            if (key == SDL.SDL_Keycode.SDLK_c) _isUsingSlot1 = true;
-
             var state = App.State;
 
             if (state.SelectedEntity != null && state.SelectedEntity.PlayerIndex == state.SelfPlayerIndex)
             {
-                var intent = ModrogApi.EntityIntent.Move;
-                var slot = _isUsingSlot0 ? 0 : (_isUsingSlot1 ? 1 : -1);
-                if (slot != -1) intent = ModrogApi.EntityIntent.Use;
-
-                var direction = key switch
+                if (key == SDL.SDL_Keycode.SDLK_e)
                 {
-                    SDL.SDL_Keycode.SDLK_RIGHT => ModrogApi.Direction.Right,
-                    SDL.SDL_Keycode.SDLK_DOWN => ModrogApi.Direction.Down,
-                    SDL.SDL_Keycode.SDLK_LEFT => ModrogApi.Direction.Left,
-                    SDL.SDL_Keycode.SDLK_UP => ModrogApi.Direction.Up,
-                    _ => (ModrogApi.Direction?)null,
-                };
+                    _isSwapping = true;
+                }
+                else if (_isSwapping)
+                {
+                    switch (key)
+                    {
+                        case SDL.SDL_Keycode.SDLK_RIGHT: break;
+                        case SDL.SDL_Keycode.SDLK_DOWN: break;
+                        case SDL.SDL_Keycode.SDLK_LEFT: break;
+                        case SDL.SDL_Keycode.SDLK_UP: break;
+                        case SDL.SDL_Keycode.SDLK_x: state.SetIntent(ModrogApi.CharacterIntent.Swap, slot: 0); break;
+                        case SDL.SDL_Keycode.SDLK_c: state.SetIntent(ModrogApi.CharacterIntent.Swap, slot: 1); break;
+                    }
+                }
+                else
+                {
+                    if (key == SDL.SDL_Keycode.SDLK_x) _isUsingSlot0 = true;
+                    else if (key == SDL.SDL_Keycode.SDLK_c) _isUsingSlot1 = true;
+                    else
+                    {
+                        var intent = ModrogApi.CharacterIntent.Move;
 
-                if (direction.HasValue) state.SetIntent(intent, direction.Value, slot);
+                        var slot = _isUsingSlot0 ? 0 : (_isUsingSlot1 ? 1 : -1);
+                        if (slot != -1) intent = ModrogApi.CharacterIntent.Use;
+
+                        var direction = key switch
+                        {
+                            SDL.SDL_Keycode.SDLK_RIGHT => ModrogApi.Direction.Right,
+                            SDL.SDL_Keycode.SDLK_DOWN => ModrogApi.Direction.Down,
+                            SDL.SDL_Keycode.SDLK_LEFT => ModrogApi.Direction.Left,
+                            SDL.SDL_Keycode.SDLK_UP => ModrogApi.Direction.Up,
+                            _ => (ModrogApi.Direction?)null,
+                        };
+
+                        if (direction.HasValue) state.SetIntent(intent, direction.Value, slot);
+                    }
+                }
             }
 
             if (key == SDL.SDL_Keycode.SDLK_TAB)
@@ -154,10 +178,12 @@ namespace ModrogClient.Interface.Playing
             if (key == SDL.SDL_Keycode.SDLK_w || key == SDL.SDL_Keycode.SDLK_z) _isScrollingUp = false;
             if (key == SDL.SDL_Keycode.SDLK_s) _isScrollingDown = false;
 
+            var state = App.State;
+
+            if (key == SDL.SDL_Keycode.SDLK_e) _isSwapping = false;
             if (key == SDL.SDL_Keycode.SDLK_x) _isUsingSlot0 = false;
             if (key == SDL.SDL_Keycode.SDLK_c) _isUsingSlot1 = false;
 
-            var state = App.State;
             if (key == SDL.SDL_Keycode.SDLK_LEFT) state.ClearMoveIntent(ModrogApi.Direction.Left);
             if (key == SDL.SDL_Keycode.SDLK_RIGHT) state.ClearMoveIntent(ModrogApi.Direction.Right);
             if (key == SDL.SDL_Keycode.SDLK_UP) state.ClearMoveIntent(ModrogApi.Direction.Up);
@@ -286,14 +312,14 @@ namespace ModrogClient.Interface.Playing
 
         public void OnSpritesheetReceived(Span<byte> data)
         {
-            if (SpritesheetTexture != IntPtr.Zero) SDL.SDL_DestroyTexture(SpritesheetTexture);
+            if (_spritesheetTexture != IntPtr.Zero) SDL.SDL_DestroyTexture(_spritesheetTexture);
 
             unsafe
             {
                 fixed (byte* dataPointer = data)
                 {
                     var rwOps = SDL.SDL_RWFromMem((IntPtr)dataPointer, data.Length);
-                    SpritesheetTexture = SDL_image.IMG_LoadTexture_RW(Desktop.Renderer, rwOps, freesrc: 1);
+                    _spritesheetTexture = SDL_image.IMG_LoadTexture_RW(Desktop.Renderer, rwOps, freesrc: 1);
                 }
             }
         }
@@ -372,7 +398,7 @@ namespace ModrogClient.Interface.Playing
                                 var spriteLocation = tileKinds[tile - 1].SpriteLocation;
                                 var sourceRect = new SDL.SDL_Rect { x = spriteLocation.X * state.TileSize, y = spriteLocation.Y * state.TileSize, w = state.TileSize, h = state.TileSize };
                                 var destRect = new SDL.SDL_Rect { x = left, y = top, w = right - left, h = bottom - top };
-                                SDL.SDL_RenderCopy(Desktop.Renderer, SpritesheetTexture, ref sourceRect, ref destRect);
+                                SDL.SDL_RenderCopy(Desktop.Renderer, _spritesheetTexture, ref sourceRect, ref destRect);
                             }
                         }
                     }
@@ -414,7 +440,7 @@ namespace ModrogClient.Interface.Playing
 
                 var sourceRect = new SDL.SDL_Rect { x = entity.SpriteLocation.X * state.TileSize, y = entity.SpriteLocation.Y * state.TileSize, w = state.TileSize, h = state.TileSize };
                 var destRect = new SDL.SDL_Rect { x = left, y = top, w = right - left, h = bottom - top };
-                SDL.SDL_RenderCopyEx(Desktop.Renderer, SpritesheetTexture, ref sourceRect, ref destRect, 0f, IntPtr.Zero, entity.ActionDirection == ModrogApi.Direction.Left ? SDL.SDL_RendererFlip.SDL_FLIP_HORIZONTAL : SDL.SDL_RendererFlip.SDL_FLIP_NONE);
+                SDL.SDL_RenderCopyEx(Desktop.Renderer, _spritesheetTexture, ref sourceRect, ref destRect, 0f, IntPtr.Zero, entity.ActionDirection == ModrogApi.Direction.Left ? SDL.SDL_RendererFlip.SDL_FLIP_HORIZONTAL : SDL.SDL_RendererFlip.SDL_FLIP_NONE);
             }
 
             var fogColor = new Color(0x00000044);

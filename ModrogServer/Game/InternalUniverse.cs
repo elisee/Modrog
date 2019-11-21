@@ -170,19 +170,23 @@ namespace ModrogServer.Game
         public override void SetSpritesheet(string path) { SpritesheetPath = path; }
         public override void SetTileSize(int tileSize) { TileSize = tileSize; }
 
-        public override ModrogApi.Server.Player[] GetPlayers() => Players;
-
-        public override ModrogApi.Server.EntityKind CreateEntityKind(Point spriteLocation)
-        {
-            var entityKind = new InternalEntityKind(spriteLocation);
-            return entityKind;
-        }
-
         public override ModrogApi.Server.TileKind CreateTileKind(ModrogApi.MapLayer layer, Point spriteLocation)
         {
             var tileKind = new InternalTileKind((short)TileKindsPerLayer[(int)layer].Count, spriteLocation);
             TileKindsPerLayer[(int)layer].Add(tileKind);
             return tileKind;
+        }
+
+        public override ModrogApi.Server.CharacterKind CreateCharacterKind(Point spriteLocation)
+        {
+            var entityKind = new InternalCharacterKind(spriteLocation);
+            return entityKind;
+        }
+
+        public override ModrogApi.Server.ItemKind CreateItemKind(Point spriteLocation)
+        {
+            var itemKind = new InternalItemKind(spriteLocation);
+            return itemKind;
         }
 
         public override ModrogApi.Server.World CreateWorld()
@@ -191,6 +195,8 @@ namespace ModrogServer.Game
             _worlds.Add(world);
             return world;
         }
+
+        public override ModrogApi.Server.Player[] GetPlayers() => Players;
         #endregion
     }
 }

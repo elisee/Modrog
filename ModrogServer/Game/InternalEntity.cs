@@ -15,10 +15,9 @@ namespace ModrogServer.Game
         internal Point PreviousTickPosition;
         internal int PlayerIndex;
 
-        internal readonly ItemKind[] StorageSlotItems = new ItemKind[4];
-        internal readonly ItemKind[] ActionSlotItems = new ItemKind[2];
+        internal readonly ItemKind[] SlotItems = new ItemKind[4 + 2];
 
-        internal EntityIntent Intent = EntityIntent.Idle;
+        internal CharacterIntent Intent = CharacterIntent.Idle;
         internal Direction IntentDirection;
         internal int IntentSlot;
 
@@ -68,11 +67,18 @@ namespace ModrogServer.Game
             ActionItem = null;
         }
 
-        public override ItemKind GetStorageSlotItem(int index) => StorageSlotItems[index];
-        public override void SetStorageSlotItem(int index, ItemKind itemKind) => StorageSlotItems[index] = itemKind;
+        public override void Remove()
+        {
+            World.Remove(this);
 
-        public override ItemKind GetActionSlotItem(int index) => ActionSlotItems[index];
-        public override void SetActionSlotItem(int index, ItemKind itemKind) => ActionSlotItems[index] = itemKind;
+            Position = PreviousTickPosition = Point.Zero;
+            Action = EntityAction.Idle;
+            ActionDirection = Direction.Down;
+            ActionItem = null;
+        }
+
+        public override ItemKind GetSlotItem(int index) => SlotItems[index];
+        public override void SetSlotItem(int index, ItemKind itemKind) => SlotItems[index] = itemKind;
         #endregion
     }
 }

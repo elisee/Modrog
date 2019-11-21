@@ -1,10 +1,10 @@
 ﻿namespace ModrogApi
 {
-    public enum EntityIntent : byte
+    public enum CharacterIntent : byte
     {
         Idle,
         Move,
         Use,
-        PickUp,
+        Swap,
     }
 }

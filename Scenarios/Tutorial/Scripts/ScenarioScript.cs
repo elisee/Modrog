@@ -20,9 +20,12 @@ class ScenarioScript : IScenarioScript
 
     public readonly Player Player;
 
-    public readonly EntityKind KnightEntityKind;
-    public readonly EntityKind RobotEntityKind;
-    public readonly EntityKind SkeletonEntityKind;
+    public readonly CharacterKind KnightCharacterKind;
+    public readonly CharacterKind RobotCharacterKind;
+    public readonly CharacterKind SkeletonCharacterKind;
+
+    public readonly ItemKind SwordItemKind;
+    public readonly ItemKind PistolItemKind;
 
     public readonly Entity Knight;
     public readonly Entity Robot;
@@ -46,9 +49,12 @@ class ScenarioScript : IScenarioScript
         UndergroundWorld = Universe.CreateWorld();
         UndergroundWorld.InsertMap(0, 0, Universe.LoadMap("Maps/Underground.map"));
 
-        KnightEntityKind = Universe.CreateEntityKind(spriteLocation: new Point(0, 6));
-        RobotEntityKind = Universe.CreateEntityKind(spriteLocation: new Point(5, 6));
-        SkeletonEntityKind = Universe.CreateEntityKind(spriteLocation: new Point(0, 8));
+        KnightCharacterKind = Universe.CreateCharacterKind(spriteLocation: new Point(0, 6));
+        RobotCharacterKind = Universe.CreateCharacterKind(spriteLocation: new Point(5, 6));
+        SkeletonCharacterKind = Universe.CreateCharacterKind(spriteLocation: new Point(0, 8));
+
+        SwordItemKind = Universe.CreateItemKind(spriteLocation: new Point(1, 9));
+        PistolItemKind = Universe.CreateItemKind(spriteLocation: new Point(4, 10));
 
         Player = Universe.GetPlayers()[0];
 
@@ -56,10 +62,16 @@ class ScenarioScript : IScenarioScript
         // spawnCoords = _cryptEntranceCoords;
 
         // Forest
-        Knight = ForestWorld.SpawnEntity(KnightEntityKind, spawnCoords, owner: Player);
+        Knight = ForestWorld.SpawnCharacter(KnightCharacterKind, spawnCoords, owner: Player);
 
-        _skeletons.Add(ForestWorld.SpawnEntity(SkeletonEntityKind, spawnCoords + new Point(10, 3), owner: null));
-        _skeletons.Add(ForestWorld.SpawnEntity(SkeletonEntityKind, spawnCoords + new Point(12, 4), owner: null));
+        var sword = ForestWorld.SpawnItem(SwordItemKind, spawnCoords + new Point(-3, -3));
+        sword.Custom = SwordItemKind;
+
+        var pistol = ForestWorld.SpawnItem(PistolItemKind, spawnCoords + new Point(0, -5));
+        pistol.Custom = PistolItemKind;
+
+        _skeletons.Add(ForestWorld.SpawnCharacter(SkeletonCharacterKind, spawnCoords + new Point(10, 3), owner: null));
+        _skeletons.Add(ForestWorld.SpawnCharacter(SkeletonCharacterKind, spawnCoords + new Point(12, 4), owner: null));
 
         SetupForestView();
         Player.Teleport(ForestWorld, spawnCoords);
@@ -68,12 +80,31 @@ class ScenarioScript : IScenarioScript
         // Crypt
     }
 
-    public void OnEntityIntent(Entity entity, EntityIntent intent, Direction direction, int slot, out bool preventDefault)
+    public void OnCharacterIntent(Entity entity, CharacterIntent intent, Direction direction, int slot, out bool preventDefault)
     {
-        if (intent == EntityIntent.Use)
+        if (intent == CharacterIntent.Swap)
+        {
+            var world = entity.GetWorld();
+            var entities = world.GetEntities(entity.GetPosition());
+
+            foreach (var otherEntity in entities)
+            {
+                // TODO: Probably doesn't make sense to use Custom for that, just retrieve the item from an inventory slot of the item
+                // that way it can also be shown in the UI and this doesn't need to be done in script
+                if (otherEntity.Custom is ItemKind itemKind)
+                {
+                    otherEntity.Remove();
+                    entity.SetSlotItem(slot, itemKind);
+                }
+            }
+
+            preventDefault = true;
+            return;
+        }
+        else if (intent == CharacterIntent.Use)
         {
             preventDefault = true;
-            entity.GetWorld().SpawnEntity(RobotEntityKind, entity.GetPosition() + ModrogApi.MathHelper.GetOffsetFromDirection(direction), owner: null);
+            entity.GetWorld().SpawnCharacter(RobotCharacterKind, entity.GetPosition() + ModrogApi.MathHelper.GetOffsetFromDirection(direction), owner: null);
             return;
         }
 

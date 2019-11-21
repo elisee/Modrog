@@ -186,7 +186,6 @@ namespace ModrogEditor.Interface.Editing.Map
 
         void LoadTileSet()
         {
-            // TODO: If this fails, we should not 
             try
             {
                 var tileSetJson = JsonHelper.Parse(File.ReadAllText(Path.Combine(App.State.ActiveScenarioPath, TileSetPath)));
