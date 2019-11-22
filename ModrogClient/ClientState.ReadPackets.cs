@@ -131,15 +131,14 @@ namespace ModrogClient
             }
             else
             {
-                SelfPlayerIndex = _packetReader.ReadInt();
-                ReadSelfLocation();
-
                 WorldChunks.Clear();
                 FogChunks.Clear();
                 EntitiesInSight.Clear();
                 EntitiesInSightById.Clear();
 
+                SelfPlayerIndex = _packetReader.ReadInt();
                 ReadUniverseSetup();
+                ReadSelfLocation();
                 ReadNewEntitiesInSight();
             }
 

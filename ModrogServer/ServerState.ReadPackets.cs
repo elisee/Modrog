@@ -145,9 +145,8 @@ namespace ModrogServer
                     var player = _universe.Players[peer.Identity.PlayerIndex];
 
                     _packetWriter.WriteInt(player.Index);
-                    _packetWriter.WriteShortPoint(player.Position);
-
                     WriteUniverseSetup();
+                    _packetWriter.WriteShortPoint(player.Position);
                     WriteNewEntitiesInSight(player.EntitiesInSight, player.Index);
                     break;
             }
