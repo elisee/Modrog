@@ -16,5 +16,7 @@ namespace SwarmBasics.Math
             var remainder = dividend % divisor;
             return remainder >= 0 ? remainder : remainder + divisor;
         }
+
+        public static float ToDegrees(float angle) => angle * 180f / MathF.PI;
     }
 }

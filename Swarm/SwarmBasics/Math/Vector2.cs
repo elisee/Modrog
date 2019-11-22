@@ -26,6 +26,7 @@ namespace SwarmBasics.Math
         public static bool operator !=(Vector2 left, Vector2 right) => !(left == right);
         public static Vector2 operator +(Vector2 left, Vector2 right) => new Vector2(left.X + right.X, left.Y + right.Y);
         public static Vector2 operator -(Vector2 left, Vector2 right) => new Vector2(left.X - right.X, left.Y - right.Y);
+        public static Vector2 operator *(Vector2 vector, float value) => new Vector2(vector.X * value, vector.Y * value);
 
         public static Vector2 operator -(Vector2 vector) => new Vector2(-vector.X, -vector.Y);
 
