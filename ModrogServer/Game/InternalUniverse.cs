@@ -87,6 +87,8 @@ namespace ModrogServer.Game
 
         internal void Tick()
         {
+            TickIndex++;
+
             // Apply planned moves
             foreach (var world in _worlds) world.Tick();
 
