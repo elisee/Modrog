@@ -1,4 +1,5 @@
 ﻿using ModrogApi;
+using ModrogCommon;
 using SwarmBasics.Math;
 
 namespace ModrogClient.Game
@@ -6,16 +7,17 @@ namespace ModrogClient.Game
     class ClientEntity
     {
         public readonly int Id;
-        public int PlayerIndex = -1;
+        public Point Position { get; private set; }
 
         public readonly ClientCharacterKind CharacterKind;
-        public readonly ClientItemKind ItemKind;
-
+        public ClientItemKind[] ItemSlots = new ClientItemKind[Protocol.CharacterItemSlotCount];
+        public int PlayerIndex = -1;
         public Point PreviousTickPosition { get; private set; }
-        public Point Position { get; private set; }
         public EntityAction Action { get; private set; }
         public Direction ActionDirection { get; private set; }
-        // TODO: public ClientItemKind ActionItem { get; private set; }
+        public ClientItemKind ActionItem { get; private set; }
+
+        public readonly ClientItemKind ItemKind;
 
         public ClientEntity(int id, Point position, ClientCharacterKind characterKind, int playerIndex)
         {
@@ -36,14 +38,15 @@ namespace ModrogClient.Game
         {
             PreviousTickPosition = Position;
             Action = EntityAction.Idle;
+            ActionItem = null;
         }
 
-        public void ApplyTick(EntityAction action, Direction actionDirection) // TODO: , ClientItemKind actionItem)
+        public void ApplyTick(EntityAction action, Direction actionDirection, ClientItemKind actionItem)
         {
             PreviousTickPosition = Position;
             Action = action;
             ActionDirection = actionDirection;
-            // TODO: ActionItem = actionItem;
+            ActionItem = actionItem;
 
             switch (action)
             {

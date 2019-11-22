@@ -78,7 +78,7 @@ namespace ModrogServer
                 var peer = _peersBySocket[socket];
                 var player = _universe.Players[peer.Identity.PlayerIndex];
                 var seenEntities = new HashSet<Game.InternalEntity>();
-                var seenEntitiesWithAction = new HashSet<Game.InternalEntity>();
+                var seenDirtyEntities = new HashSet<Game.InternalEntity>();
                 var seenTileStacks = new Dictionary<Point, short[]>();
 
                 foreach (var ownedEntity in player.OwnedEntities)
@@ -110,7 +110,7 @@ namespace ModrogServer
                             foreach (Game.InternalEntity entityInView in world.GetEntities(target))
                             {
                                 seenEntities.Add(entityInView);
-                                if (entityInView.Action != ModrogApi.EntityAction.Idle) seenEntitiesWithAction.Add(entityInView);
+                                if (entityInView.Action != ModrogApi.EntityAction.Idle || entityInView.AreItemSlotsDirty) seenDirtyEntities.Add(entityInView);
                             }
                         }
                     }
@@ -138,22 +138,31 @@ namespace ModrogServer
                 newlySeenEntities.ExceptWith(player.EntitiesInSight);
 
                 // Newly seen entities
-                WriteNewEntitiesInSight(newlySeenEntities);
+                WriteNewEntitiesInSight(newlySeenEntities, player.Index);
 
                 // Entity actions
                 player.EntitiesInSight.Clear();
                 player.EntitiesInSight.UnionWith(seenEntities);
 
-                _packetWriter.WriteShort((short)seenEntitiesWithAction.Count);
+                _packetWriter.WriteShort((short)seenDirtyEntities.Count);
 
-                foreach (var entity in seenEntitiesWithAction)
+                foreach (var entity in seenDirtyEntities)
                 {
                     Debug.Assert(entity.World == player.World);
 
                     _packetWriter.WriteInt(entity.Id);
                     _packetWriter.WriteByte((byte)entity.Action);
                     _packetWriter.WriteByte((byte)entity.ActionDirection);
-                    _packetWriter.WriteShort((byte)0); // TODO: entity.ActionItem);
+                    _packetWriter.WriteShort((short)(entity.ActionItem?.Id ?? -1));
+
+                    if (entity.PlayerIndex == player.Index)
+                    {
+                        _packetWriter.WriteByte((byte)(entity.AreItemSlotsDirty ? 1 : 0));
+                        if (entity.AreItemSlotsDirty)
+                        {
+                            foreach (var itemKind in entity.ItemSlots) _packetWriter.WriteShort((short)(itemKind?.Id ?? -1));
+                        }
+                    }
                 }
 
                 _packetWriter.WriteShort((short)seenTileStacks.Count);

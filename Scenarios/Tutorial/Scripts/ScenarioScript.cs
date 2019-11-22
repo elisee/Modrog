@@ -94,7 +94,7 @@ class ScenarioScript : IScenarioScript
                 if (otherEntity.Custom is ItemKind itemKind)
                 {
                     otherEntity.Remove();
-                    entity.SetSlotItem(slot, itemKind);
+                    entity.SetItem(slot, itemKind);
                 }
             }
 

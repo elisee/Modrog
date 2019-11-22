@@ -15,6 +15,8 @@ namespace ModrogCommon
 
         public const int MapChunkSide = 16;
 
+        public const int CharacterItemSlotCount = 2 + 4;
+
         public enum ServerPacketType : byte
         {
             // Handshake

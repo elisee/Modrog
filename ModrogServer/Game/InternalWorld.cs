@@ -31,6 +31,7 @@ namespace ModrogServer.Game
                 entity.Action = ModrogApi.EntityAction.Idle;
                 entity.ActionDirection = ModrogApi.Direction.Down;
                 entity.ActionItem = null;
+                entity.AreItemSlotsDirty = false;
 
                 if (entity.Intent == ModrogApi.CharacterIntent.Idle) continue;
 
@@ -134,7 +135,7 @@ namespace ModrogServer.Game
         {
             var entities = new List<ModrogApi.Server.Entity>();
 
-            // TODO: Optimize with space partitioning
+            // TODO: Optimize with chunk partitioning
             foreach (var entity in _entities)
             {
                 if (entity.Position == position) entities.Add(entity);

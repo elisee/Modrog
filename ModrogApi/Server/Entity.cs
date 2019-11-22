@@ -14,7 +14,7 @@ namespace ModrogApi.Server
         public abstract void Remove();
 
         // Character
-        public abstract ItemKind GetSlotItem(int index);
-        public abstract void SetSlotItem(int index, ItemKind itemKind);
+        public abstract ItemKind GetItem(int index);
+        public abstract void SetItem(int index, ItemKind itemKind);
     }
 }

@@ -285,9 +285,9 @@ namespace ModrogClient
             if (SelectedEntity != null) EntitiesInSightById.TryGetValue(SelectedEntity.Id, out SelectedEntity);
             foreach (var entity in EntitiesInSight) entity.ClearPreviousTick();
 
-            var entitiesWithActionCount = (int)_packetReader.ReadShort();
+            var dirtyEntitiesCount = (int)_packetReader.ReadShort();
 
-            for (var i = 0; i < entitiesWithActionCount; i++)
+            for (var i = 0; i < dirtyEntitiesCount; i++)
             {
                 var id = _packetReader.ReadInt();
 
@@ -295,7 +295,17 @@ namespace ModrogClient
                 var direction = (ModrogApi.Direction)_packetReader.ReadByte();
                 var actionItemKindId = (int)_packetReader.ReadShort();
 
-                EntitiesInSightById[id].ApplyTick(action, direction); // TODO: ItemKinds[actionItemKindId]);
+                var entity = EntitiesInSightById[id];
+                entity.ApplyTick(action, direction, actionItemKindId != -1 ? ItemKinds[actionItemKindId] : null);
+
+                if (entity.PlayerIndex == SelfPlayerIndex && _packetReader.ReadByte() != 0)
+                {
+                    for (var j = 0; j < entity.ItemSlots.Length; j++)
+                    {
+                        var slotItemKindId = _packetReader.ReadShort();
+                        entity.ItemSlots[j] = slotItemKindId != -1 ? ItemKinds[slotItemKindId] : null;
+                    }
+                }
             }
 
             var tileStacksCount = (int)_packetReader.ReadShort();
@@ -351,10 +361,19 @@ namespace ModrogClient
                 var itemKindId = _packetReader.ReadShort();
 
                 Game.ClientEntity entity;
-                if (characterKindId != short.MaxValue)
+                if (characterKindId != -1)
                 {
                     var playerIndex = _packetReader.ReadByte();
                     entity = new Game.ClientEntity(id, position, CharacterKinds[characterKindId], playerIndex);
+
+                    if (playerIndex == SelfPlayerIndex)
+                    {
+                        for (var j = 0; j < entity.ItemSlots.Length; j++)
+                        {
+                            var slotItemKindId = _packetReader.ReadShort();
+                            if (slotItemKindId != -1) entity.ItemSlots[j] = ItemKinds[slotItemKindId];
+                        }
+                    }
                 }
                 else
                 {

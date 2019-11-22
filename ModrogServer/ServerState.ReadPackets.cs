@@ -148,7 +148,7 @@ namespace ModrogServer
                     _packetWriter.WriteShortPoint(player.Position);
 
                     WriteUniverseSetup();
-                    WriteNewEntitiesInSight(player.EntitiesInSight);
+                    WriteNewEntitiesInSight(player.EntitiesInSight, player.Index);
                     break;
             }
 
@@ -242,7 +242,7 @@ namespace ModrogServer
         #endregion
 
         #region Playing Stage
-        void WriteNewEntitiesInSight(ICollection<Game.InternalEntity> entities)
+        void WriteNewEntitiesInSight(ICollection<Game.InternalEntity> entities, int playerIndex)
         {
             _packetWriter.WriteShort((short)entities.Count);
             foreach (var entity in entities)
@@ -251,10 +251,18 @@ namespace ModrogServer
                 // For characters, we send the previous tick position so the client can interpolate after applying the action below
                 _packetWriter.WriteShortPoint(entity.CharacterKind != null ? entity.PreviousTickPosition : entity.Position);
 
-                _packetWriter.WriteShort((short)(entity.CharacterKind?.Id ?? short.MaxValue));
-                _packetWriter.WriteShort((short)(entity.ItemKind?.Id ?? short.MaxValue));
+                _packetWriter.WriteShort((short)(entity.CharacterKind?.Id ?? -1));
+                _packetWriter.WriteShort((short)(entity.ItemKind?.Id ?? -1));
 
-                if (entity.CharacterKind != null) _packetWriter.WriteByte((byte)entity.PlayerIndex);
+                if (entity.CharacterKind != null)
+                {
+                    _packetWriter.WriteByte((byte)entity.PlayerIndex);
+
+                    if (entity.PlayerIndex == playerIndex)
+                    {
+                        foreach (var itemKind in entity.ItemSlots) _packetWriter.WriteShort((short)(itemKind?.Id ?? -1));
+                    }
+                }
             }
         }
 

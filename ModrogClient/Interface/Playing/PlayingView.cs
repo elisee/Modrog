@@ -43,6 +43,7 @@ namespace ModrogClient.Interface.Playing
 
         readonly Element _hudCharacterContainer;
         readonly Element _healthBarFill;
+        readonly Panel[] _hudItemSlots = new Panel[Protocol.CharacterItemSlotCount];
 
         readonly Label _hudSwapHint;
         readonly Panel _hudSwapPanel;
@@ -82,9 +83,10 @@ namespace ModrogClient.Interface.Playing
                 _healthBarFill = new Element(healthBarBackground) { Left = 0, Width = 64, BackgroundPatch = new TexturePatch(0x12cc34ff) };
 
                 var slotsContainer = new Element(_hudCharacterContainer) { ChildLayout = ChildLayoutMode.Left, Top = 8 };
-                for (var i = 0; i < 6; i++)
+                for (var i = 0; i < Protocol.CharacterItemSlotCount; i++)
                 {
-                    new Panel(slotsContainer) { Width = 32, Height = 32, Left = i > 0 ? (i == 2 ? 16 : 8) : 0, BackgroundPatch = new TexturePatch(0x789456ff) };
+                    var cartridge = new Element(slotsContainer) { Width = 32, Height = 32, Left = i > 0 ? (i == 2 ? 16 : 8) : 0, BackgroundPatch = new TexturePatch(0x789456ff) };
+                    _hudItemSlots[i] = new Panel(cartridge);
                 }
             }
 
@@ -282,22 +284,14 @@ namespace ModrogClient.Interface.Playing
                         var newSelectedEntityIndex = selectedEntityIndex < hoveredEntities.Count - 1 ? selectedEntityIndex + 1 : 0;
                         state.SelectEntity(hoveredEntities[newSelectedEntityIndex]);
                     }
-
-                    var entity = state.SelectedEntity;
-                    var spriteLocation = entity.CharacterKind?.SpriteLocation ?? entity.ItemKind.SpriteLocation;
-                    var sourceRect = new Rectangle(spriteLocation.X * state.TileSize, spriteLocation.Y * state.TileSize, state.TileSize, state.TileSize);
-                    _entityPortrait.BackgroundPatch = new TexturePatch(new TextureArea(_spritesheetTexture, sourceRect));
-                    _hudCharacterContainer.Visible = entity.CharacterKind != null;
-                    _hudEntityPanel.Visible = true;
                 }
                 else
                 {
                     App.State.SelectEntity(null);
-                    _hudEntityPanel.Visible = false;
                 }
 
                 _hudSwapPanel.Visible = false;
-                _hud.Layout(_contentRectangle);
+                UpdateSelectedEntityHud();
                 Desktop.SetFocusedElement(this);
             }
             else if (button == SDL.SDL_BUTTON_MIDDLE)
@@ -310,6 +304,58 @@ namespace ModrogClient.Interface.Playing
                 _isDraggingScroll = true;
                 _dragScroll = new Vector2(Scroll.X + Desktop.MouseX / _zoom, Scroll.Y + Desktop.MouseY / _zoom);
             }
+        }
+
+        void UpdateSelectedEntityHud()
+        {
+            var state = App.State;
+
+            if (state.SelectedEntity != null)
+            {
+                var isSelfEntity = state.SelectedEntity?.PlayerIndex == state.SelfPlayerIndex;
+
+                {
+                    var spriteLocation = state.SelectedEntity.CharacterKind?.SpriteLocation ?? state.SelectedEntity.ItemKind.SpriteLocation;
+                    var sourceRect = new Rectangle(spriteLocation.X * state.TileSize, spriteLocation.Y * state.TileSize, state.TileSize, state.TileSize);
+                    _entityPortrait.BackgroundPatch = new TexturePatch(new TextureArea(_spritesheetTexture, sourceRect));
+                    _hudCharacterContainer.Visible = state.SelectedEntity.CharacterKind != null;
+                    _hudEntityPanel.Visible = true;
+                }
+
+                for (var i = 0; i < Protocol.CharacterItemSlotCount; i++)
+                {
+                    if (isSelfEntity && state.SelectedEntity.ItemSlots[i] != null)
+                    {
+                        var spriteLocation = state.SelectedEntity.ItemSlots[i].SpriteLocation;
+                        var sourceRect = new Rectangle(spriteLocation.X * state.TileSize, spriteLocation.Y * state.TileSize, state.TileSize, state.TileSize);
+                        _hudItemSlots[i].BackgroundPatch = new TexturePatch(new TextureArea(_spritesheetTexture, sourceRect));
+                    }
+                    else
+                    {
+                        _hudItemSlots[i].BackgroundPatch = null;
+                    }
+                }
+
+                if (isSelfEntity)
+                {
+                    var position = state.SelectedEntity.Position;
+                    var itemEntities = new List<Game.ClientEntity>();
+                    foreach (var entity in state.EntitiesInSight) if (entity.Position == position && entity.ItemKind != null) itemEntities.Add(entity);
+
+                    var showHudSwapHint = itemEntities.Count > 0 && !_hudSwapPanel.Visible;
+                    if (showHudSwapHint != _hudSwapHint.Visible)
+                    {
+                        _hudSwapHint.Visible = showHudSwapHint;
+                        _hud.Layout();
+                    }
+                }
+            }
+            else
+            {
+                _hudEntityPanel.Visible = false;
+            }
+
+            _hud.Layout(_contentRectangle);
         }
 
         public override void OnMouseUp(int button)
@@ -382,21 +428,10 @@ namespace ModrogClient.Interface.Playing
 
         public void OnTick()
         {
-            App.State.SendSelfPlayerPosition(new Point((int)(Scroll.X / App.State.TileSize), (int)(Scroll.Y / App.State.TileSize)));
+            var state = App.State;
+            state.SendSelfPlayerPosition(new Point((int)(Scroll.X / state.TileSize), (int)(Scroll.Y / state.TileSize)));
 
-            if (App.State.SelectedEntity?.PlayerIndex == App.State.SelfPlayerIndex)
-            {
-                var position = App.State.SelectedEntity.Position;
-                var itemEntities = new List<Game.ClientEntity>();
-                foreach (var entity in App.State.EntitiesInSight) if (entity.Position == position && entity.ItemKind != null) itemEntities.Add(entity);
-
-                var showHudSwapHint = itemEntities.Count > 0 && !_hudSwapPanel.Visible;
-                if (showHudSwapHint != _hudSwapHint.Visible)
-                {
-                    _hudSwapHint.Visible = showHudSwapHint;
-                    _hud.Layout();
-                }
-            }
+            UpdateSelectedEntityHud();
         }
 
         public void OnSpritesheetReceived(Span<byte> data)

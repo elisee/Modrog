@@ -1,5 +1,6 @@
 ﻿using ModrogApi;
 using ModrogApi.Server;
+using ModrogCommon;
 using SwarmBasics.Math;
 using System;
 using System.Diagnostics.CodeAnalysis;
@@ -13,7 +14,7 @@ namespace ModrogServer.Game
         internal Point Position;
 
         internal readonly InternalCharacterKind CharacterKind;
-        internal readonly InternalItemKind[] SlotItems = new InternalItemKind[4 + 2];
+        internal readonly InternalItemKind[] ItemSlots = new InternalItemKind[Protocol.CharacterItemSlotCount];
         internal int PlayerIndex;
         public int ViewRadius = 2;
 
@@ -23,7 +24,8 @@ namespace ModrogServer.Game
         internal int IntentSlot;
         internal EntityAction Action = EntityAction.Idle;
         internal Direction ActionDirection;
-        internal ItemKind ActionItem;
+        internal InternalItemKind ActionItem;
+        internal bool AreItemSlotsDirty;
 
         internal readonly InternalItemKind ItemKind;
 
@@ -86,8 +88,12 @@ namespace ModrogServer.Game
             ActionItem = null;
         }
 
-        public override ItemKind GetSlotItem(int index) => SlotItems[index];
-        public override void SetSlotItem(int index, ItemKind itemKind) => SlotItems[index] = (InternalItemKind)itemKind;
+        public override ItemKind GetItem(int slot) => ItemSlots[slot];
+        public override void SetItem(int slot, ItemKind itemKind)
+        {
+            ItemSlots[slot] = (InternalItemKind)itemKind;
+            AreItemSlotsDirty = true;
+        }
         #endregion
     }
 }
