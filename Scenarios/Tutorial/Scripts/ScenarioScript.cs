@@ -50,9 +50,9 @@ class ScenarioScript : IScenarioScript
         UndergroundWorld = Universe.CreateWorld();
         UndergroundWorld.InsertMap(0, 0, Universe.LoadMap("Maps/Underground.map"));
 
-        KnightCharacterKind = Universe.CreateCharacterKind(spriteLocation: new Point(0, 6));
-        RobotCharacterKind = Universe.CreateCharacterKind(spriteLocation: new Point(5, 6));
-        SkeletonCharacterKind = Universe.CreateCharacterKind(spriteLocation: new Point(0, 8));
+        KnightCharacterKind = Universe.CreateCharacterKind(spriteLocation: new Point(0, 6), health: 8);
+        RobotCharacterKind = Universe.CreateCharacterKind(spriteLocation: new Point(5, 6), health: 5);
+        SkeletonCharacterKind = Universe.CreateCharacterKind(spriteLocation: new Point(0, 8), health: 3);
 
         SwordItemKind = Universe.CreateItemKind(spriteLocation: new Point(1, 9));
         PistolItemKind = Universe.CreateItemKind(spriteLocation: new Point(4, 10));
@@ -98,7 +98,12 @@ class ScenarioScript : IScenarioScript
 
                 foreach (var otherEntity in entities)
                 {
-                    if (otherEntity.GetCharacterKind() == SkeletonCharacterKind) otherEntity.Remove();
+                    if (otherEntity.GetCharacterKind() == SkeletonCharacterKind)
+                    {
+                        var health = otherEntity.GetHealth() - 1;
+                        otherEntity.SetHealth(health);
+                        if (health <= 0) otherEntity.Remove();
+                    }
                 }
             }
 

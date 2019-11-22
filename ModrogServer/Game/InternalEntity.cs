@@ -4,6 +4,7 @@ using ModrogCommon;
 using SwarmBasics.Math;
 using System;
 using System.Diagnostics.CodeAnalysis;
+using static ModrogCommon.Protocol;
 
 namespace ModrogServer.Game
 {
@@ -12,20 +13,21 @@ namespace ModrogServer.Game
         internal readonly int Id;
         internal InternalWorld World;
         internal Point Position;
+        internal EntityDirtyFlags DirtyFlags;
 
         internal readonly InternalCharacterKind CharacterKind;
+        internal int Health;
         internal readonly InternalItemKind[] ItemSlots = new InternalItemKind[Protocol.CharacterItemSlotCount];
         internal int PlayerIndex;
         public int ViewRadius = 2;
-
         internal Point PreviousTickPosition;
+
         internal CharacterIntent Intent = CharacterIntent.Idle;
         internal Direction IntentDirection;
         internal int IntentSlot;
         internal EntityAction Action = EntityAction.Idle;
         internal Direction ActionDirection;
         internal InternalItemKind ActionItem;
-        internal bool AreItemSlotsDirty;
 
         internal readonly InternalItemKind ItemKind;
 
@@ -34,12 +36,14 @@ namespace ModrogServer.Game
             Id = id;
             Position = PreviousTickPosition = position;
             CharacterKind = (InternalCharacterKind)characterKind;
+            Health = CharacterKind.Health;
 
             PlayerIndex = playerIndex;
             if (PlayerIndex != -1)
             {
-                world.Universe.Players[PlayerIndex].OwnedEntities.Add(this);
-                world.Universe.Players[PlayerIndex].OwnedEntitiesById.Add(Id, this);
+                var player = world.Universe.Players[PlayerIndex];
+                player.OwnedEntities.Add(this);
+                player.OwnedEntitiesById.Add(Id, this);
             }
 
             world.Add(this);
@@ -83,7 +87,15 @@ namespace ModrogServer.Game
 
         public override void Remove()
         {
+            if (PlayerIndex != -1)
+            {
+                var player = World.Universe.Players[PlayerIndex];
+                player.OwnedEntities.Remove(this);
+                player.OwnedEntitiesById.Remove(Id);
+            }
+
             World.Remove(this);
+            World = null;
 
             Position = PreviousTickPosition = Point.Zero;
             Action = EntityAction.Idle;
@@ -91,11 +103,18 @@ namespace ModrogServer.Game
             ActionItem = null;
         }
 
+        public override int GetHealth() => Health;
+        public override void SetHealth(int health)
+        {
+            Health = health;
+            DirtyFlags |= EntityDirtyFlags.Health;
+        }
+
         public override ItemKind GetItem(int slot) => ItemSlots[slot];
         public override void SetItem(int slot, ItemKind itemKind)
         {
             ItemSlots[slot] = (InternalItemKind)itemKind;
-            AreItemSlotsDirty = true;
+            DirtyFlags |= EntityDirtyFlags.ItemSlots;
         }
         #endregion
     }

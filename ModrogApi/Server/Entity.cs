@@ -17,6 +17,9 @@ namespace ModrogApi.Server
         public abstract void Remove();
 
         // Character
+        public abstract int GetHealth();
+        public abstract void SetHealth(int health);
+
         public abstract ItemKind GetItem(int index);
         public abstract void SetItem(int index, ItemKind itemKind);
     }

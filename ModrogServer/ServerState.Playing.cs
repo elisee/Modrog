@@ -59,6 +59,7 @@ namespace ModrogServer
             foreach (var kind in _universe.CharacterKinds)
             {
                 _packetWriter.WriteShortPoint(kind.SpriteLocation);
+                _packetWriter.WriteShort((short)kind.Health);
             }
 
             _packetWriter.WriteShort((short)_universe.ItemKinds.Count);
@@ -110,7 +111,7 @@ namespace ModrogServer
                             foreach (Game.InternalEntity entityInView in world.GetEntities(target))
                             {
                                 seenEntities.Add(entityInView);
-                                if (entityInView.Action != ModrogApi.EntityAction.Idle || entityInView.AreItemSlotsDirty) seenDirtyEntities.Add(entityInView);
+                                if (entityInView.Action != ModrogApi.EntityAction.Idle || entityInView.DirtyFlags != Protocol.EntityDirtyFlags.None) seenDirtyEntities.Add(entityInView);
                             }
                         }
                     }
@@ -155,10 +156,12 @@ namespace ModrogServer
                     _packetWriter.WriteByte((byte)entity.ActionDirection);
                     _packetWriter.WriteShort((short)(entity.ActionItem?.Id ?? -1));
 
+                    _packetWriter.WriteInt((int)entity.DirtyFlags);
+                    if (entity.DirtyFlags.HasFlag(Protocol.EntityDirtyFlags.Health)) _packetWriter.WriteShort((short)entity.Health);
+
                     if (entity.PlayerIndex == player.Index)
                     {
-                        _packetWriter.WriteByte((byte)(entity.AreItemSlotsDirty ? 1 : 0));
-                        if (entity.AreItemSlotsDirty)
+                        if (entity.DirtyFlags.HasFlag(Protocol.EntityDirtyFlags.ItemSlots))
                         {
                             foreach (var itemKind in entity.ItemSlots) _packetWriter.WriteShort((short)(itemKind?.Id ?? -1));
                         }

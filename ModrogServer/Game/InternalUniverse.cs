@@ -89,12 +89,8 @@ namespace ModrogServer.Game
         {
             TickIndex++;
 
-            // Apply planned moves
+            foreach (var world in _worlds) world.ClearPreviousTick();
             foreach (var world in _worlds) world.Tick();
-
-            // TODO: Resolve damage, etc.
-
-            // 
             _script.Tick();
         }
 
@@ -187,9 +183,9 @@ namespace ModrogServer.Game
             return tileKind;
         }
 
-        public override ModrogApi.Server.CharacterKind CreateCharacterKind(Point spriteLocation)
+        public override ModrogApi.Server.CharacterKind CreateCharacterKind(Point spriteLocation, int health)
         {
-            var characterKind = new InternalCharacterKind(_nextCharacterKindId++, spriteLocation);
+            var characterKind = new InternalCharacterKind(_nextCharacterKindId++, spriteLocation, health);
             CharacterKinds.Add(characterKind);
             return characterKind;
         }

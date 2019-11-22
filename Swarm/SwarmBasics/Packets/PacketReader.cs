@@ -76,6 +76,13 @@ namespace SwarmBasics.Packets
             return value;
         }
 
+        public TEnum ReadInt<TEnum>() where TEnum : Enum
+        {
+            var value = ReadInt();
+            if (!Enum.IsDefined(typeof(TEnum), value)) throw new PacketException($"Invalid {typeof(TEnum).Name} enum value");
+            return (TEnum)Enum.ToObject(typeof(TEnum), value);
+        }
+
         public string ReadByteSizeString()
         {
             var sizeInBytes = ReadByte();

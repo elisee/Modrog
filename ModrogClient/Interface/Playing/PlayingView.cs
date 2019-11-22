@@ -305,6 +305,8 @@ namespace ModrogClient.Interface.Playing
                     _hudEntityPanel.Visible = true;
                 }
 
+                _hudCharacterHealthBarFill.Width = state.SelectedEntity.Health * _hudCharacterHealthBarFill.Parent.Width / state.SelectedEntity.CharacterKind.Health;
+
                 for (var i = 0; i < Protocol.CharacterItemSlotCount; i++)
                 {
                     if (isSelfEntity && state.SelectedEntity.ItemSlots[i] != null)

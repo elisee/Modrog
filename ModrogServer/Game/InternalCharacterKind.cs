@@ -6,11 +6,13 @@ namespace ModrogServer.Game
     {
         public readonly int Id;
         public readonly Point SpriteLocation;
+        public readonly int Health;
 
-        internal InternalCharacterKind(int id, Point spriteLocation)
+        internal InternalCharacterKind(int id, Point spriteLocation, int health)
         {
             Id = id;
             SpriteLocation = spriteLocation;
+            Health = health;
         }
 
         #region API

@@ -19,6 +19,18 @@ namespace ModrogServer.Game
             Universe = universe;
         }
 
+        internal void ClearPreviousTick()
+        {
+            foreach (var entity in _entities)
+            {
+                entity.PreviousTickPosition = entity.Position;
+                entity.Action = ModrogApi.EntityAction.Idle;
+                entity.ActionDirection = ModrogApi.Direction.Down;
+                entity.ActionItem = null;
+                entity.DirtyFlags = Protocol.EntityDirtyFlags.None;
+            }
+        }
+
         internal void Tick()
         {
             var entities = _entities.ToArray();
@@ -26,13 +38,6 @@ namespace ModrogServer.Game
             foreach (var entity in entities)
             {
                 if (entity.World != this) continue;
-
-                entity.PreviousTickPosition = entity.Position;
-                entity.Action = ModrogApi.EntityAction.Idle;
-                entity.ActionDirection = ModrogApi.Direction.Down;
-                entity.ActionItem = null;
-                entity.AreItemSlotsDirty = false;
-
                 if (entity.Intent == ModrogApi.CharacterIntent.Idle) continue;
 
                 var intent = entity.Intent;

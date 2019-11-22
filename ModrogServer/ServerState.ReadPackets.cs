@@ -255,6 +255,7 @@ namespace ModrogServer
 
                 if (entity.CharacterKind != null)
                 {
+                    _packetWriter.WriteShort((short)entity.Health);
                     _packetWriter.WriteByte((byte)entity.PlayerIndex);
 
                     if (entity.PlayerIndex == playerIndex)

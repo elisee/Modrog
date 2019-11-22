@@ -10,8 +10,10 @@ namespace ModrogClient.Game
         public Point Position { get; private set; }
 
         public readonly ClientCharacterKind CharacterKind;
+        public int Health;
         public ClientItemKind[] ItemSlots = new ClientItemKind[Protocol.CharacterItemSlotCount];
         public int PlayerIndex = -1;
+
         public Point PreviousTickPosition { get; private set; }
         public EntityAction Action { get; private set; }
         public Direction ActionDirection { get; private set; }
@@ -19,11 +21,12 @@ namespace ModrogClient.Game
 
         public readonly ClientItemKind ItemKind;
 
-        public ClientEntity(int id, Point position, ClientCharacterKind characterKind, int playerIndex)
+        public ClientEntity(int id, Point position, ClientCharacterKind characterKind, int health, int playerIndex)
         {
             Id = id;
             Position = PreviousTickPosition = position;
             CharacterKind = characterKind;
+            Health = health;
             PlayerIndex = playerIndex;
         }
 

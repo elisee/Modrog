@@ -233,7 +233,7 @@ namespace ModrogClient
             var characterKindsCount = _packetReader.ReadShort();
             for (var i = 0; i < characterKindsCount; i++)
             {
-                var characterKind = new Game.ClientCharacterKind(i, _packetReader.ReadShortPoint());
+                var characterKind = new Game.ClientCharacterKind(i, _packetReader.ReadShortPoint(), _packetReader.ReadShort());
                 CharacterKinds.Add(characterKind);
             }
 
@@ -296,12 +296,18 @@ namespace ModrogClient
 
                 var entity = EntitiesInSightById[id];
 
-                if (entity.PlayerIndex == SelfPlayerIndex && _packetReader.ReadByte() != 0)
+                var dirtyFlags = _packetReader.ReadInt<Protocol.EntityDirtyFlags>();
+                if (dirtyFlags.HasFlag(Protocol.EntityDirtyFlags.Health)) entity.Health = _packetReader.ReadShort();
+
+                if (entity.PlayerIndex == SelfPlayerIndex)
                 {
-                    for (var j = 0; j < entity.ItemSlots.Length; j++)
+                    if (dirtyFlags.HasFlag(Protocol.EntityDirtyFlags.ItemSlots))
                     {
-                        var slotItemKindId = _packetReader.ReadShort();
-                        entity.ItemSlots[j] = slotItemKindId != -1 ? ItemKinds[slotItemKindId] : null;
+                        for (var j = 0; j < entity.ItemSlots.Length; j++)
+                        {
+                            var slotItemKindId = _packetReader.ReadShort();
+                            entity.ItemSlots[j] = slotItemKindId != -1 ? ItemKinds[slotItemKindId] : null;
+                        }
                     }
                 }
 
@@ -363,8 +369,9 @@ namespace ModrogClient
                 Game.ClientEntity entity;
                 if (characterKindId != -1)
                 {
+                    var health = _packetReader.ReadShort();
                     var playerIndex = _packetReader.ReadByte();
-                    entity = new Game.ClientEntity(id, position, CharacterKinds[characterKindId], playerIndex);
+                    entity = new Game.ClientEntity(id, position, CharacterKinds[characterKindId], health, playerIndex);
 
                     if (playerIndex == SelfPlayerIndex)
                     {

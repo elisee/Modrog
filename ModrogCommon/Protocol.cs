@@ -1,4 +1,5 @@
-﻿using System.Text.RegularExpressions;
+﻿using System;
+using System.Text.RegularExpressions;
 
 namespace ModrogCommon
 {
@@ -16,6 +17,7 @@ namespace ModrogCommon
         public const int MapChunkSide = 16;
 
         public const int CharacterItemSlotCount = 2 + 4;
+        [Flags] public enum EntityDirtyFlags { None, Health, ItemSlots }
 
         public enum ServerPacketType : byte
         {
