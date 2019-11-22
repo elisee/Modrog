@@ -66,10 +66,7 @@ class ScenarioScript : IScenarioScript
         Knight = ForestWorld.SpawnCharacter(KnightCharacterKind, spawnCoords, owner: Player);
 
         var sword = ForestWorld.SpawnItem(SwordItemKind, spawnCoords + new Point(-3, -3));
-        sword.Custom = SwordItemKind;
-
         var pistol = ForestWorld.SpawnItem(PistolItemKind, spawnCoords + new Point(0, -5));
-        pistol.Custom = PistolItemKind;
 
         _skeletons.Add(ForestWorld.SpawnCharacter(SkeletonCharacterKind, spawnCoords + new Point(10, 3), owner: null));
         _skeletons.Add(ForestWorld.SpawnCharacter(SkeletonCharacterKind, spawnCoords + new Point(12, 4), owner: null));
@@ -88,7 +85,23 @@ class ScenarioScript : IScenarioScript
         if (intent == CharacterIntent.Use)
         {
             if (entity.GetItem(0) == null) entity.SetItem(0, PistolItemKind);
-            // entity.GetWorld().SpawnCharacter(ArrowKind, entity.GetPosition() + ModrogApi.MathHelper.GetOffsetFromDirection(direction), owner: null);
+
+            var position = entity.GetPosition();
+            var offset = ModrogApi.MathHelper.GetOffsetFromDirection(direction);
+
+            // entity.GetWorld().SpawnEffect(PistolBlastEffectKind, position + offset);
+
+            for (var i = 0; i < 3; i++)
+            {
+                position += offset;
+                var entities = entity.GetWorld().GetEntities(position);
+
+                foreach (var otherEntity in entities)
+                {
+                    if (otherEntity.GetCharacterKind() == SkeletonCharacterKind) otherEntity.Remove();
+                }
+            }
+
             return;
         }
     }

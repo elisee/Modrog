@@ -6,6 +6,9 @@ namespace ModrogApi.Server
     {
         public object Custom;
 
+        public abstract CharacterKind GetCharacterKind();
+        public abstract ItemKind GetItemKind();
+
         public abstract World GetWorld();
         public abstract Point GetPosition();
 

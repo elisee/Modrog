@@ -67,6 +67,9 @@ namespace ModrogServer.Game
         public override World GetWorld() => World;
         public override Point GetPosition() => Position;
 
+        public override CharacterKind GetCharacterKind() => CharacterKind;
+        public override ItemKind GetItemKind() => ItemKind;
+
         public override void Teleport(World world, Point position)
         {
             World.Remove(this);
