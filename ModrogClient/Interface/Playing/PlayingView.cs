@@ -3,7 +3,6 @@ using SDL2;
 using SwarmBasics;
 using SwarmBasics.Math;
 using SwarmPlatform.Graphics;
-using SwarmPlatform.Interface;
 using SwarmPlatform.UI;
 using System;
 using System.Collections.Generic;
@@ -42,11 +41,11 @@ namespace ModrogClient.Interface.Playing
         readonly Element _entityPortrait;
 
         readonly Element _hudCharacterContainer;
-        readonly Element _healthBarFill;
-        readonly Panel[] _hudItemSlots = new Panel[Protocol.CharacterItemSlotCount];
+        readonly Element _hudCharacterHealthBarFill;
+        readonly Panel[] _hudCharacterItemSlots = new Panel[Protocol.CharacterItemSlotCount];
 
-        readonly Label _hudSwapHint;
-        readonly Panel _hudSwapPanel;
+        readonly Panel _hudGroundPanel;
+        readonly Panel[] _hudGroundItemSlots = new Panel[8];
 
         // Sidebar
         readonly Element _sidebarPanel;
@@ -80,36 +79,34 @@ namespace ModrogClient.Interface.Playing
                 _hudCharacterContainer = new Element(_hudEntityPanel) { Left = 8, ChildLayout = ChildLayoutMode.Top };
 
                 var healthBarBackground = new Element(_hudCharacterContainer) { Left = 0, Width = 128, Height = 16, BackgroundPatch = new TexturePatch(0x222222ff) };
-                _healthBarFill = new Element(healthBarBackground) { Left = 0, Width = 64, BackgroundPatch = new TexturePatch(0x12cc34ff) };
+                _hudCharacterHealthBarFill = new Element(healthBarBackground) { Left = 0, Width = 64, BackgroundPatch = new TexturePatch(0x12cc34ff) };
 
                 var slotsContainer = new Element(_hudCharacterContainer) { ChildLayout = ChildLayoutMode.Left, Top = 8 };
                 for (var i = 0; i < Protocol.CharacterItemSlotCount; i++)
                 {
                     var cartridge = new Element(slotsContainer) { Width = 32, Height = 32, Left = i > 0 ? (i == 2 ? 16 : 8) : 0, BackgroundPatch = new TexturePatch(0x789456ff) };
-                    _hudItemSlots[i] = new Panel(cartridge);
+                    _hudCharacterItemSlots[i] = new Panel(cartridge);
                 }
             }
 
-            _hudSwapHint = new Label(_hud)
             {
-                Visible = false,
-                Top = 8,
-                Text = "Press SPACE to pick up items",
-                Flow = Flow.Shrink
-            };
+                _hudGroundPanel = new Panel(_hud)
+                {
+                    Visible = false,
+                    BackgroundPatch = new TexturePatch(0x456123ff),
+                    Top = 8,
+                    Padding = 8,
+                    ChildLayout = ChildLayoutMode.Top,
+                    Flow = Flow.Shrink
+                };
 
-            _hudSwapPanel = new Panel(_hud)
-            {
-                Visible = false,
-                BackgroundPatch = new TexturePatch(0x456123ff),
-                Top = 8,
-                Padding = 8,
-                ChildLayout = ChildLayoutMode.Left,
-                Flow = Flow.Shrink
-            };
-
-            new StyledTextButton(_hudSwapPanel) { Width = 32, Height = 32, Text = "[X]", OnActivate = () => App.State.SetSwapIntent(slot: 0, itemEntityId: 0) };
-            new StyledTextButton(_hudSwapPanel) { Width = 32, Height = 32, Left = 8, Text = "[C]", OnActivate = () => App.State.SetSwapIntent(slot: 1, itemEntityId: 0) };
+                var slotsContainer = new Element(_hudGroundPanel) { ChildLayout = ChildLayoutMode.Left };
+                for (var i = 0; i < _hudGroundItemSlots.Length; i++)
+                {
+                    var cartridge = new Element(slotsContainer) { Width = 32, Height = 32, Left = i > 0 ? 8 : 0, BackgroundPatch = new TexturePatch(0x789456ff) };
+                    _hudGroundItemSlots[i] = new Panel(cartridge);
+                }
+            }
 
             // Sidebar
             _sidebarPanel = new Panel(Desktop, this)
@@ -191,15 +188,6 @@ namespace ModrogClient.Interface.Playing
             {
                 if (key == SDL.SDL_Keycode.SDLK_x) _isUsingSlot0 = true;
                 else if (key == SDL.SDL_Keycode.SDLK_c) _isUsingSlot1 = true;
-                else if (key == SDL.SDL_Keycode.SDLK_SPACE)
-                {
-                    if (App.State.SelectedEntity != null && App.State.SelectedEntity.PlayerIndex == App.State.SelfPlayerIndex)
-                    {
-                        _hudSwapPanel.Visible = true;
-                        _hudSwapHint.Visible = false;
-                        _hud.Layout();
-                    }
-                }
                 else
                 {
                     var direction = key switch
@@ -236,11 +224,6 @@ namespace ModrogClient.Interface.Playing
 
             var state = App.State;
 
-            if (key == SDL.SDL_Keycode.SDLK_SPACE)
-            {
-                _hudSwapPanel.Visible = false;
-                Desktop.SetFocusedElement(this);
-            }
             if (key == SDL.SDL_Keycode.SDLK_x) _isUsingSlot0 = false;
             if (key == SDL.SDL_Keycode.SDLK_c) _isUsingSlot1 = false;
 
@@ -290,8 +273,8 @@ namespace ModrogClient.Interface.Playing
                     App.State.SelectEntity(null);
                 }
 
-                _hudSwapPanel.Visible = false;
-                UpdateSelectedEntityHud();
+                _hudGroundPanel.Visible = false;
+                UpdateHud();
                 Desktop.SetFocusedElement(this);
             }
             else if (button == SDL.SDL_BUTTON_MIDDLE)
@@ -306,7 +289,7 @@ namespace ModrogClient.Interface.Playing
             }
         }
 
-        void UpdateSelectedEntityHud()
+        void UpdateHud()
         {
             var state = App.State;
 
@@ -328,11 +311,11 @@ namespace ModrogClient.Interface.Playing
                     {
                         var spriteLocation = state.SelectedEntity.ItemSlots[i].SpriteLocation;
                         var sourceRect = new Rectangle(spriteLocation.X * state.TileSize, spriteLocation.Y * state.TileSize, state.TileSize, state.TileSize);
-                        _hudItemSlots[i].BackgroundPatch = new TexturePatch(new TextureArea(_spritesheetTexture, sourceRect));
+                        _hudCharacterItemSlots[i].BackgroundPatch = new TexturePatch(new TextureArea(_spritesheetTexture, sourceRect));
                     }
                     else
                     {
-                        _hudItemSlots[i].BackgroundPatch = null;
+                        _hudCharacterItemSlots[i].BackgroundPatch = null;
                     }
                 }
 
@@ -342,17 +325,35 @@ namespace ModrogClient.Interface.Playing
                     var itemEntities = new List<Game.ClientEntity>();
                     foreach (var entity in state.EntitiesInSight) if (entity.Position == position && entity.ItemKind != null) itemEntities.Add(entity);
 
-                    var showHudSwapHint = itemEntities.Count > 0 && !_hudSwapPanel.Visible;
-                    if (showHudSwapHint != _hudSwapHint.Visible)
+                    if (itemEntities.Count > 0)
                     {
-                        _hudSwapHint.Visible = showHudSwapHint;
-                        _hud.Layout();
+                        _hudGroundPanel.Visible = true;
+
+                        for (var i = 0; i < _hudGroundItemSlots.Length; i++)
+                        {
+                            if (i < itemEntities.Count)
+                            {
+                                _hudGroundItemSlots[i].Parent.Visible = true;
+                                var spriteLocation = itemEntities[i].ItemKind.SpriteLocation;
+                                var sourceRect = new Rectangle(spriteLocation.X * state.TileSize, spriteLocation.Y * state.TileSize, state.TileSize, state.TileSize);
+                                _hudGroundItemSlots[i].BackgroundPatch = new TexturePatch(new TextureArea(_spritesheetTexture, sourceRect));
+                            }
+                            else
+                            {
+                                _hudGroundItemSlots[i].Parent.Visible = false;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        _hudGroundPanel.Visible = false;
                     }
                 }
             }
             else
             {
                 _hudEntityPanel.Visible = false;
+                _hudGroundPanel.Visible = false;
             }
 
             _hud.Layout(_contentRectangle);
@@ -431,7 +432,7 @@ namespace ModrogClient.Interface.Playing
             var state = App.State;
             state.SendSelfPlayerPosition(new Point((int)(Scroll.X / state.TileSize), (int)(Scroll.Y / state.TileSize)));
 
-            UpdateSelectedEntityHud();
+            UpdateHud();
         }
 
         public void OnSpritesheetReceived(Span<byte> data)
@@ -537,35 +538,59 @@ namespace ModrogClient.Interface.Playing
 
                 var position = Vector2.Lerp(entity.PreviousTickPosition.ToVector2(), entity.Position.ToVector2(), tickProgress);
                 var angle = ModrogApi.MathHelper.GetAngleFromDirection(entity.ActionDirection);
-                var stretch = Vector2.One;
 
-                if (entity.Action == ModrogApi.EntityAction.Move)
                 {
-                    position.Y += -MathF.Sin(tickProgress * MathF.PI) * 0.2f;
-                    stretch.X = 1f - MathF.Sin(tickProgress * MathF.PI) * 0.2f;
-                    stretch.Y = 1f + MathF.Sin(tickProgress * MathF.PI) * 0.2f;
+                    var stretch = Vector2.One;
+
+                    if (entity.Action == ModrogApi.EntityAction.Move)
+                    {
+                        position.Y += -MathF.Sin(tickProgress * MathF.PI) * 0.2f;
+                        stretch.X = 1f - MathF.Sin(tickProgress * MathF.PI) * 0.2f;
+                        stretch.Y = 1f + MathF.Sin(tickProgress * MathF.PI) * 0.2f;
+                    }
+                    else if (entity.Action == ModrogApi.EntityAction.Bounce)
+                    {
+                        var amount = MathF.Sin(tickProgress * MathF.PI) * 0.1f;
+
+                        position.X += MathF.Cos(angle) * amount;
+                        position.Y += MathF.Sin(angle) * amount;
+
+                        stretch.X = 1f - Math.Abs(MathF.Cos(angle)) * amount + Math.Abs(MathF.Sin(angle)) * amount;
+                        stretch.Y = 1f - Math.Abs(MathF.Sin(angle)) * amount + Math.Abs(MathF.Cos(angle)) * amount;
+                    }
+
+                    var left = ViewRectangle.X + (int)((position.X + 0.5f - 0.5f * stretch.X) * _zoom * state.TileSize) - (int)(viewportScroll.X * _zoom);
+                    var right = ViewRectangle.X + (int)((position.X + 0.5f + 0.5f * stretch.X) * _zoom * state.TileSize) - (int)(viewportScroll.X * _zoom);
+                    var top = ViewRectangle.Y + (int)((position.Y + 0.5f - 0.5f * stretch.Y) * _zoom * state.TileSize) - (int)(viewportScroll.Y * _zoom);
+                    var bottom = ViewRectangle.Y + (int)((position.Y + 0.5f + 0.5f * stretch.Y) * _zoom * state.TileSize) - (int)(viewportScroll.Y * _zoom);
+
+                    var spriteLocation = entity.CharacterKind?.SpriteLocation ?? entity.ItemKind.SpriteLocation;
+                    var sourceRect = new SDL.SDL_Rect { x = spriteLocation.X * state.TileSize, y = spriteLocation.Y * state.TileSize, w = state.TileSize, h = state.TileSize };
+                    var destRect = new SDL.SDL_Rect { x = left, y = top, w = right - left, h = bottom - top };
+                    SDL.SDL_RenderCopyEx(Desktop.Renderer, _spritesheetTexture, ref sourceRect, ref destRect, 0f, IntPtr.Zero, entity.ActionDirection == ModrogApi.Direction.Left ? SDL.SDL_RendererFlip.SDL_FLIP_HORIZONTAL : SDL.SDL_RendererFlip.SDL_FLIP_NONE);
                 }
-                else if (entity.Action == ModrogApi.EntityAction.Bounce)
+
+                if (entity.Action == ModrogApi.EntityAction.Use)
                 {
+                    var itemPosition = position + ModrogApi.MathHelper.GetOffsetFromDirection(entity.ActionDirection).ToVector2() * 0.5f;
+
                     var amount = MathF.Sin(tickProgress * MathF.PI) * 0.1f;
+                    var stretch = new Vector2(
+                        1f - Math.Abs(MathF.Cos(angle)) * amount + Math.Abs(MathF.Sin(angle)) * amount,
+                        1f - Math.Abs(MathF.Sin(angle)) * amount + Math.Abs(MathF.Cos(angle)) * amount);
 
-                    position.X += MathF.Cos(angle) * amount;
-                    position.Y += MathF.Sin(angle) * amount;
+                    var left = ViewRectangle.X + (int)((itemPosition.X + 0.5f - 0.5f * stretch.X) * _zoom * state.TileSize) - (int)(viewportScroll.X * _zoom);
+                    var right = ViewRectangle.X + (int)((itemPosition.X + 0.5f + 0.5f * stretch.X) * _zoom * state.TileSize) - (int)(viewportScroll.X * _zoom);
+                    var top = ViewRectangle.Y + (int)((itemPosition.Y + 0.5f - 0.5f * stretch.Y) * _zoom * state.TileSize) - (int)(viewportScroll.Y * _zoom);
+                    var bottom = ViewRectangle.Y + (int)((itemPosition.Y + 0.5f + 0.5f * stretch.Y) * _zoom * state.TileSize) - (int)(viewportScroll.Y * _zoom);
 
-                    stretch.X = 1f - Math.Abs(MathF.Cos(angle)) * amount + Math.Abs(MathF.Sin(angle)) * amount;
-                    stretch.Y = 1f - Math.Abs(MathF.Sin(angle)) * amount + Math.Abs(MathF.Cos(angle)) * amount;
+                    var spriteLocation = entity.ActionItem.SpriteLocation;
+                    var sourceRect = new SDL.SDL_Rect { x = spriteLocation.X * state.TileSize, y = spriteLocation.Y * state.TileSize, w = state.TileSize, h = state.TileSize };
+                    var destRect = new SDL.SDL_Rect { x = left, y = top, w = right - left, h = bottom - top };
+
+                    var itemAngleDegrees = entity.ActionDirection != ModrogApi.Direction.Left ? MathHelper.ToDegrees(angle) : 0;
+                    SDL.SDL_RenderCopyEx(Desktop.Renderer, _spritesheetTexture, ref sourceRect, ref destRect, itemAngleDegrees, IntPtr.Zero, entity.ActionDirection == ModrogApi.Direction.Left ? SDL.SDL_RendererFlip.SDL_FLIP_HORIZONTAL : SDL.SDL_RendererFlip.SDL_FLIP_NONE);
                 }
-
-
-                var left = ViewRectangle.X + (int)((position.X + 0.5f - 0.5f * stretch.X) * _zoom * state.TileSize) - (int)(viewportScroll.X * _zoom);
-                var right = ViewRectangle.X + (int)((position.X + 0.5f + 0.5f * stretch.X) * _zoom * state.TileSize) - (int)(viewportScroll.X * _zoom);
-                var top = ViewRectangle.Y + (int)((position.Y + 0.5f - 0.5f * stretch.Y) * _zoom * state.TileSize) - (int)(viewportScroll.Y * _zoom);
-                var bottom = ViewRectangle.Y + (int)((position.Y + 0.5f + 0.5f * stretch.Y) * _zoom * state.TileSize) - (int)(viewportScroll.Y * _zoom);
-
-                var spriteLocation = entity.CharacterKind?.SpriteLocation ?? entity.ItemKind.SpriteLocation;
-                var sourceRect = new SDL.SDL_Rect { x = spriteLocation.X * state.TileSize, y = spriteLocation.Y * state.TileSize, w = state.TileSize, h = state.TileSize };
-                var destRect = new SDL.SDL_Rect { x = left, y = top, w = right - left, h = bottom - top };
-                SDL.SDL_RenderCopyEx(Desktop.Renderer, _spritesheetTexture, ref sourceRect, ref destRect, 0f, IntPtr.Zero, entity.ActionDirection == ModrogApi.Direction.Left ? SDL.SDL_RendererFlip.SDL_FLIP_HORIZONTAL : SDL.SDL_RendererFlip.SDL_FLIP_NONE);
             }
 
             var fogColor = new Color(0x00000044);

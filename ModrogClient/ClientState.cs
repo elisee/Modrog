@@ -323,8 +323,8 @@ namespace ModrogClient
             SelectedEntityMoveIntentDirection = null;
 
             WriteIntentHeader(ModrogApi.CharacterIntent.Use);
-            _packetWriter.WriteByte((byte)slot);
             _packetWriter.WriteByte((byte)direction);
+            _packetWriter.WriteByte((byte)slot);
             SendPacket();
         }
 

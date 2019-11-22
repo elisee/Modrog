@@ -23,6 +23,7 @@ class ScenarioScript : IScenarioScript
     public readonly CharacterKind KnightCharacterKind;
     public readonly CharacterKind RobotCharacterKind;
     public readonly CharacterKind SkeletonCharacterKind;
+    public readonly CharacterKind ArrowKind;
 
     public readonly ItemKind SwordItemKind;
     public readonly ItemKind PistolItemKind;
@@ -82,33 +83,14 @@ class ScenarioScript : IScenarioScript
 
     public void OnCharacterIntent(Entity entity, CharacterIntent intent, Direction direction, int slot, out bool preventDefault)
     {
-        if (intent == CharacterIntent.Swap)
-        {
-            var world = entity.GetWorld();
-            var entities = world.GetEntities(entity.GetPosition());
-
-            foreach (var otherEntity in entities)
-            {
-                // TODO: Probably doesn't make sense to use Custom for that, just retrieve the item from an inventory slot of the item
-                // that way it can also be shown in the UI and this doesn't need to be done in script
-                if (otherEntity.Custom is ItemKind itemKind)
-                {
-                    otherEntity.Remove();
-                    entity.SetItem(slot, itemKind);
-                }
-            }
-
-            preventDefault = true;
-            return;
-        }
-        else if (intent == CharacterIntent.Use)
-        {
-            preventDefault = true;
-            entity.GetWorld().SpawnCharacter(RobotCharacterKind, entity.GetPosition() + ModrogApi.MathHelper.GetOffsetFromDirection(direction), owner: null);
-            return;
-        }
-
         preventDefault = false;
+
+        if (intent == CharacterIntent.Use)
+        {
+            if (entity.GetItem(0) == null) entity.SetItem(0, PistolItemKind);
+            // entity.GetWorld().SpawnCharacter(ArrowKind, entity.GetPosition() + ModrogApi.MathHelper.GetOffsetFromDirection(direction), owner: null);
+            return;
+        }
     }
 
     public void Tick()

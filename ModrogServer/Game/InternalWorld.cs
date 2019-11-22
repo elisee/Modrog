@@ -65,6 +65,12 @@ namespace ModrogServer.Game
                         break;
 
                     case ModrogApi.CharacterIntent.Use:
+                        if (entity.ItemSlots[entity.IntentSlot] != null)
+                        {
+                            entity.Action = ModrogApi.EntityAction.Use;
+                            entity.ActionDirection = entity.IntentDirection;
+                            entity.ActionItem = entity.ItemSlots[entity.IntentSlot];
+                        }
                         break;
 
 

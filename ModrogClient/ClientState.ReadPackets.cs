@@ -295,7 +295,6 @@ namespace ModrogClient
                 var actionItemKindId = (int)_packetReader.ReadShort();
 
                 var entity = EntitiesInSightById[id];
-                entity.ApplyTick(action, direction, actionItemKindId != -1 ? ItemKinds[actionItemKindId] : null);
 
                 if (entity.PlayerIndex == SelfPlayerIndex && _packetReader.ReadByte() != 0)
                 {
@@ -305,6 +304,8 @@ namespace ModrogClient
                         entity.ItemSlots[j] = slotItemKindId != -1 ? ItemKinds[slotItemKindId] : null;
                     }
                 }
+
+                entity.ApplyTick(action, direction, actionItemKindId != -1 ? ItemKinds[actionItemKindId] : null);
             }
 
             var tileStacksCount = (int)_packetReader.ReadShort();
