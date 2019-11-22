@@ -597,20 +597,6 @@ namespace ModrogClient.Interface.Playing
             fogColor.UseAsDrawColor(Desktop.Renderer);
             SDL.SDL_SetRenderDrawBlendMode(Desktop.Renderer, SDL.SDL_BlendMode.SDL_BLENDMODE_BLEND);
 
-            /*
-            for (var y = startTileY; y <= endTileY; y++)
-            {
-                for (var x = startTileX; x <= endTileX; x++)
-                {
-                    var tileIndex = y * state.WorldSize.X + x;
-                    if (fog[tileIndex] != 0) continue;
-
-                    var rect = new SDL.SDL_Rect { x = x * TileSize - viewportScrollX, y = y * TileSize - viewportScrollY, w = TileSize, h = TileSize };
-                    SDL.SDL_RenderFillRect(Desktop.Renderer, ref rect);
-                }
-            }
-            */
-
             for (var chunkY = startChunkCoords.Y; chunkY <= endChunkCoords.Y; chunkY++)
             {
                 for (var chunkX = startChunkCoords.X; chunkX <= endChunkCoords.X; chunkX++)
