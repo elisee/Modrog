@@ -593,6 +593,21 @@ namespace ModrogClient.Interface.Playing
                     var itemAngleDegrees = entity.ActionDirection != ModrogApi.Direction.Left ? MathHelper.ToDegrees(angle) : 0;
                     SDL.SDL_RenderCopyEx(Desktop.Renderer, _spritesheetTexture, ref sourceRect, ref destRect, itemAngleDegrees, IntPtr.Zero, entity.ActionDirection == ModrogApi.Direction.Left ? SDL.SDL_RendererFlip.SDL_FLIP_HORIZONTAL : SDL.SDL_RendererFlip.SDL_FLIP_NONE);
                 }
+
+                if (entity.CharacterKind != null && entity.Health < entity.CharacterKind.Health)
+                {
+                    var left = ViewRectangle.X + (int)(position.X * _zoom * state.TileSize) - (int)(viewportScroll.X * _zoom);
+                    var right = ViewRectangle.X + (int)(((position.X + 1f) * state.TileSize) * _zoom) - (int)(viewportScroll.X * _zoom);
+                    var top = ViewRectangle.Y + (int)(position.Y * _zoom * state.TileSize) - (int)(viewportScroll.Y * _zoom);
+
+                    new Color(0x222222ff).UseAsDrawColor(Desktop.Renderer);
+                    var backgroundRect = new Rectangle(left, top, right - left, 4).ToSDL_Rect();
+                    SDL.SDL_RenderFillRect(Desktop.Renderer, ref backgroundRect);
+
+                    new Color(0x12cc34ff).UseAsDrawColor(Desktop.Renderer);
+                    var fillRect = new Rectangle(left, top, (right - left) * entity.Health / entity.CharacterKind.Health, 4).ToSDL_Rect();
+                    SDL.SDL_RenderFillRect(Desktop.Renderer, ref fillRect);
+                }
             }
 
             var fogColor = new Color(0x00000044);
