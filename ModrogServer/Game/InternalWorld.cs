@@ -9,17 +9,25 @@ namespace ModrogServer.Game
     sealed class InternalWorld : ModrogApi.Server.World
     {
         internal readonly InternalUniverse Universe;
+        internal bool Destroyed;
 
         internal readonly Dictionary<Point, Chunk> Chunks = new Dictionary<Point, Chunk>();
 
         readonly List<InternalEntity> _entities = new List<InternalEntity>();
+        readonly List<InternalEntity> _addedEntities = new List<InternalEntity>();
 
         internal InternalWorld(InternalUniverse universe)
         {
             Universe = universe;
         }
 
-        internal void ClearPreviousTick()
+        public override void Destroy()
+        {
+            Destroyed = true;
+            foreach (var entity in _entities) if (entity.World == this) entity.Remove();
+        }
+
+        internal void PreTick()
         {
             foreach (var entity in _entities)
             {
@@ -33,9 +41,7 @@ namespace ModrogServer.Game
 
         internal void Tick()
         {
-            var entities = _entities.ToArray();
-
-            foreach (var entity in entities)
+            foreach (var entity in _entities)
             {
                 if (entity.World != this) continue;
                 if (entity.Intent == ModrogApi.CharacterIntent.Idle) continue;
@@ -61,11 +67,19 @@ namespace ModrogServer.Game
                                 break;
                             }
 
+                            foreach (var targetEntity in GetEntities(newPosition))
+                            {
+                                if (targetEntity.GetCharacterKind() != null)
+                                {
+                                    entity.Action = ModrogApi.EntityAction.Bounce;
+                                    break;
+                                }
+                            }
+
+                            if (entity.Action == ModrogApi.EntityAction.Bounce) break;
+
                             entity.Action = ModrogApi.EntityAction.Move;
                             entity.Position = newPosition;
-
-                            // TODO: Dig, push, collect, etc.
-                            // TODO: Check for interactions with entities
                         }
                         break;
 
@@ -78,11 +92,17 @@ namespace ModrogServer.Game
                         }
                         break;
 
-
                     case ModrogApi.CharacterIntent.Idle:
                         break;
                 }
             }
+        }
+
+        internal void PostTick()
+        {
+            _entities.AddRange(_addedEntities);
+            _addedEntities.Clear();
+            _entities.RemoveAll(x => x.World != this);
         }
 
         public override ModrogApi.Server.Entity SpawnCharacter(ModrogApi.Server.CharacterKind kind, Point position, ModrogApi.Server.Player owner)
@@ -98,15 +118,14 @@ namespace ModrogServer.Game
         internal void Add(InternalEntity entity)
         {
             Debug.Assert(entity.World == null);
-            _entities.Add(entity);
+            _addedEntities.Add(entity);
             entity.World = this;
         }
 
         internal void Remove(InternalEntity entity)
         {
             Debug.Assert(entity.World == this);
-            _entities.Remove(entity);
-            entity.World = null;
+            _addedEntities.Remove(entity);
         }
 
         internal short PeekTile(ModrogApi.MapLayer layer, Point position)
@@ -144,14 +163,9 @@ namespace ModrogServer.Game
 
         public override IReadOnlyList<ModrogApi.Server.Entity> GetEntities(Point position)
         {
-            var entities = new List<ModrogApi.Server.Entity>();
-
             // TODO: Optimize with chunk partitioning
-            foreach (var entity in _entities)
-            {
-                if (entity.Position == position) entities.Add(entity);
-            }
-
+            var entities = _entities.FindAll(x => x.World == this && x.Position == position);
+            entities.AddRange(_addedEntities.FindAll(x => x.World == this && x.Position == position));
             return entities;
         }
 

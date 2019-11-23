@@ -74,14 +74,17 @@ namespace ModrogServer.Game
         public override CharacterKind GetCharacterKind() => CharacterKind;
         public override ItemKind GetItemKind() => ItemKind;
 
-        public override void Teleport(World world, Point position)
+        public override void Teleport(World world, Point position, Direction direction)
         {
             World.Remove(this);
             ((InternalWorld)world).Add(this);
 
             Position = PreviousTickPosition = position;
-            Action = EntityAction.Idle;
-            ActionDirection = Direction.Down;
+
+            Intent = CharacterIntent.Idle;
+
+            Action = EntityAction.Teleport;
+            ActionDirection = direction;
             ActionItem = null;
         }
 
@@ -115,6 +118,19 @@ namespace ModrogServer.Game
         {
             ItemSlots[slot] = (InternalItemKind)itemKind;
             DirtyFlags |= EntityDirtyFlags.ItemSlots;
+        }
+
+        public override void SetMoveIntent(Direction direction)
+        {
+            Intent = CharacterIntent.Move;
+            IntentDirection = direction;
+        }
+
+        public override void SetUseIntent(Direction direction, int slot)
+        {
+            Intent = CharacterIntent.Use;
+            IntentDirection = direction;
+            IntentSlot = slot;
         }
         #endregion
     }

@@ -19,11 +19,16 @@ namespace SwarmBasics.Math
             Y = y;
         }
 
+        public float SquaredLength() => X * X + Y * Y;
+        public float Length() => MathF.Sqrt(X * X + Y * Y);
+
         public override bool Equals(object obj) => obj is Vector2 vector && Equals(vector);
         public bool Equals(Vector2 other) => X == other.X && Y == other.Y;
         public override int GetHashCode() => HashCode.Combine(X, Y);
+
         public static bool operator ==(Vector2 left, Vector2 right) => left.Equals(right);
         public static bool operator !=(Vector2 left, Vector2 right) => !(left == right);
+
         public static Vector2 operator +(Vector2 left, Vector2 right) => new Vector2(left.X + right.X, left.Y + right.Y);
         public static Vector2 operator -(Vector2 left, Vector2 right) => new Vector2(left.X - right.X, left.Y - right.Y);
         public static Vector2 operator *(Vector2 vector, float value) => new Vector2(vector.X * value, vector.Y * value);

@@ -3,6 +3,7 @@
     public enum EntityAction : byte
     {
         Idle,
+        Teleport,
         Move,
         Bounce,
         Use,

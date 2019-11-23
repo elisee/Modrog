@@ -21,6 +21,7 @@ namespace ModrogServer.Game
 
         internal readonly List<InternalTileKind>[] TileKindsPerLayer = new List<InternalTileKind>[(int)ModrogApi.MapLayer.Count];
         internal readonly List<InternalWorld> _worlds = new List<InternalWorld>();
+        readonly List<InternalWorld> _addedWorlds = new List<InternalWorld>();
 
         internal string ScenarioPath { get; private set; }
         internal string SpritesheetPath { get; private set; } = "Spritesheet.png";
@@ -89,9 +90,14 @@ namespace ModrogServer.Game
         {
             TickIndex++;
 
-            foreach (var world in _worlds) world.ClearPreviousTick();
-            foreach (var world in _worlds) world.Tick();
+            foreach (var world in _worlds) world.PreTick();
             _script.Tick();
+            foreach (var world in _worlds) world.Tick();
+            foreach (var world in _worlds) world.PostTick();
+
+            _worlds.AddRange(_addedWorlds);
+            _addedWorlds.Clear();
+            _worlds.RemoveAll(x => x.Destroyed);
         }
 
         #region API
@@ -200,7 +206,7 @@ namespace ModrogServer.Game
         public override ModrogApi.Server.World CreateWorld()
         {
             var world = new InternalWorld(this);
-            _worlds.Add(world);
+            _addedWorlds.Add(world);
             return world;
         }
 

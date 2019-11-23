@@ -282,21 +282,26 @@ namespace ModrogClient
             ReadNewEntitiesInSight();
 
             if (SelectedEntity != null) EntitiesInSightById.TryGetValue(SelectedEntity.Id, out SelectedEntity);
-            foreach (var entity in EntitiesInSight) entity.ClearPreviousTick();
+            foreach (var entity in EntitiesInSight) entity.PreTick();
 
             var dirtyEntitiesCount = (int)_packetReader.ReadShort();
 
             for (var i = 0; i < dirtyEntitiesCount; i++)
             {
                 var id = _packetReader.ReadInt();
-
-                var action = (ModrogApi.EntityAction)_packetReader.ReadByte();
-                var direction = (ModrogApi.Direction)_packetReader.ReadByte();
-                var actionItemKindId = (int)_packetReader.ReadShort();
-
                 var entity = EntitiesInSightById[id];
 
-                var dirtyFlags = _packetReader.ReadInt<Protocol.EntityDirtyFlags>();
+                var action = (ModrogApi.EntityAction)_packetReader.ReadByte();
+
+                switch (action)
+                {
+                    case ModrogApi.EntityAction.Teleport: entity.ApplyTeleportAction(_packetReader.ReadShortPoint(), _packetReader.ReadByte<ModrogApi.Direction>()); break;
+                    case ModrogApi.EntityAction.Move: entity.ApplyMoveAction(_packetReader.ReadByte<ModrogApi.Direction>()); break;
+                    case ModrogApi.EntityAction.Bounce: entity.ApplyBounceAction(_packetReader.ReadByte<ModrogApi.Direction>()); break;
+                    case ModrogApi.EntityAction.Use: entity.ApplyUseAction(_packetReader.ReadByte<ModrogApi.Direction>(), ItemKinds[_packetReader.ReadShort()]); break;
+                }
+
+                var dirtyFlags = (Protocol.EntityDirtyFlags)_packetReader.ReadInt();
                 if (dirtyFlags.HasFlag(Protocol.EntityDirtyFlags.Health)) entity.Health = _packetReader.ReadShort();
 
                 if (entity.PlayerIndex == SelfPlayerIndex)
@@ -310,8 +315,6 @@ namespace ModrogClient
                         }
                     }
                 }
-
-                entity.ApplyTick(action, direction, actionItemKindId != -1 ? ItemKinds[actionItemKindId] : null);
             }
 
             var tileStacksCount = (int)_packetReader.ReadShort();

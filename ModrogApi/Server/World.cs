@@ -12,5 +12,7 @@ namespace ModrogApi.Server
         public abstract void InsertMap(int x, int y, Map map);
 
         public abstract IReadOnlyList<Entity> GetEntities(Point position);
+
+        public abstract void Destroy();
     }
 }

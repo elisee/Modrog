@@ -13,7 +13,7 @@ namespace ModrogApi.Server
         public abstract Point GetPosition();
 
         public abstract void SetView(int viewRadius);
-        public abstract void Teleport(World world, Point position);
+        public abstract void Teleport(World world, Point position, Direction direction);
         public abstract void Remove();
 
         // Character
@@ -22,5 +22,8 @@ namespace ModrogApi.Server
 
         public abstract ItemKind GetItem(int index);
         public abstract void SetItem(int index, ItemKind itemKind);
+
+        public abstract void SetMoveIntent(Direction direction);
+        public abstract void SetUseIntent(Direction direction, int slot);
     }
 }

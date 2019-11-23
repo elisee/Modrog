@@ -152,9 +152,23 @@ namespace ModrogServer
                     Debug.Assert(entity.World == player.World);
 
                     _packetWriter.WriteInt(entity.Id);
+
                     _packetWriter.WriteByte((byte)entity.Action);
-                    _packetWriter.WriteByte((byte)entity.ActionDirection);
-                    _packetWriter.WriteShort((short)(entity.ActionItem?.Id ?? -1));
+                    switch (entity.Action)
+                    {
+                        case ModrogApi.EntityAction.Teleport:
+                            _packetWriter.WriteShortPoint(entity.Position);
+                            _packetWriter.WriteByte((byte)entity.ActionDirection);
+                            break;
+                        case ModrogApi.EntityAction.Move:
+                        case ModrogApi.EntityAction.Bounce:
+                            _packetWriter.WriteByte((byte)entity.ActionDirection);
+                            break;
+                        case ModrogApi.EntityAction.Use:
+                            _packetWriter.WriteByte((byte)entity.ActionDirection);
+                            _packetWriter.WriteShort((short)entity.ActionItem.Id);
+                            break;
+                    }
 
                     _packetWriter.WriteInt((int)entity.DirtyFlags);
                     if (entity.DirtyFlags.HasFlag(Protocol.EntityDirtyFlags.Health)) _packetWriter.WriteShort((short)entity.Health);

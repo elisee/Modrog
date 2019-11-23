@@ -37,36 +37,45 @@ namespace ModrogClient.Game
             ItemKind = itemKind;
         }
 
-        public void ClearPreviousTick()
+        public void PreTick()
         {
             PreviousTickPosition = Position;
             Action = EntityAction.Idle;
             ActionItem = null;
         }
 
-        public void ApplyTick(EntityAction action, Direction actionDirection, ClientItemKind actionItem)
+        public void ApplyTeleportAction(Point position, Direction direction)
         {
-            PreviousTickPosition = Position;
-            Action = action;
-            ActionDirection = actionDirection;
-            ActionItem = actionItem;
+            Action = EntityAction.Teleport;
+            PreviousTickPosition = Position = position;
+            ActionDirection = direction;
+        }
 
-            switch (action)
+        public void ApplyMoveAction(Direction direction)
+        {
+            Action = EntityAction.Move;
+            ActionDirection = direction;
+
+            switch (ActionDirection)
             {
-                case EntityAction.Move:
-                    switch (actionDirection)
-                    {
-                        case Direction.Right: Position = new Point(Position.X + 1, Position.Y); break;
-                        case Direction.Down: Position = new Point(Position.X, Position.Y + 1); break;
-                        case Direction.Left: Position = new Point(Position.X - 1, Position.Y); break;
-                        case Direction.Up: Position = new Point(Position.X, Position.Y - 1); break;
-                    }
-                    break;
-
-                default:
-                    // Ignore
-                    break;
+                case Direction.Right: Position = new Point(Position.X + 1, Position.Y); break;
+                case Direction.Down: Position = new Point(Position.X, Position.Y + 1); break;
+                case Direction.Left: Position = new Point(Position.X - 1, Position.Y); break;
+                case Direction.Up: Position = new Point(Position.X, Position.Y - 1); break;
             }
+        }
+
+        public void ApplyBounceAction(Direction direction)
+        {
+            Action = EntityAction.Bounce;
+            ActionDirection = direction;
+        }
+
+        public void ApplyUseAction(Direction direction, ClientItemKind itemKind)
+        {
+            Action = EntityAction.Use;
+            ActionDirection = direction;
+            ActionItem = itemKind;
         }
     }
 }
