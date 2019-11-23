@@ -91,13 +91,21 @@ namespace ModrogServer.Game
             TickIndex++;
 
             foreach (var world in _worlds) world.PreTick();
-            _script.Tick();
-            foreach (var world in _worlds) world.Tick();
-            foreach (var world in _worlds) world.PostTick();
 
-            _worlds.AddRange(_addedWorlds);
-            _addedWorlds.Clear();
-            _worlds.RemoveAll(x => x.Destroyed);
+            _script.Tick();
+            ProcessPending();
+
+            foreach (var world in _worlds) world.Tick();
+            ProcessPending();
+
+            void ProcessPending()
+            {
+                _worlds.AddRange(_addedWorlds);
+                _addedWorlds.Clear();
+                _worlds.RemoveAll(x => x.Destroyed);
+
+                foreach (var world in _worlds) world.ProcessPendingEntities();
+            }
         }
 
         #region API

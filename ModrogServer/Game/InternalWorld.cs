@@ -98,7 +98,7 @@ namespace ModrogServer.Game
             }
         }
 
-        internal void PostTick()
+        internal void ProcessPendingEntities()
         {
             _entities.AddRange(_addedEntities);
             _addedEntities.Clear();
@@ -126,6 +126,7 @@ namespace ModrogServer.Game
         {
             Debug.Assert(entity.World == this);
             _addedEntities.Remove(entity);
+            entity.World = null;
         }
 
         internal short PeekTile(ModrogApi.MapLayer layer, Point position)
