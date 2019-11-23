@@ -85,6 +85,9 @@ class ScenarioScript : IScenarioScript
         _skeletons.Clear();
         _skeletons.Add(ForestWorld.SpawnCharacter(SkeletonCharacterKind, spawnCoords + new Point(10, 3), owner: null));
         _skeletons.Add(ForestWorld.SpawnCharacter(SkeletonCharacterKind, spawnCoords + new Point(12, 4), owner: null));
+        _skeletons.Add(ForestWorld.SpawnCharacter(SkeletonCharacterKind, _cryptEntranceCoords + new Point(-2, 2), owner: null));
+        _skeletons.Add(ForestWorld.SpawnCharacter(SkeletonCharacterKind, _cryptEntranceCoords + new Point(4, 1), owner: null));
+        _skeletons.Add(ForestWorld.SpawnCharacter(SkeletonCharacterKind, _cryptEntranceCoords + new Point(0, 4), owner: null));
         foreach (var skeleton in _skeletons) skeleton.SetItem(0, SwordItemKind);
 
         Knight = ForestWorld.SpawnCharacter(KnightCharacterKind, spawnCoords, owner: Player);
@@ -162,6 +165,8 @@ class ScenarioScript : IScenarioScript
                     {
                         var diff = skeleton.GetPosition() - knightPosition;
                         var manhattanDistance = Math.Abs(diff.X) + Math.Abs(diff.Y);
+                        if (manhattanDistance > 10) continue;
+
                         var direction = (Math.Abs(diff.X) > Math.Abs(diff.Y)) ?
                             (diff.X > 0 ? Direction.Left : Direction.Right) :
                             (diff.Y > 0 ? Direction.Up : Direction.Down);
